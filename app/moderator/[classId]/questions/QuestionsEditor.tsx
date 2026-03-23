@@ -28,13 +28,6 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   superhero: 'Супергерой',
 }
 
-const TYPE_COLORS: Record<QuestionType, string> = {
-  personal: 'bg-indigo-50 text-indigo-600',
-  class_voice: 'bg-purple-50 text-purple-600',
-  better_together: 'bg-green-50 text-green-600',
-  superhero: 'bg-amber-50 text-amber-600',
-}
-
 const EMPTY_FORM = {
   text: '',
   type: 'personal' as QuestionType,
@@ -43,7 +36,7 @@ const EMPTY_FORM = {
   max_length: '',
 }
 
-// ─── Question form (shared for add + edit) ─────────────────────────────────
+// ─── Form ─────────────────────────────────────────────────────────────────────
 
 function QuestionForm({
   initial,
@@ -63,38 +56,38 @@ function QuestionForm({
   }
 
   return (
-    <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 space-y-4">
-      {/* Text */}
+    <div className="bg-white border border-indigo-200 rounded-2xl p-6 shadow-sm space-y-4">
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Текст на въпроса</label>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+          Текст на въпроса
+        </label>
         <textarea
           value={form.text}
           onChange={(e) => set('text', e.target.value)}
           rows={2}
           placeholder="Напишете въпроса..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Type */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Раздел</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            Раздел
+          </label>
           <select
             value={form.type}
             onChange={(e) => set('type', e.target.value as QuestionType)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
             {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => (
               <option key={t} value={t}>{TYPE_LABELS[t]}</option>
             ))}
           </select>
         </div>
-
-        {/* Max length */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Макс. дължина <span className="text-gray-400 font-normal">(знаци, по желание)</span>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            Макс. знаци <span className="text-gray-400 font-normal normal-case">(по желание)</span>
           </label>
           <input
             type="number"
@@ -103,15 +96,16 @@ function QuestionForm({
             value={form.max_length}
             onChange={(e) => set('max_length', e.target.value)}
             placeholder="без ограничение"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
       </div>
 
-      {/* Media toggles */}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-2">Разрешена медия</label>
-        <div className="flex gap-3">
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          Разрешена медия
+        </label>
+        <div className="flex gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -137,14 +131,14 @@ function QuestionForm({
         <button
           onClick={() => onSave(form)}
           disabled={isPending || !form.text.trim() || (!form.allows_text && !form.allows_media)}
-          className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          className="bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
         >
           {isPending ? 'Запазване...' : 'Запази'}
         </button>
         <button
           onClick={onCancel}
           disabled={isPending}
-          className="text-gray-500 hover:text-gray-700 text-sm px-4 py-2"
+          className="text-gray-400 hover:text-gray-600 text-sm px-4 py-2.5"
         >
           Отказ
         </button>
@@ -153,9 +147,9 @@ function QuestionForm({
   )
 }
 
-// ─── Single custom question row ────────────────────────────────────────────
+// ─── Question card ─────────────────────────────────────────────────────────────
 
-function CustomQuestionRow({
+function QuestionCard({
   question,
   classId,
   onMoveUp,
@@ -184,12 +178,8 @@ function CustomQuestionRow({
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: question.order_index,
       })
-      if (result.error) {
-        setError(result.error)
-      } else {
-        setEditing(false)
-        setError(null)
-      }
+      if (result.error) setError(result.error)
+      else { setEditing(false); setError(null) }
     })
   }
 
@@ -204,7 +194,7 @@ function CustomQuestionRow({
   if (editing) {
     return (
       <div className="space-y-2">
-        {error && <p className="text-red-600 text-xs">{error}</p>}
+        {error && <p className="text-red-500 text-xs px-1">{error}</p>}
         <QuestionForm
           initial={{
             text: question.text,
@@ -222,60 +212,69 @@ function CustomQuestionRow({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      {error && <p className="text-red-600 text-xs mb-2">{error}</p>}
-      <div className="flex items-start gap-3">
-        {/* Reorder buttons */}
-        <div className="flex flex-col gap-0.5 pt-0.5 flex-shrink-0">
+    <div className="group bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow">
+      {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
+      <div className="flex items-start gap-4">
+
+        {/* Drag / reorder handle */}
+        <div className="flex-shrink-0 pt-1 flex flex-col gap-0.5">
           <button
             onClick={onMoveUp}
             disabled={isFirst || isPending}
-            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 text-xs leading-none"
-            title="Нагоре"
-          >
-            ▲
-          </button>
+            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
+          >▲</button>
           <button
             onClick={onMoveDown}
             disabled={isLast || isPending}
-            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 text-xs leading-none"
-            title="Надолу"
-          >
-            ▼
-          </button>
+            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
+          >▼</button>
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-800 leading-snug">{question.text}</p>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[question.type]}`}>
-              {TYPE_LABELS[question.type]}
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="inline-flex items-center text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-100 text-amber-700">
+              Задължителен
             </span>
             {question.allows_text && (
-              <span className="text-xs text-gray-400">📝 Текст</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>article</span>
+                Текст
+              </span>
             )}
             {question.allows_media && (
-              <span className="text-xs text-gray-400">🎥 Медия</span>
-            )}
-            {question.max_length && (
-              <span className="text-xs text-gray-400">max {question.max_length} зн.</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>mic</span>
+                Медия
+              </span>
             )}
           </div>
+
+          {/* Question text */}
+          <p
+            className="text-xl text-indigo-700 leading-snug"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            {question.text}
+          </p>
+
+          {/* Type label */}
+          <p className="text-xs text-gray-400 mt-2">{TYPE_LABELS[question.type]}</p>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 flex-shrink-0">
+        {/* Actions — appear on hover */}
+        <div className="flex-shrink-0 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
           <button
             onClick={() => setEditing(true)}
-            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors font-medium"
           >
             Редактирай
           </button>
           <button
             onClick={handleDelete}
             disabled={isPending}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+            className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
           >
             Изтрий
           </button>
@@ -285,7 +284,82 @@ function CustomQuestionRow({
   )
 }
 
-// ─── Main editor ───────────────────────────────────────────────────────────
+// ─── Archive card (system questions) ──────────────────────────────────────────
+
+function ArchiveCard({
+  systemQuestions,
+  customQuestions,
+  onAddFromArchive,
+  isPending,
+}: {
+  systemQuestions: Question[]
+  customQuestions: Question[]
+  onAddFromArchive: (q: Question) => void
+  isPending: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl overflow-hidden">
+      {!expanded ? (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full flex flex-col items-center text-center px-6 py-8 hover:bg-gray-100 transition-colors"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
+            <span className="material-symbols-outlined text-2xl text-indigo-400">auto_awesome</span>
+          </div>
+          <p className="font-semibold text-gray-700 text-sm">Използвай идеи от архива</p>
+          <p className="text-xs text-gray-400 mt-1 max-w-[200px]">
+            Разгледай подбрани въпроси от успешни випуски в миналото.
+          </p>
+        </button>
+      ) : (
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-semibold text-sm text-gray-700">Идеи от архива</p>
+            <button
+              onClick={() => setExpanded(false)}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ✕ Затвори
+            </button>
+          </div>
+          <div className="space-y-2">
+            {systemQuestions.map((q) => {
+              const added = customQuestions.some((c) => c.text === q.text)
+              return (
+                <div
+                  key={q.id}
+                  className={`bg-white rounded-xl px-4 py-3 flex items-start gap-3 border transition-colors ${
+                    added ? 'border-gray-100 opacity-50' : 'border-gray-100 hover:border-indigo-200'
+                  }`}
+                >
+                  <p
+                    className="flex-1 text-sm text-gray-700 leading-snug"
+                    style={{ fontFamily: 'Noto Serif, serif' }}
+                  >
+                    {q.text}
+                  </p>
+                  <button
+                    disabled={added || isPending}
+                    onClick={() => onAddFromArchive(q)}
+                    className="flex-shrink-0 w-7 h-7 rounded-full border border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center text-sm font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    title={added ? 'Вече добавен' : 'Добави'}
+                  >
+                    {added ? '✓' : '+'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main editor ───────────────────────────────────────────────────────────────
 
 export default function QuestionsEditor({ classId, systemQuestions, customQuestions: initialCustom }: Props) {
   const [customQuestions, setCustomQuestions] = useState(initialCustom)
@@ -295,9 +369,10 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
 
   function handleAdd(form: typeof EMPTY_FORM) {
     startTransition(async () => {
-      const nextIndex = customQuestions.length > 0
-        ? Math.max(...customQuestions.map((q) => q.order_index)) + 1
-        : 1
+      const nextIndex =
+        customQuestions.length > 0
+          ? Math.max(...customQuestions.map((q) => q.order_index)) + 1
+          : 1
 
       const result = await createQuestion(classId, {
         text: form.text,
@@ -313,11 +388,10 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
       } else {
         setAdding(false)
         setAddError(null)
-        // Optimistically add — page will revalidate
         setCustomQuestions((prev) => [
           ...prev,
           {
-            id: 'pending',
+            id: 'pending-' + Date.now(),
             text: form.text,
             type: form.type,
             allows_text: form.allows_text,
@@ -330,13 +404,35 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
     })
   }
 
+  function handleAddFromArchive(q: Question) {
+    const nextIndex =
+      customQuestions.length > 0
+        ? Math.max(...customQuestions.map((c) => c.order_index)) + 1
+        : 1
+    startTransition(async () => {
+      const result = await createQuestion(classId, {
+        text: q.text,
+        type: q.type,
+        allows_text: q.allows_text,
+        allows_media: q.allows_media,
+        max_length: q.max_length,
+        order_index: nextIndex,
+      })
+      if (!result.error) {
+        setCustomQuestions((prev) => [
+          ...prev,
+          { ...q, id: 'pending-' + q.id, order_index: nextIndex },
+        ])
+      }
+    })
+  }
+
   function handleMove(index: number, direction: 'up' | 'down') {
     const newList = [...customQuestions]
     const swapIndex = direction === 'up' ? index - 1 : index + 1
     ;[newList[index], newList[swapIndex]] = [newList[swapIndex], newList[index]]
     const reindexed = newList.map((q, i) => ({ ...q, order_index: i + 1 }))
     setCustomQuestions(reindexed)
-
     startTransition(async () => {
       await reorderQuestions(
         classId,
@@ -346,124 +442,119 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
   }
 
   return (
-    <div className="space-y-10">
-      {/* Custom questions */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">Собствени въпроси</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Добавете въпроси специфични за вашия клас.
-            </p>
-          </div>
-          {!adding && (
-            <button
-              onClick={() => setAdding(true)}
-              className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              + Добави въпрос
-            </button>
-          )}
-        </div>
-
-        {adding && (
-          <div className="mb-4">
-            {addError && <p className="text-red-600 text-xs mb-2">{addError}</p>}
-            <QuestionForm
-              initial={EMPTY_FORM}
-              onSave={handleAdd}
-              onCancel={() => { setAdding(false); setAddError(null) }}
-              isPending={isPending}
-            />
-          </div>
-        )}
-
-        {customQuestions.length === 0 && !adding ? (
-          <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
-            <p className="text-gray-400 text-sm">Нямате собствени въпроси.</p>
-            <p className="text-gray-400 text-xs mt-1">Натиснете „+ Добави въпрос", за да започнете.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {customQuestions.map((q, i) => (
-              <CustomQuestionRow
-                key={q.id}
-                question={q}
-                classId={classId}
-                onMoveUp={() => handleMove(i, 'up')}
-                onMoveDown={() => handleMove(i, 'down')}
-                isFirst={i === 0}
-                isLast={i === customQuestions.length - 1}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* System questions — selectable */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-gray-900">Системни въпроси</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Натиснете „+" до въпрос, за да го добавите към собствените и да го редактирате.
+    <div>
+      {/* ── Page header ────────────────────────────────────────────── */}
+      <div className="mb-10 flex items-start justify-between gap-6">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
+            Настройки на албума
+          </p>
+          <h1
+            className="text-4xl font-bold text-gray-900 leading-tight"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            Редактор на въпросника
+          </h1>
+          <p className="text-sm text-gray-500 mt-2 max-w-lg">
+            Определете въпросите, на които всеки ученик трябва да отговори, за да
+            създадем заедно живия архив на Вашия випуск.
           </p>
         </div>
 
-        <div className="space-y-2">
-          {systemQuestions.map((q) => {
-            const alreadyAdded = customQuestions.some((c) => c.text === q.text)
-            return (
-              <div
-                key={q.id}
-                className={`border rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${
-                  alreadyAdded
-                    ? 'bg-gray-50 border-gray-200 opacity-50'
-                    : 'bg-white border-gray-200 hover:border-indigo-200'
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700">{q.text}</p>
-                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[q.type]}`}>
-                      {TYPE_LABELS[q.type]}
-                    </span>
-                    {q.allows_text && <span className="text-xs text-gray-400">📝 Текст</span>}
-                    {q.allows_media && <span className="text-xs text-gray-400">🎥 Медия</span>}
-                  </div>
-                </div>
-                <button
-                  disabled={alreadyAdded || isPending}
-                  onClick={() => {
-                    const nextIndex = customQuestions.length > 0
-                      ? Math.max(...customQuestions.map((c) => c.order_index)) + 1
-                      : 1
-                    startTransition(async () => {
-                      const result = await createQuestion(classId, {
-                        text: q.text,
-                        type: q.type,
-                        allows_text: q.allows_text,
-                        allows_media: q.allows_media,
-                        max_length: q.max_length,
-                        order_index: nextIndex,
-                      })
-                      if (!result.error) {
-                        setCustomQuestions((prev) => [
-                          ...prev,
-                          { ...q, id: 'pending-' + q.id, order_index: nextIndex },
-                        ])
-                      }
-                    })
-                  }}
-                  className="flex-shrink-0 w-7 h-7 rounded-full border border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center justify-center text-sm font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={alreadyAdded ? 'Вече добавен' : 'Добави към собствените'}
-                >
-                  {alreadyAdded ? '✓' : '+'}
-                </button>
-              </div>
-            )
-          })}
+        {!adding && (
+          <button
+            onClick={() => setAdding(true)}
+            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-indigo-300 hover:text-indigo-700 shadow-sm transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">add</span>
+            Нов въпрос
+          </button>
+        )}
+      </div>
+
+      {/* ── Add form ───────────────────────────────────────────────── */}
+      {adding && (
+        <div className="mb-6">
+          {addError && <p className="text-red-500 text-xs mb-2 px-1">{addError}</p>}
+          <QuestionForm
+            initial={EMPTY_FORM}
+            onSave={handleAdd}
+            onCancel={() => { setAdding(false); setAddError(null) }}
+            isPending={isPending}
+          />
+        </div>
+      )}
+
+      {/* ── Questions list ─────────────────────────────────────────── */}
+      {customQuestions.length === 0 && !adding ? (
+        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-10 text-center mb-8">
+          <span className="material-symbols-outlined text-4xl text-gray-300 block mb-3">quiz</span>
+          <p className="text-gray-500 text-sm font-medium">Нямате добавени въпроси</p>
+          <p className="text-gray-400 text-xs mt-1">
+            Натиснете „Нов въпрос" или изберете от архива по-долу.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3 mb-8">
+          {customQuestions.map((q, i) => (
+            <QuestionCard
+              key={q.id}
+              question={q}
+              classId={classId}
+              onMoveUp={() => handleMove(i, 'up')}
+              onMoveDown={() => handleMove(i, 'down')}
+              isFirst={i === 0}
+              isLast={i === customQuestions.length - 1}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Bottom cards ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ArchiveCard
+          systemQuestions={systemQuestions}
+          customQuestions={customQuestions}
+          onAddFromArchive={handleAddFromArchive}
+          isPending={isPending}
+        />
+
+        {/* Groups card */}
+        <div className="relative overflow-hidden bg-indigo-700 rounded-2xl p-6 text-white">
+          <div className="relative z-10">
+            <p className="text-lg font-bold mb-2">Групови въпроси</p>
+            <p className="text-sm text-indigo-200 mb-5 leading-relaxed">
+              Създай анкети за целия клас – „Най-голям шегаджия", „Бъдещ президент" и др.
+            </p>
+            <span className="text-white font-semibold text-sm border-b border-white/40 pb-0.5 cursor-default opacity-60">
+              Очаквайте скоро
+            </span>
+          </div>
+          <div className="absolute right-4 bottom-3 opacity-10 pointer-events-none">
+            <span className="material-symbols-outlined" style={{ fontSize: 96 }}>bar_chart</span>
+          </div>
         </div>
       </div>
+
+      {/* ── Footer ─────────────────────────────────────────────────── */}
+      <footer className="mt-16 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p
+            className="text-indigo-800 italic font-medium text-sm"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            Един неразделен клас
+          </p>
+          <p className="text-xs text-gray-400 uppercase tracking-widest mt-0.5">
+            © 2024 The Living Archive.
+          </p>
+        </div>
+        <div className="flex gap-6">
+          <span className="text-xs text-gray-400 uppercase tracking-widest">Privacy Policy</span>
+          <span className="text-xs text-gray-400 uppercase tracking-widest">Terms of Service</span>
+          <span className="text-xs text-gray-400 uppercase tracking-widest">Support</span>
+        </div>
+      </footer>
     </div>
   )
 }
