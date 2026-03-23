@@ -29,11 +29,8 @@ export default function StudentActions({
     setError(null)
     const result = await resendInvite(studentId)
     setLoading(false)
-    if (result.error) {
-      setError(result.error)
-    } else {
-      setSent(true)
-    }
+    if (result.error) setError(result.error)
+    else setSent(true)
   }
 
   async function handleCopyLink() {
@@ -44,39 +41,48 @@ export default function StudentActions({
   }
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap">
       <Link
         href={`/moderator/${classId}/students/${studentId}/edit`}
-        className="text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors"
       >
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>
         Редактирай
       </Link>
 
       {!inviteAccepted && (
         <button
           onClick={handleCopyLink}
-          className="text-sm text-indigo-600 hover:text-indigo-800"
+          className={`inline-flex items-center gap-1 text-xs font-medium transition-colors ${
+            copied ? 'text-green-600' : 'text-gray-400 hover:text-indigo-600'
+          }`}
         >
-          {copied ? 'Копирано ✓' : 'Копирай линк'}
+          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+            {copied ? 'check' : 'link'}
+          </span>
+          {copied ? 'Копирано' : 'Копирай линк'}
         </button>
       )}
 
       {parentEmail && !inviteAccepted && (
-        <div className="flex items-center gap-2">
-          {sent ? (
-            <span className="text-sm text-green-600 font-medium">Изпратено ✓</span>
-          ) : (
-            <button
-              onClick={handleResend}
-              disabled={loading}
-              className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
-            >
-              {loading ? 'Изпращане...' : 'Препрати имейл'}
-            </button>
-          )}
-          {error && <span className="text-xs text-red-500">{error}</span>}
-        </div>
+        sent ? (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span>
+            Изпратено
+          </span>
+        ) : (
+          <button
+            onClick={handleResend}
+            disabled={loading}
+            className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-40"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>forward_to_inbox</span>
+            {loading ? 'Изпращане...' : 'Препрати имейл'}
+          </button>
+        )
       )}
+
+      {error && <span className="text-xs text-red-500">{error}</span>}
     </div>
   )
 }
