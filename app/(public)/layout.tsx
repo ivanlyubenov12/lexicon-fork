@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
       <Nav />
       <main className="flex-1">{children}</main>
       <Footer />
@@ -12,64 +12,71 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
 function Nav() {
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold text-gray-900 tracking-tight">
+    <header className="w-full top-0 sticky z-50 bg-[#faf9f8]/90 backdrop-blur-md border-b border-[#eeeeed] transition-all duration-300">
+      <nav className="flex justify-between items-center px-8 py-4 max-w-screen-xl mx-auto">
+        <Link
+          href="/"
+          className="text-xl font-bold text-indigo-900"
+          style={{ fontFamily: 'Noto Serif, serif' }}
+        >
           Един неразделен клас
         </Link>
-        <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
-          <Link href="/showcase" className="hover:text-gray-900 transition-colors">Примери</Link>
-          <Link href="/pricing" className="hover:text-gray-900 transition-colors">Цени</Link>
-          <Link href="/about" className="hover:text-gray-900 transition-colors">За нас</Link>
-          <Link href="/contact" className="hover:text-gray-900 transition-colors">Контакти</Link>
-        </nav>
-        <Link
-          href="/register"
-          className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          Започни сега
-        </Link>
-      </div>
+
+        <div className="hidden md:flex items-center space-x-10">
+          <Link href="/showcase" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
+            Примери
+          </Link>
+          <Link href="/pricing" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
+            Цени
+          </Link>
+          <Link href="/about" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
+            За нас
+          </Link>
+          <Link href="/contact" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
+            Контакти
+          </Link>
+        </div>
+
+        <div className="flex items-center space-x-5">
+          <Link
+            href="/login"
+            className="text-indigo-700 font-semibold text-sm hover:text-indigo-900 transition-colors"
+          >
+            Вход
+          </Link>
+          <Link
+            href="/register"
+            className="bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-indigo-800 hover:scale-105 transition-all duration-200"
+          >
+            Създай лексикон
+          </Link>
+        </div>
+      </nav>
     </header>
   )
 }
 
 function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-400 py-12 mt-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
-          <div className="col-span-2 sm:col-span-1">
-            <p className="text-white font-semibold mb-2">Един неразделен клас</p>
-            <p className="text-sm leading-relaxed">
-              Дигитален спомен за всеки клас — текст, видео, глас.
-            </p>
+    <footer className="w-full border-t border-indigo-50 bg-[#faf9f8]">
+      <div className="max-w-7xl mx-auto py-12 px-8 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex flex-col items-center md:items-start space-y-3">
+          <div
+            className="italic text-lg text-indigo-900 font-bold"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            Един неразделен клас.
           </div>
-          <div>
-            <p className="text-white text-sm font-medium mb-3">Продукт</p>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/showcase" className="hover:text-white transition-colors">Примери</Link></li>
-              <li><Link href="/pricing" className="hover:text-white transition-colors">Цени</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-white text-sm font-medium mb-3">Компания</p>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="hover:text-white transition-colors">За нас</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Контакти</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-white text-sm font-medium mb-3">Акаунт</p>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/register" className="hover:text-white transition-colors">Регистрация</Link></li>
-              <li><Link href="/login" className="hover:text-white transition-colors">Вход</Link></li>
-            </ul>
-          </div>
+          <p className="text-xs uppercase tracking-widest text-slate-400 text-center md:text-left">
+            © {new Date().getFullYear()} Един неразделен клас. The Living Archive.
+          </p>
         </div>
-        <div className="border-t border-gray-800 pt-6 text-xs text-gray-600 flex flex-col sm:flex-row justify-between gap-2">
-          <p>© {new Date().getFullYear()} Един неразделен клас. Всички права запазени.</p>
-          <p>Направено с любов за българските класни стаи 🇧🇬</p>
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+          <Link href="/about" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">За нас</Link>
+          <Link href="/pricing" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Цени</Link>
+          <Link href="/showcase" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Примери</Link>
+          <Link href="/contact" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Контакти</Link>
+          <Link href="/register" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Регистрация</Link>
         </div>
       </div>
     </footer>
