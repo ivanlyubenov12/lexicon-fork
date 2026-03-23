@@ -333,6 +333,7 @@ export default function EventsEditor({
             title,
             event_date: null,
             note: null,
+            photos: [],
             order_index: prev.length + 1,
           },
         ])

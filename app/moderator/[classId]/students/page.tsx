@@ -100,7 +100,7 @@ export default async function StudentsPage({ params }: { params: { classId: stri
               </p>
             </div>
             <Link
-              href={`${base}/students/new`}
+              href={`/moderator/${classId}/students/new`}
               className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow transition-colors"
             >
               <span className="material-symbols-outlined text-base">person_add</span>

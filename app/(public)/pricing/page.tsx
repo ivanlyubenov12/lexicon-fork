@@ -1,16 +1,53 @@
 import Link from 'next/link'
 
-const included = [
-  'Неограничен брой деца в класа',
-  'Профил за всяко дете — текст, видео и глас',
-  'Послания от съученици (модерирани)',
-  'AI-генериран супергерой на класа',
-  'Гласът на класа — анонимни въпроси',
-  'По-добри заедно — колективни отговори',
-  'Сваляне на PDF на лексикона',
-  'Достъп само за родителите на класа',
-  'Без абонамент — плащате веднъж',
-  'Достъп завинаги',
+const tiers = [
+  {
+    name: 'Пробен',
+    price: null,
+    priceNote: 'Безплатно',
+    desc: 'Регистрирайте се и попълнете лексикона без никакво плащане.',
+    features: [
+      'До 30 деца в класа',
+      'Всички въпроси и профили',
+      'Послания от съученици',
+      'Преглед на лексикона',
+    ],
+    cta: 'Започни безплатно',
+    ctaHref: '/register',
+    featured: false,
+  },
+  {
+    name: 'Един клас',
+    price: '19.99',
+    priceNote: 'EUR · еднократно',
+    desc: 'Публикувайте завършения лексикон и го споделете с родителите.',
+    features: [
+      'Всичко от Пробен',
+      'Публикуване за родителите',
+      'AI-генериран супергерой',
+      'Сваляне на PDF',
+      'Достъп завинаги',
+      'Без абонамент',
+    ],
+    cta: 'Създай лексикон →',
+    ctaHref: '/register',
+    featured: true,
+  },
+  {
+    name: 'По заявка',
+    price: null,
+    priceNote: 'Свържете се',
+    desc: 'За училища с много паралелки или специални изисквания.',
+    features: [
+      'Неограничени класове',
+      'Персонализиран дизайн',
+      'Приоритетна поддръжка',
+      'Фактура за юридическо лице',
+    ],
+    cta: 'Пишете ни',
+    ctaHref: '/contact',
+    featured: false,
+  },
 ]
 
 const faqs = [
@@ -38,75 +75,127 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="pt-16">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-purple-900 text-white py-20 sm:py-28">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block bg-indigo-800/60 text-indigo-200 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
+    <div style={{ fontFamily: 'Manrope, sans-serif' }}>
+
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      <section className="bg-[#faf9f8] pt-20 pb-16 px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <span className="inline-block bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
             Цени
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
+          <h1
+            className="text-5xl sm:text-6xl font-bold text-indigo-900 leading-tight mb-5"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
             Просто и честно
           </h1>
-          <p className="text-indigo-200 text-lg leading-relaxed">
+          <p className="text-gray-500 text-lg leading-relaxed">
             Един клас. Едно плащане. Спомен за цял живот.
           </p>
         </div>
       </section>
 
-      {/* Pricing card */}
-      <section className="bg-white py-20 sm:py-28">
-        <div className="max-w-lg mx-auto px-4 sm:px-6">
-          <div className="rounded-3xl border-2 border-indigo-600 shadow-xl overflow-hidden">
-            {/* Card header */}
-            <div className="bg-indigo-600 px-8 py-8 text-white text-center">
-              <p className="text-indigo-200 text-sm font-semibold uppercase tracking-widest mb-2">
-                Един неразделен клас
-              </p>
-              <div className="flex items-end justify-center gap-1 mb-1">
-                <span className="text-6xl font-black">19.99</span>
-                <span className="text-2xl font-bold mb-2">EUR</span>
+      {/* ── Pricing tiers ─────────────────────────────────────────────────── */}
+      <section className="bg-[#f4f3f2] py-20 px-6">
+        <div className="max-w-5xl mx-auto grid sm:grid-cols-3 gap-6 items-stretch">
+          {tiers.map((tier) => (
+            <div
+              key={tier.name}
+              className={`flex flex-col rounded-3xl p-8 shadow-sm ${
+                tier.featured
+                  ? 'bg-indigo-700 text-white ring-2 ring-indigo-600 lg:scale-105'
+                  : 'bg-white text-gray-900'
+              }`}
+            >
+              <div className="mb-6">
+                <p
+                  className={`text-xs font-bold uppercase tracking-widest mb-3 ${
+                    tier.featured ? 'text-indigo-200' : 'text-indigo-500'
+                  }`}
+                >
+                  {tier.name}
+                </p>
+                {tier.price ? (
+                  <div className="flex items-end gap-1 mb-1">
+                    <span
+                      className="text-5xl font-black"
+                      style={{ fontFamily: 'Noto Serif, serif' }}
+                    >
+                      {tier.price}
+                    </span>
+                    <span className={`text-lg font-bold mb-1.5 ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                      EUR
+                    </span>
+                  </div>
+                ) : (
+                  <p
+                    className={`text-3xl font-bold mb-1 ${tier.featured ? 'text-white' : 'text-gray-900'}`}
+                    style={{ fontFamily: 'Noto Serif, serif' }}
+                  >
+                    {tier.priceNote}
+                  </p>
+                )}
+                {tier.price && (
+                  <p className={`text-xs ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                    {tier.priceNote}
+                  </p>
+                )}
+                <p className={`text-sm mt-3 leading-relaxed ${tier.featured ? 'text-indigo-100' : 'text-gray-500'}`}>
+                  {tier.desc}
+                </p>
               </div>
-              <p className="text-indigo-200 text-sm">еднократно · без абонамент</p>
-            </div>
 
-            {/* Included */}
-            <div className="px-8 py-8">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
-                Включва
-              </p>
-              <ul className="space-y-3">
-                {included.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <span className="text-indigo-500 font-bold mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-gray-700 text-sm">{item}</span>
+              <ul className="space-y-2.5 flex-1 mb-8">
+                {tier.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm">
+                    <span
+                      className={`material-symbols-outlined flex-shrink-0 mt-0.5 ${
+                        tier.featured ? 'text-amber-300' : 'text-indigo-400'
+                      }`}
+                      style={{ fontSize: 16 }}
+                    >
+                      check_circle
+                    </span>
+                    <span className={tier.featured ? 'text-indigo-100' : 'text-gray-700'}>
+                      {f}
+                    </span>
                   </li>
                 ))}
               </ul>
 
               <Link
-                href="/register"
-                className="mt-8 block w-full bg-indigo-600 text-white font-bold text-base text-center py-4 rounded-xl hover:bg-indigo-700 transition-colors shadow-md"
+                href={tier.ctaHref}
+                className={`block text-center font-bold text-sm py-3.5 rounded-xl transition-all ${
+                  tier.featured
+                    ? 'bg-amber-400 text-gray-900 hover:bg-amber-300'
+                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                }`}
               >
-                Започни безплатно →
+                {tier.cta}
               </Link>
-              <p className="text-gray-400 text-xs text-center mt-3">
-                Регистрацията е безплатна — плащате само при публикуване
-              </p>
             </div>
-          </div>
+          ))}
         </div>
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Регистрацията е безплатна — плащате само при публикуване
+        </p>
       </section>
 
-      {/* FAQ */}
-      <section className="bg-gray-50 py-20 sm:py-28">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
+      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
+      <section className="bg-[#faf9f8] py-20 px-6">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3 text-center">
+            Въпроси и отговори
+          </p>
+          <h2
+            className="text-3xl sm:text-4xl font-bold text-indigo-900 text-center mb-12"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
             Често задавани въпроси
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {faqs.map((faq) => (
-              <div key={faq.q} className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div key={faq.q} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{faq.a}</p>
               </div>
@@ -115,23 +204,34 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-white py-20 sm:py-28">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Готови ли сте?
-          </h2>
-          <p className="text-gray-500 text-lg mb-8">
-            Регистрацията отнема 2 минути. Плащате само когато лексиконът е готов.
-          </p>
-          <Link
-            href="/register"
-            className="inline-block bg-amber-400 text-gray-900 font-bold text-base px-8 py-4 rounded-xl hover:bg-amber-300 transition-colors shadow-md"
-          >
-            Създай лексикона на класа →
-          </Link>
+      {/* ── CTA ───────────────────────────────────────────────────────────── */}
+      <section className="bg-[#faf9f8] py-12 pb-20 px-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-[#f4f3f2] rounded-[3rem] px-10 py-14 text-center">
+            <span
+              className="material-symbols-outlined text-amber-400 text-4xl block mb-4"
+            >
+              favorite
+            </span>
+            <h2
+              className="text-3xl font-bold text-indigo-900 mb-4"
+              style={{ fontFamily: 'Noto Serif, serif' }}
+            >
+              Готови ли сте?
+            </h2>
+            <p className="text-gray-500 text-base mb-8 leading-relaxed">
+              Регистрацията отнема 2 минути.<br />Плащате само когато лексиконът е готов.
+            </p>
+            <Link
+              href="/register"
+              className="inline-block bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-indigo-800 transition-colors shadow-md"
+            >
+              Създай лексикона на класа →
+            </Link>
+          </div>
         </div>
       </section>
+
     </div>
   )
 }
