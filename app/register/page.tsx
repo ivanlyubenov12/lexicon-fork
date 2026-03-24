@@ -8,7 +8,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Един неразделен клас</h1>
           <p className="mt-2 text-gray-500 text-sm">
-            Създайте акаунт, за да започнете
+            Създайте профил, с който да модерирате и изградите лексикона на класа си
           </p>
         </div>
 

@@ -23,6 +23,9 @@ function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center space-x-10">
+          <Link href="/how-it-works" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
+            Как работи
+          </Link>
           <Link href="/showcase" className="text-slate-600 font-medium hover:text-indigo-800 transition-colors text-sm">
             Примери
           </Link>
@@ -72,6 +75,7 @@ function Footer() {
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
+          <Link href="/how-it-works" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Как работи</Link>
           <Link href="/about" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">За нас</Link>
           <Link href="/pricing" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Цени</Link>
           <Link href="/showcase" className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors">Примери</Link>

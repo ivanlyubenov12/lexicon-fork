@@ -325,6 +325,31 @@ export async function rejectMessage(
   return { error: null }
 }
 
+export async function updateStudent(
+  classId: string,
+  studentId: string,
+  data: { first_name: string; last_name: string; parent_email: string }
+): Promise<{ error: string | null }> {
+  const supabase = createServiceRoleClient()
+
+  const { error } = await supabase
+    .from('students')
+    .update({
+      first_name: data.first_name,
+      last_name: data.last_name,
+      parent_email: data.parent_email,
+    })
+    .eq('id', studentId)
+    .eq('class_id', classId)
+
+  if (error) {
+    return { error: 'Неуспешно запазване. Опитайте отново.' }
+  }
+
+  revalidatePath(`/moderator/${classId}/students`)
+  return { error: null }
+}
+
 export async function resendInvite(studentId: string): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
 

@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginModerator } from './actions'
@@ -20,7 +21,7 @@ function SubmitButton() {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, action] = useFormState(loginModerator, { error: null, redirectTo: null })
+  const [state, action] = useActionState(loginModerator, { error: null, redirectTo: null })
 
   useEffect(() => {
     if (state.redirectTo) router.push(state.redirectTo)

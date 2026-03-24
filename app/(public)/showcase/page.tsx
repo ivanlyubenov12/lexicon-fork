@@ -1,246 +1,222 @@
+export const dynamic = 'force-dynamic'
+
+import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
+import { createServiceRoleClient } from '@/lib/supabase/server'
 
-// ─── Mock data ──────────────────────────────────────────────────────────────
+// ─── Card accent styles per showcase position ─────────────────────────────────
 
-const mockStudents = [
-  { name: 'Ива', initial: 'И', color: 'bg-pink-100 text-pink-600' },
-  { name: 'Мартин', initial: 'М', color: 'bg-blue-100 text-blue-600' },
-  { name: 'Радост', initial: 'Р', color: 'bg-amber-100 text-amber-600' },
-  { name: 'Борис', initial: 'Б', color: 'bg-green-100 text-green-600' },
-  { name: 'Симона', initial: 'С', color: 'bg-purple-100 text-purple-600' },
-  { name: 'Алекс', initial: 'А', color: 'bg-indigo-100 text-indigo-600' },
-]
-
-const mockAnswers = [
+const CARD_STYLES = [
   {
-    question: 'Какво обичаш най-много в училище?',
-    student: 'Ива',
-    initial: 'И',
-    color: 'bg-pink-100 text-pink-600',
-    text: 'Обичам часовете по рисуване, защото тогава мога да правя каквото си искам и никой не ме поправя.',
+    accent:   'bg-[#3632b7]',
+    iconBg:   'bg-[#e2dfff]',
+    iconText: 'text-[#3632b7]',
+    yearBg:   'bg-[#3632b7]/10 text-[#3632b7]',
+    countText:'text-[#3632b7]',
+    arrowText:'text-[#3632b7]',
+    icon:     'school',
   },
   {
-    question: 'Какъв ще бъдеш като пораснеш?',
-    student: 'Мартин',
-    initial: 'М',
-    color: 'bg-blue-100 text-blue-600',
-    text: 'Ще съм пилот или може би ветеринар. Зависи дали ще ми харесат повече самолетите или кучетата.',
+    accent:   'bg-[#855300]',
+    iconBg:   'bg-[#ffddb8]',
+    iconText: 'text-[#855300]',
+    yearBg:   'bg-[#855300]/10 text-[#855300]',
+    countText:'text-[#855300]',
+    arrowText:'text-[#855300]',
+    icon:     'palette',
   },
   {
-    question: 'Кое е най-доброто нещо в нашия клас?',
-    student: 'Радост',
-    initial: 'Р',
-    color: 'bg-amber-100 text-amber-600',
-    text: 'Всички се смеем заедно дори когато нещо се обърка. Точно затова ни е хубаво.',
+    accent:   'bg-[#ba1a1a]',
+    iconBg:   'bg-[#ffdad6]',
+    iconText: 'text-[#ba1a1a]',
+    yearBg:   'bg-[#ba1a1a]/10 text-[#ba1a1a]',
+    countText:'text-[#ba1a1a]',
+    arrowText:'text-[#ba1a1a]',
+    icon:     'calculate',
   },
 ]
 
-const mockVoice = [
-  { word: 'приятелство', size: 'text-3xl font-black' },
-  { word: 'смях', size: 'text-2xl font-bold' },
-  { word: 'футбол', size: 'text-xl font-semibold' },
-  { word: 'рисуване', size: 'text-lg font-semibold' },
-  { word: 'книги', size: 'text-base font-medium' },
-  { word: 'музика', size: 'text-sm font-medium' },
-  { word: 'природа', size: 'text-sm' },
-  { word: 'математика', size: 'text-xs' },
-]
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-const navCards = [
-  { icon: 'group', label: 'Децата в класа', count: '22 деца', color: 'text-indigo-500 bg-indigo-50' },
-  { icon: 'record_voice_over', label: 'Гласът на класа', count: null, color: 'text-amber-500 bg-amber-50' },
-  { icon: 'diversity_3', label: 'По-добри заедно', count: null, color: 'text-green-500 bg-green-50' },
-  { icon: 'auto_awesome', label: 'Супергероят', count: null, color: 'text-rose-500 bg-rose-50' },
-]
+export default async function ShowcasePage() {
+  noStore()
+  const admin = createServiceRoleClient()
 
-// ─── Page ───────────────────────────────────────────────────────────────────
+  // Fetch showcase classes ordered by position, fallback to 3 latest published
+  let { data: classes } = await admin
+    .from('classes')
+    .select('id, name, school_year, superhero_prompt, school_logo_url, showcase_order')
+    .eq('status', 'published')
+    .not('showcase_order', 'is', null)
+    .order('showcase_order', { ascending: true })
 
-export default function ShowcasePage() {
+  if (!classes || classes.length === 0) {
+    const fallback = await admin
+      .from('classes')
+      .select('id, name, school_year, superhero_prompt, school_logo_url')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(3)
+    classes = (fallback.data ?? []).map(c => ({ ...c, showcase_order: null }))
+  }
+
+  // Fetch student counts
+  const classIds = (classes ?? []).map(c => c.id)
+  const studentCountMap: Record<string, number> = {}
+  if (classIds.length > 0) {
+    const { data: students } = await admin
+      .from('students')
+      .select('class_id')
+      .in('class_id', classIds)
+    for (const s of students ?? []) {
+      studentCountMap[s.class_id] = (studentCountMap[s.class_id] ?? 0) + 1
+    }
+  }
+
+  const classList = classes ?? []
+
   return (
-    <div style={{ fontFamily: 'Manrope, sans-serif' }}>
+    <div style={{ fontFamily: 'Manrope, sans-serif', color: '#1a1c1c' }}>
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="bg-[#faf9f8] pt-20 pb-16 px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <span className="inline-block bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+      <main className="pt-8 pb-24 px-6 md:px-12 max-w-7xl mx-auto">
+
+        {/* ── Hero ────────────────────────────────────────────────────────── */}
+        <section className="mb-20 text-center max-w-3xl mx-auto">
+          <span className="inline-block px-4 py-1 rounded-full bg-[#ffddb8] text-[#2a1700] text-xs font-bold tracking-widest mb-6 uppercase">
             Примери
           </span>
-          <h1
-            className="text-5xl sm:text-6xl font-bold text-indigo-900 leading-tight mb-5"
+          <h2
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#1a1c1c] leading-tight mb-6"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
-            Ето как изглежда{' '}
-            <em className="not-italic text-amber-500">готовият лексикон</em>
-          </h1>
-          <p className="text-gray-500 text-lg leading-relaxed">
-            Разгледайте демо лексикон — точно така ще изглежда и вашият клас.
+            Ето как изглежда готовият лексикон
+          </h2>
+          <p className="text-lg text-[#464555]/80">
+            Изберете клас и разгледайте живия пример.
           </p>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Mock: Class home ─────────────────────────────────────────────── */}
-      <section className="bg-[#f4f3f2] py-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-3xl p-8 shadow-sm">
-            <div className="text-center mb-8">
-              <p className="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-1">
-                Един неразделен клас
-              </p>
-              <h2
-                className="text-2xl font-bold text-indigo-900"
-                style={{ fontFamily: 'Noto Serif, serif' }}
-              >
-                4Б клас · ОУ „Христо Ботев"
-              </h2>
-              <p className="text-sm text-gray-400 mt-1">Учебна година 2024/2025</p>
-            </div>
+        {/* ── Three-panel Selector ────────────────────────────────────────── */}
+        {classList.length > 0 ? (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+            {classList.map((cls, i) => {
+              const style = CARD_STYLES[i % CARD_STYLES.length]
+              const [namePart, schoolPart] = cls.name.includes(' — ')
+                ? cls.name.split(' — ')
+                : [cls.name, null]
+              const count = studentCountMap[cls.id] ?? 0
+              const teaser = cls.superhero_prompt
+                ? `„${cls.superhero_prompt.slice(0, 90)}${cls.superhero_prompt.length > 90 ? '…' : ''}"`
+                : '„Разгледайте профилите на децата и техните истории."'
 
-            <div className="grid grid-cols-2 gap-3 mb-8">
-              {navCards.map((card) => (
-                <div
-                  key={card.label}
-                  className="bg-[#faf9f8] border border-gray-100 rounded-2xl p-5 text-center"
+              return (
+                <Link
+                  key={cls.id}
+                  href={`/lexicon/${cls.id}`}
+                  className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col transform hover:-translate-y-2"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3 ${card.color}`}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{card.icon}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-800">{card.label}</p>
-                  {card.count && <p className="text-xs text-gray-400 mt-1">{card.count}</p>}
-                </div>
-              ))}
-            </div>
+                  {/* Colored left accent bar */}
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${style.accent}`} />
 
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-                Децата в класа
-              </p>
-              <div className="grid grid-cols-6 gap-3">
-                {mockStudents.map((s) => (
-                  <div key={s.name} className="flex flex-col items-center gap-1.5">
-                    <div className={`w-12 h-12 rounded-full ${s.color} flex items-center justify-center font-bold text-base`}>
-                      {s.initial}
+                  <div className="p-8 flex flex-col h-full">
+                    {/* Icon + year */}
+                    <div className="flex justify-between items-start mb-8">
+                      <div className={`w-12 h-12 rounded-xl ${style.iconBg} flex items-center justify-center ${style.iconText}`}>
+                        <span className="material-symbols-outlined">{style.icon}</span>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${style.yearBg}`}>
+                        {cls.school_year}
+                      </span>
                     </div>
-                    <p className="text-xs font-medium text-gray-600">{s.name}</p>
+
+                    {/* Class name + teaser */}
+                    <div className="mb-auto">
+                      <h3 className="text-2xl font-bold text-[#1a1c1c] mb-1" style={{ fontFamily: 'Noto Serif, serif' }}>
+                        {namePart}
+                      </h3>
+                      {schoolPart && (
+                        <p className="text-[#464555] text-sm mb-4">{schoolPart}</p>
+                      )}
+                      <p className="text-[#464555]/70 text-sm leading-relaxed italic" style={{ fontFamily: 'Noto Serif, serif' }}>
+                        {teaser}
+                      </p>
+                    </div>
+
+                    {/* Footer row */}
+                    <div className="mt-8 flex items-center justify-between border-t border-[#f4f3f2] pt-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`material-symbols-outlined text-sm ${style.countText}`}>group</span>
+                        <span className={`text-xs font-bold ${style.countText}`}>{count} деца</span>
+                      </div>
+                      <span className={`material-symbols-outlined ${style.arrowText} group-hover:translate-x-1 transition-transform`}>
+                        arrow_forward
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                </Link>
+              )
+            })}
+          </section>
+        ) : (
+          <section className="mb-24">
+            <div className="bg-white rounded-2xl p-16 text-center border border-dashed border-gray-200">
+              <span className="material-symbols-outlined text-5xl text-gray-200 block mb-4">menu_book</span>
+              <p className="text-gray-500 font-medium">Все още няма избрани showcase класове.</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Изберете класове от <Link href="/admin/classes" className="text-[#3632b7] underline">Admin → Класове</Link>.
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* ── Mock: Student answers ─────────────────────────────────────────── */}
-      <section className="bg-[#faf9f8] py-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3 text-center">
-            Профили
-          </p>
-          <h2
-            className="text-3xl font-bold text-indigo-900 text-center mb-10"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
-            Профилите на децата
-          </h2>
-
-          <div className="space-y-4">
-            {mockAnswers.map((a, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                <p className="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-3">
-                  {a.question}
-                </p>
-                <p className="text-gray-700 text-sm leading-relaxed italic mb-4">
-                  „{a.text}"
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className={`w-6 h-6 rounded-full ${a.color} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
-                    {a.initial}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-500">— {a.student}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Mock: Voice of the class ─────────────────────────────────────── */}
-      <section className="bg-[#f4f3f2] py-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3 text-center">
-            Гласът на класа
-          </p>
-          <h2
-            className="text-3xl font-bold text-indigo-900 text-center mb-10"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
-            Думите, с които живеят
-          </h2>
-          <div className="bg-white rounded-3xl border border-gray-100 p-10 shadow-sm flex flex-wrap justify-center items-center gap-x-6 gap-y-4">
-            {mockVoice.map((item) => (
-              <span
-                key={item.word}
-                className={`${item.size} text-indigo-700 leading-none`}
+        {/* ── What's inside strip ─────────────────────────────────────────── */}
+        <section className="mb-32 py-4">
+          <h4 className="text-center text-xs uppercase tracking-[0.3em] text-[#464555]/50 mb-10 font-semibold">
+            Какво включва всеки лексикон
+          </h4>
+          <div className="flex flex-wrap justify-center gap-4">
+            {[
+              { icon: 'person',            label: 'Профил на всяко дете' },
+              { icon: 'mail',              label: 'Послания от съучениците' },
+              { icon: 'record_voice_over', label: 'Гласът на класа' },
+              { icon: 'auto_awesome',      label: 'AI супергерой' },
+            ].map(({ icon, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 bg-[#f4f3f2] px-6 py-3 rounded-full hover:bg-[#e9e8e7] transition-colors"
               >
-                {item.word}
-              </span>
+                <span className="material-symbols-outlined text-[#3632b7]">{icon}</span>
+                <span className="text-sm font-semibold">{label}</span>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Mock: Superhero ──────────────────────────────────────────────── */}
-      <section className="bg-[#faf9f8] py-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3 text-center">
-            AI функция
-          </p>
-          <h2
-            className="text-3xl font-bold text-indigo-900 text-center mb-10"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
-            Супергероят на класа
-          </h2>
-
-          <div className="bg-indigo-700 rounded-3xl p-10 text-white max-w-sm mx-auto text-center">
-            <div className="w-48 h-48 rounded-2xl bg-indigo-600 flex items-center justify-center mx-auto mb-6">
-              <span className="material-symbols-outlined text-indigo-300" style={{ fontSize: 80 }}>
-                auto_awesome
-              </span>
-            </div>
-            <p className="text-indigo-200 text-sm italic leading-relaxed">
-              „Жена с дълга кестенява коса и очи като морето. Носи синя наметка и държи книга в ръка.
-              Около нея летят звезди."
-            </p>
-            <p className="text-xs text-indigo-400 mt-3">— описание от децата в класа</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="bg-[#f4f3f2] py-12 pb-20 px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-[#faf9f8] rounded-[3rem] px-10 py-14 text-center">
-            <span className="material-symbols-outlined text-amber-400 text-4xl block mb-4">
-              star
-            </span>
-            <h2
-              className="text-3xl font-bold text-indigo-900 mb-4"
+        {/* ── CTA ─────────────────────────────────────────────────────────── */}
+        <section className="relative bg-[#f4f3f2] rounded-[2rem] p-12 md:p-20 text-center overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#3632b7]/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#855300]/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
+          <div className="relative z-10">
+            <h3
+              className="text-3xl md:text-4xl font-bold text-[#1a1c1c] mb-4"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Готови за вашия клас?
-            </h2>
-            <p className="text-gray-500 text-base mb-8 leading-relaxed">
-              Регистрацията е безплатна.<br />19.99 EUR при публикуване.
+            </h3>
+            <p className="text-[#464555] mb-10 max-w-md mx-auto">
+              Регистрацията е безплатна. 69.99 EUR при публикуване.
             </p>
             <Link
               href="/register"
-              className="inline-block bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-indigo-800 transition-colors shadow-md"
+              className="inline-flex items-center gap-3 bg-[#3632b7] text-white px-8 py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-95 transition-all shadow-xl"
             >
-              Създай лексикона на класа →
+              Създай лексикона на класа
+              <span className="material-symbols-outlined">arrow_forward</span>
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
+
+      </main>
 
     </div>
   )

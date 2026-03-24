@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useFormStatus } from 'react-dom'
 import { registerModerator } from './actions'
 
 function SubmitButton() {
@@ -13,14 +13,14 @@ function SubmitButton() {
       disabled={pending}
       className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
-      {pending ? 'Моля изчакайте...' : 'Създай акаунт'}
+      {pending ? 'Моля изчакайте...' : 'Създайте акаунт'}
     </button>
   )
 }
 
 export default function RegisterForm() {
   const router = useRouter()
-  const [state, action] = useFormState(registerModerator, { error: null, redirectTo: null })
+  const [state, action] = useActionState(registerModerator, { error: null, redirectTo: null })
 
   useEffect(() => {
     if (state.redirectTo) {
@@ -45,14 +45,14 @@ export default function RegisterForm() {
           name="email"
           type="email"
           required
-          placeholder="вашия@имейл.com"
+          placeholder="your@email.com"
           className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-          Парола
+          Задайте парола
         </label>
         <input
           id="password"

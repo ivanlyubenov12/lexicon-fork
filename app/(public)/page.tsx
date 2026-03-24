@@ -81,7 +81,7 @@ export default function HomePage() {
                 Разгледайте демо
               </Link>
             </div>
-            <p className="text-slate-400 text-sm">19.99 EUR · еднократно · без абонамент</p>
+            <p className="text-slate-400 text-sm">69.99 EUR · еднократно · без абонамент</p>
           </div>
 
           {/* Right — photo composition */}
@@ -341,7 +341,7 @@ export default function HomePage() {
                   className="text-4xl font-bold"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
-                  19.99 EUR
+                  69.99 EUR
                 </span>
                 <span className="text-indigo-300"> /еднократно</span>
               </div>
@@ -472,7 +472,7 @@ export default function HomePage() {
               Създай профил на класа
             </Link>
           </div>
-          <p className="text-slate-400 text-sm relative z-10">19.99 EUR · еднократно · без абонамент</p>
+          <p className="text-slate-400 text-sm relative z-10">69.99 EUR · еднократно · без абонамент</p>
         </div>
       </section>
 

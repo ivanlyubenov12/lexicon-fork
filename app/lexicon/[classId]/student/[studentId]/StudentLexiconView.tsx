@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useRef } from 'react'
+import { LexiconBottomNav } from '../../LexiconNav'
 
 interface Question {
   id: string
@@ -173,7 +174,7 @@ export default function StudentLexiconView({
   const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
 
   return (
-    <div className="bg-[#faf9f8] min-h-screen" style={{ fontFamily: 'Manrope, sans-serif' }}>
+    <div className="bg-[#faf9f8] min-h-screen pb-32" style={{ fontFamily: 'Manrope, sans-serif' }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav className="w-full top-0 sticky z-50 bg-[#faf9f8]/90 backdrop-blur-md border-b border-[#eeeeed]">
@@ -495,27 +496,9 @@ export default function StudentLexiconView({
 
       </main>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="w-full border-t border-indigo-50 mt-16">
-        <div className="max-w-7xl mx-auto py-10 px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
-            <p
-              className="italic text-lg text-indigo-900 font-bold"
-              style={{ fontFamily: 'Noto Serif, serif' }}
-            >
-              Един неразделен клас.
-            </p>
-            <p className="text-xs uppercase tracking-widest text-slate-400 mt-1">
-              © {new Date().getFullYear()} The Living Archive.
-            </p>
-          </div>
-          <Link
-            href={resolvedBackHref}
-            className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors"
-          >
-            ← Обратно към класа
-          </Link>
-        </div>
+      {/* ── Fixed bottom navigation ──────────────────────────────────── */}
+      <footer className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-[#faf9f8]/80 backdrop-blur-xl shadow-[0_-4px_40px_rgba(26,28,28,0.06)] rounded-t-[2rem]">
+        <LexiconBottomNav classId={classId} />
       </footer>
 
     </div>
