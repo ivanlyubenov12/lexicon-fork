@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import MessagesSection from './MessagesSection'
 import PhotoUpload from './PhotoUpload'
 import ClassVoiceSection from './ClassVoiceSection'
+import PollsSection from './PollsSection'
 
 interface Question {
   id: string
   text: string
   order_index: number
+  type: string
   allows_text: boolean
   allows_media: boolean
 }
@@ -29,51 +31,128 @@ interface Props {
   classId: string
   classmates: Array<{ id: string; first_name: string; last_name: string; photo_url: string | null }>
   sentMessages: Array<{ recipient_student_id: string; status: string; content: string }>
+  polls: Array<{ id: string; question: string; order_index: number }>
+  existingVotes: Record<string, string>
 }
 
-type Tab = 'personal' | 'messages' | 'class'
+// ── Status helpers ────────────────────────────────────────────────────────────
 
-function statusDot(status: string | undefined) {
-  if (status === 'approved') return <span className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0" />
-  if (status === 'submitted') return <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 flex-shrink-0" />
-  return <span className="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0" />
+type SectionStatus = 'done' | 'partial' | 'pending' | 'todo'
+
+function StatusChip({ status, label }: { status: SectionStatus; label: string }) {
+  const styles: Record<SectionStatus, string> = {
+    done: 'bg-green-50 text-green-700 border-green-200',
+    partial: 'bg-amber-50 text-amber-700 border-amber-200',
+    pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    todo: 'bg-gray-50 text-gray-400 border-gray-200',
+  }
+  const dots: Record<SectionStatus, string> = {
+    done: 'bg-green-500',
+    partial: 'bg-amber-500',
+    pending: 'bg-yellow-400',
+    todo: 'bg-gray-300',
+  }
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${styles[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dots[status]}`} />
+      {label}
+    </span>
+  )
 }
 
-function QuestionList({ questions, answers, studentId }: {
-  questions: Question[]
-  answers: Map<string, string>
-  studentId: string
+function QuestionRow({ question, status, studentId }: { question: Question; status: string | undefined; studentId: string }) {
+  return (
+    <Link
+      href={`/my/${studentId}/question/${question.id}`}
+      className="flex items-center gap-3 bg-[#faf9f8] rounded-xl px-4 py-3.5 hover:bg-indigo-50 hover:border-indigo-200 border border-transparent transition-all group"
+    >
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+        status === 'approved' ? 'bg-green-500' :
+        status === 'submitted' ? 'bg-yellow-400' :
+        'bg-gray-300'
+      }`} />
+      <span className="flex-1 text-sm text-gray-700 group-hover:text-indigo-800 leading-snug">{question.text}</span>
+      {status === 'approved' && (
+        <span className="text-xs text-green-600 font-medium flex-shrink-0">Одобрен</span>
+      )}
+      {status === 'submitted' && (
+        <span className="text-xs text-yellow-600 font-medium flex-shrink-0">За преглед</span>
+      )}
+      {!status && (
+        <span className="material-symbols-outlined text-gray-300 group-hover:text-indigo-400 text-base">arrow_forward</span>
+      )}
+    </Link>
+  )
+}
+
+// ── Accordion section ─────────────────────────────────────────────────────────
+
+function Section({
+  id,
+  icon,
+  title,
+  description,
+  status,
+  statusLabel,
+  open,
+  onToggle,
+  children,
+  accentColor = 'indigo',
+}: {
+  id: string
+  icon: string
+  title: string
+  description: string
+  status: SectionStatus
+  statusLabel: string
+  open: boolean
+  onToggle: () => void
+  children: React.ReactNode
+  accentColor?: 'indigo' | 'amber' | 'violet' | 'teal'
 }) {
-  if (questions.length === 0) {
-    return <p className="text-sm text-gray-400 text-center py-8">Няма въпроси в тази секция.</p>
+  const iconColors: Record<string, string> = {
+    indigo: 'bg-indigo-100 text-indigo-600',
+    amber: 'bg-amber-100 text-amber-700',
+    violet: 'bg-violet-100 text-violet-600',
+    teal: 'bg-teal-100 text-teal-600',
   }
 
   return (
-    <div className="space-y-3">
-      {questions.map((question) => {
-        const status = answers.get(question.id)
-        const questionText = question.text.length > 55
-          ? question.text.slice(0, 55) + '…'
-          : question.text
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left"
+      >
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconColors[accentColor]}`}>
+          <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-800 text-sm leading-tight">{title}</p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <StatusChip status={status} label={statusLabel} />
+          <span className={`material-symbols-outlined text-gray-400 text-base transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
+            expand_more
+          </span>
+        </div>
+      </button>
 
-        return (
-          <Link
-            key={question.id}
-            href={`/my/${studentId}/question/${question.id}`}
-            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 px-4 py-4 hover:border-indigo-300 hover:shadow-sm transition-all"
-          >
-            {statusDot(status)}
-            <span className="text-xs font-semibold text-gray-400 w-5 flex-shrink-0">
-              {question.order_index}
-            </span>
-            <span className="flex-1 text-sm text-gray-700">{questionText}</span>
-            <span className="text-gray-400 text-sm">→</span>
-          </Link>
-        )
-      })}
+      {open && (
+        <div className="border-t border-gray-100">
+          <div className="px-5 py-3 bg-[#faf9f8] flex items-start gap-2">
+            <span className="material-symbols-outlined text-sm text-gray-400 mt-0.5 flex-shrink-0">info</span>
+            <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+          </div>
+          <div className="px-5 py-5">
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function StudentProfileParent({
   student,
@@ -85,113 +164,362 @@ export default function StudentProfileParent({
   classId,
   classmates,
   sentMessages,
+  polls,
+  existingVotes,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('personal')
-
   const answerMap = new Map(answers.map((a) => [a.question_id, a.status]))
 
-  const approvedPersonal = personalQuestions.filter((q) => answerMap.get(q.id) === 'approved').length
-  const approvedClass = classQuestions.filter((q) => answerMap.get(q.id) === 'approved').length
-  const totalPersonal = personalQuestions.length
-  const totalClass = classQuestions.length
-  const totalApproved = approvedPersonal + approvedClass
-  const totalAll = totalPersonal + totalClass
-  const progressPercent = totalAll > 0 ? (totalApproved / totalAll) * 100 : 0
+  const superheroQuestions = classQuestions.filter(q => q.type === 'superhero')
+  const betterTogetherQuestions = classQuestions.filter(q => q.type === 'better_together')
+  const videoQuestions = classQuestions.filter(q => q.type === 'video')
+
+  // ── Per-section status computation ─────────────────────────────────────────
+
+  const photoStatus: SectionStatus = student.photo_url ? 'done' : 'todo'
+
+  function questionsSectionStatus(questions: Question[]): SectionStatus {
+    if (questions.length === 0) return 'done'
+    const approved = questions.filter(q => answerMap.get(q.id) === 'approved').length
+    const submitted = questions.filter(q => answerMap.get(q.id) === 'submitted').length
+    if (approved === questions.length) return 'done'
+    if (submitted > 0 || approved > 0) return 'partial'
+    return 'todo'
+  }
+
+  function questionsSectionLabel(questions: Question[]): string {
+    if (questions.length === 0) return 'Няма въпроси'
+    const approved = questions.filter(q => answerMap.get(q.id) === 'approved').length
+    const submitted = questions.filter(q => answerMap.get(q.id) === 'submitted').length
+    if (approved === questions.length) return 'Всички одобрени'
+    if (submitted > 0) return `${approved + submitted} / ${questions.length} изпратени`
+    if (approved > 0) return `${approved} / ${questions.length} одобрени`
+    return 'Не е започнато'
+  }
+
+  const sentCount = sentMessages.length
+  const messagesStatus: SectionStatus = sentCount === 0 ? 'todo' : sentCount < classmates.length ? 'partial' : 'done'
+  const messagesLabel = classmates.length === 0 ? 'Няма съученици' :
+    sentCount === 0 ? 'Не е започнато' : `${sentCount} / ${classmates.length} послания`
+
+  const voteCount = Object.keys(existingVotes).length
+  const pollsStatus: SectionStatus = polls.length === 0 ? 'done' :
+    voteCount === 0 ? 'todo' : voteCount < polls.length ? 'partial' : 'done'
+  const pollsLabel = polls.length === 0 ? 'Няма анкети' :
+    voteCount === 0 ? 'Не е гласувано' : `${voteCount} / ${polls.length} гласа`
+
+  // ── Overall progress ────────────────────────────────────────────────────────
+
+  // voice section is localStorage-based — exclude from trackable progress
+  const TRACKED_SECTION_IDS = [
+    'photo',
+    'personal',
+    ...(polls.length > 0 ? ['polls'] : []),
+    ...(betterTogetherQuestions.length > 0 ? ['better_together'] : []),
+    ...(videoQuestions.length > 0 ? ['video'] : []),
+    'messages',
+    ...(superheroQuestions.length > 0 ? ['superhero'] : []),
+  ]
+
+  const SECTION_IDS = [
+    ...TRACKED_SECTION_IDS,
+    ...(classVoiceQuestions.length > 0 ? ['voice'] : []),
+  ]
+
+  const sectionStatusMap: Record<string, SectionStatus> = {
+    photo: photoStatus,
+    personal: questionsSectionStatus(personalQuestions),
+    polls: pollsStatus,
+    better_together: questionsSectionStatus(betterTogetherQuestions),
+    video: questionsSectionStatus(videoQuestions),
+    voice: 'todo',
+    messages: messagesStatus,
+    superhero: questionsSectionStatus(superheroQuestions),
+  }
+
+  const doneCount = TRACKED_SECTION_IDS.filter(id => sectionStatusMap[id] === 'done').length
+  const totalSections = TRACKED_SECTION_IDS.length
+  const progressPercent = totalSections > 0 ? (doneCount / totalSections) * 100 : 0
+
+  // ── Persist open section across sessions ────────────────────────────────────
+
+  const STORAGE_KEY = `lexicon_open_section_${student.id}`
+
+  const [openSection, setOpenSection] = useState<string | null>(null)
+
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    if (saved && SECTION_IDS.includes(saved)) {
+      setOpenSection(saved)
+    } else {
+      // Auto-open the first incomplete section
+      const first = SECTION_IDS.find(id => sectionStatusMap[id] !== 'done') ?? SECTION_IDS[0] ?? null
+      setOpenSection(first)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function toggle(id: string) {
+    const next = openSection === id ? null : id
+    setOpenSection(next)
+    if (next && typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, next)
+    }
+  }
 
   const isClassActive = classStatus === 'active' || classStatus === 'ready_for_payment'
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'personal', label: 'Въпроси към мен' },
-    { key: 'messages', label: 'Послания към другите' },
-    { key: 'class', label: 'Моят клас и аз' },
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
 
-        {/* Header */}
-        <div className="text-center mb-5">
-          <PhotoUpload
-            studentId={student.id}
-            photoUrl={student.photo_url}
-            firstName={student.first_name}
-          />
-          <h1 className="text-xl font-bold text-gray-800 mt-2">
-            {student.first_name} {student.last_name}
-          </h1>
+      {/* ── Sticky top bar ───────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="max-w-xl mx-auto flex items-center gap-3">
+          {student.photo_url ? (
+            <img src={student.photo_url} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-indigo-100" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+              {student.first_name[0]}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-800 leading-tight truncate">
+              {student.first_name} {student.last_name}
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[140px]">
+                <div
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-400 font-medium">{doneCount}/{totalSections} секции</span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-xl mx-auto px-4 py-6 space-y-3">
 
         {/* Class inactive banner */}
         {!isClassActive && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-lg mb-4 text-center">
-            Класът все още не е активен.
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+            <span className="material-symbols-outlined text-amber-500 text-base mt-0.5">schedule</span>
+            <p className="text-sm text-amber-800">
+              Класът все още не е активен. Можете да попълните въпросника предварително.
+            </p>
           </div>
         )}
 
-        {/* Progress bar */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-600">Общ прогрес</span>
-            <span className="text-xs font-semibold text-indigo-600">
-              {totalApproved} / {totalAll} одобрени
-            </span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-2">
-            <div
-              className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 mb-5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 pb-3 text-xs font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'border-b-2 border-indigo-600 text-indigo-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab content */}
-        {activeTab === 'personal' && (
-          <QuestionList
-            questions={personalQuestions}
-            answers={answerMap}
-            studentId={student.id}
-          />
-        )}
-
-        {activeTab === 'messages' && (
-          <MessagesSection
-            authorStudentId={student.id}
-            classmates={classmates}
-            sentMessages={sentMessages}
-          />
-        )}
-
-        {activeTab === 'class' && (
-          <>
-            <QuestionList
-              questions={classQuestions}
-              answers={answerMap}
+        {/* ── 1. Снимка ──────────────────────────────────────────────────── */}
+        <Section
+          id="photo"
+          icon="photo_camera"
+          title="Снимка на детето"
+          description={`Снимката ще украси личната страница на ${student.first_name} в лексикона. Може да качите портретна снимка или любима снимка на детето.`}
+          status={photoStatus}
+          statusLabel={student.photo_url ? 'Качена' : 'Липсва'}
+          open={openSection === 'photo'}
+          onToggle={() => toggle('photo')}
+          accentColor="indigo"
+        >
+          <div className="flex flex-col items-center gap-3">
+            <PhotoUpload
               studentId={student.id}
+              photoUrl={student.photo_url}
+              firstName={student.first_name}
             />
-            <ClassVoiceSection
-              classId={classId}
-              questions={classVoiceQuestions}
-            />
-          </>
+            <p className="text-xs text-gray-400 text-center">
+              Кликнете върху иконата за редактиране, за да качите или смените снимката
+            </p>
+          </div>
+        </Section>
+
+        {/* ── 2. Лични въпроси ───────────────────────────────────────────── */}
+        {personalQuestions.length > 0 && (
+          <Section
+            id="personal"
+            icon="person"
+            title="Лични въпроси"
+            description={`Въпроси за ${student.first_name} — разкажете за неговите/нейните интереси, мечти и любими моменти. Отговорите ще бъдат на личната страница в лексикона.`}
+            status={questionsSectionStatus(personalQuestions)}
+            statusLabel={questionsSectionLabel(personalQuestions)}
+            open={openSection === 'personal'}
+            onToggle={() => toggle('personal')}
+            accentColor="indigo"
+          >
+            <div className="space-y-2">
+              {personalQuestions.map(q => (
+                <QuestionRow
+                  key={q.id}
+                  question={q}
+                  status={answerMap.get(q.id)}
+                  studentId={student.id}
+                />
+              ))}
+            </div>
+          </Section>
         )}
+
+        {/* ── 3. Анкети ──────────────────────────────────────────────────── */}
+        {polls.length > 0 && (
+          <Section
+            id="polls"
+            icon="how_to_vote"
+            title="Анкети на класа"
+            description="Изберете кой съученик пасва най-добре на всяко описание. Резултатите са анонимни — никой не знае кой кого е избрал."
+            status={pollsStatus}
+            statusLabel={pollsLabel}
+            open={openSection === 'polls'}
+            onToggle={() => toggle('polls')}
+            accentColor="violet"
+          >
+            <PollsSection
+              polls={polls}
+              classmates={classmates}
+              voterStudentId={student.id}
+              existingVotes={existingVotes}
+            />
+          </Section>
+        )}
+
+        {/* ── 4. Колективни въпроси (better_together) ────────────────────── */}
+        {betterTogetherQuestions.length > 0 && (
+          <Section
+            id="better_together"
+            icon="groups"
+            title="По-добре заедно"
+            description={`Въпроси за живота на ${student.first_name} в класа. Отговорите описват класа като цяло и ще се появят на страниците на всички деца.`}
+            status={questionsSectionStatus(betterTogetherQuestions)}
+            statusLabel={questionsSectionLabel(betterTogetherQuestions)}
+            open={openSection === 'better_together'}
+            onToggle={() => toggle('better_together')}
+            accentColor="teal"
+          >
+            <div className="space-y-2">
+              {betterTogetherQuestions.map(q => (
+                <QuestionRow
+                  key={q.id}
+                  question={q}
+                  status={answerMap.get(q.id)}
+                  studentId={student.id}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── 5. Видео въпроси ───────────────────────────────────────────── */}
+        {videoQuestions.length > 0 && (
+          <Section
+            id="video"
+            icon="videocam"
+            title="Видео въпроси"
+            description={`Тези въпроси изискват видеоотговор. Запишете кратко видео с ${student.first_name}, което ще бъде включено в лексикона.`}
+            status={questionsSectionStatus(videoQuestions)}
+            statusLabel={questionsSectionLabel(videoQuestions)}
+            open={openSection === 'video'}
+            onToggle={() => toggle('video')}
+            accentColor="indigo"
+          >
+            <div className="space-y-2">
+              {videoQuestions.map(q => (
+                <QuestionRow
+                  key={q.id}
+                  question={q}
+                  status={answerMap.get(q.id)}
+                  studentId={student.id}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── 6. Анонимен глас ───────────────────────────────────────────── */}
+        {classVoiceQuestions.length > 0 && (
+          <Section
+            id="voice"
+            icon="record_voice_over"
+            title="Анонимен глас на класа"
+            description="Споделете мисли и спомени за класа напълно анонимно. Никой — дори модераторът — не може да разбере кой какво е написал."
+            status="todo"
+            statusLabel="Анонимно"
+            open={openSection === 'voice'}
+            onToggle={() => toggle('voice')}
+            accentColor="amber"
+          >
+            <ClassVoiceSection classId={classId} questions={classVoiceQuestions} />
+          </Section>
+        )}
+
+        {/* ── 6. Послания до съучениците ─────────────────────────────────── */}
+        {classmates.length > 0 && (
+          <Section
+            id="messages"
+            icon="favorite"
+            title="Послания до съучениците"
+            description={`Напишете лично пожелание от ${student.first_name} до всеки съученик. Посланията ще се появят на личните им страници след одобрение от учителя.`}
+            status={messagesStatus}
+            statusLabel={messagesLabel}
+            open={openSection === 'messages'}
+            onToggle={() => toggle('messages')}
+            accentColor="amber"
+          >
+            <MessagesSection
+              authorStudentId={student.id}
+              classmates={classmates}
+              sentMessages={sentMessages}
+            />
+          </Section>
+        )}
+
+        {/* ── 7. Супергероят ─────────────────────────────────────────────── */}
+        {superheroQuestions.length > 0 && (
+          <Section
+            id="superhero"
+            icon="auto_awesome"
+            title={`Супергероят на ${student.first_name}`}
+            description={`Тези отговори помагат на учителя да създаде уникален супергеройски образ за ${student.first_name}. Разкажете за неговите/нейните специални сили и таланти.`}
+            status={questionsSectionStatus(superheroQuestions)}
+            statusLabel={questionsSectionLabel(superheroQuestions)}
+            open={openSection === 'superhero'}
+            onToggle={() => toggle('superhero')}
+            accentColor="violet"
+          >
+            <div className="space-y-2">
+              {superheroQuestions.map(q => (
+                <QuestionRow
+                  key={q.id}
+                  question={q}
+                  status={answerMap.get(q.id)}
+                  studentId={student.id}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── Footer ─────────────────────────────────────────────────────── */}
+        {doneCount === totalSections && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-4">
+            <span
+              className="material-symbols-outlined text-green-500 text-3xl flex-shrink-0"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              check_circle
+            </span>
+            <div>
+              <p className="font-bold text-green-800 text-sm">Всичко е попълнено!</p>
+              <p className="text-xs text-green-700 mt-0.5">
+                Благодарим ви, че помогнахте да направим лексикона на {student.first_name} незабравим.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <p className="text-xs text-gray-400 text-center pb-4">
+          Прогресът се запазва автоматично. Можете да продължите по всяко време.
+        </p>
+
       </div>
     </div>
   )

@@ -11,9 +11,9 @@ interface Props {
   question: {
     id: string
     text: string
+    type: string
     order_index: number
-    allows_text: boolean
-    allows_media: boolean
+    max_length: number | null
   }
   answer: {
     id?: string
@@ -28,33 +28,33 @@ interface Props {
   nextUnansweredId: string | null
 }
 
-type Tab = 'text' | 'video' | 'audio'
-
-function resolveDefaultTab(question: Props['question']): Tab {
-  if (question.order_index === 5) return 'video'
-  if (question.allows_text) return 'text'
-  if (question.allows_media) return 'video'
-  return 'text'
-}
-
-export default function AnswerForm({ studentId, question, answer, prevQuestionId, nextQuestionId, nextUnansweredId }: Props) {
+export default function AnswerForm({
+  studentId,
+  question,
+  answer,
+  prevQuestionId,
+  nextQuestionId,
+  nextUnansweredId,
+}: Props) {
   const router = useRouter()
-  const isVideoOnly = question.order_index === 5
+  const isVideo = question.type === 'video'
 
-  const [activeTab, setActiveTab] = useState<Tab>(resolveDefaultTab(question))
+  // ── Text state ──────────────────────────────────────────────────────────────
   const [textValue, setTextValue] = useState(answer?.text_content ?? '')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // ── Video state ─────────────────────────────────────────────────────────────
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedRef = useRef(answer?.text_content ?? '')
 
-  // Auto-save draft with 3s debounce
+  // Auto-save text draft (3s debounce)
   useEffect(() => {
-    if (activeTab !== 'text') return
+    if (isVideo) return
     if (textValue === lastSavedRef.current) return
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -73,7 +73,7 @@ export default function AnswerForm({ studentId, question, answer, prevQuestionId
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [textValue, activeTab, studentId, question.id])
+  }, [textValue, isVideo, studentId, question.id])
 
   async function handleTextSubmit() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -89,7 +89,7 @@ export default function AnswerForm({ studentId, question, answer, prevQuestionId
     }
   }
 
-  async function handleMediaSubmit() {
+  async function handleVideoSubmit() {
     if (!mediaFile) return
     setSubmitError(null)
     setUploading(true)
@@ -107,10 +107,9 @@ export default function AnswerForm({ studentId, question, answer, prevQuestionId
         return
       }
 
-      const mediaType = activeTab === 'video' ? 'video' : 'audio'
       const result = await submitAnswer(studentId, question.id, {
         media_url: data.url,
-        media_type: mediaType,
+        media_type: 'video',
       })
 
       if (result.error) {
@@ -129,195 +128,178 @@ export default function AnswerForm({ studentId, question, answer, prevQuestionId
   }
 
   const answerStatus = submitStatus ?? answer?.status
+  const isLocked = answerStatus === 'submitted' || answerStatus === 'approved'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* Back link */}
+
+        {/* Back */}
         <Link
           href={`/my/${studentId}`}
-          className="inline-flex items-center text-sm text-indigo-600 hover:underline mb-6"
+          className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 transition-colors mb-6 font-medium"
         >
-          ← Профил на детето
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Назад
         </Link>
 
-        {/* Question badge + text */}
+        {/* Question */}
         <div className="mb-6">
-          <span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-            Въпрос {question.order_index}
-          </span>
-          <h1 className="text-xl font-bold text-gray-800">{question.text}</h1>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+              {isVideo ? (
+                <>
+                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
+                  Видео въпрос
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-xs">article</span>
+                  Въпрос {question.order_index}
+                </>
+              )}
+            </span>
+          </div>
+          <h1
+            className="text-2xl font-bold text-indigo-900 leading-snug"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            {question.text}
+          </h1>
         </div>
 
         {/* Status banners */}
         {answerStatus === 'approved' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg mb-4 flex items-center gap-2">
-            <span>Одобрен ✓</span>
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            Одобрен
           </div>
         )}
         {answerStatus === 'submitted' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg mb-4">
-            Изпратено — чака одобрение ✓
+          <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">schedule</span>
+            Изпратено — чака одобрение
           </div>
         )}
-        {answer?.status === 'draft' && answer.moderator_note && answerStatus !== 'submitted' && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-lg mb-4">
-            <p className="font-semibold mb-1">Бележка от модератора:</p>
+        {answer?.status === 'draft' && answer.moderator_note && !isLocked && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl mb-5">
+            <p className="font-semibold mb-1 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base">feedback</span>
+              Бележка от модератора
+            </p>
             <p>{answer.moderator_note}</p>
           </div>
         )}
 
-        {/* Format selector */}
-        {!isVideoOnly && (question.allows_text || question.allows_media) && (
-          <div className="mb-6">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-              Избери в какъв формат да е отговорът
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {question.allows_text && (
-                <button
-                  onClick={() => setActiveTab('text')}
-                  className={`flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-2 transition-all ${
-                    activeTab === 'text'
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="text-2xl">✏️</span>
-                  <span className="text-xs font-semibold">Текст</span>
-                </button>
-              )}
-              {question.allows_media && (
-                <>
-                  <button
-                    onClick={() => setActiveTab('video')}
-                    className={`flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-2 transition-all ${
-                      activeTab === 'video'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-2xl">🎥</span>
-                    <span className="text-xs font-semibold">Видео</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('audio')}
-                    className={`flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-2 transition-all ${
-                      activeTab === 'audio'
-                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                        : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-2xl">🎙️</span>
-                    <span className="text-xs font-semibold">Аудио</span>
-                  </button>
-                </>
-              )}
-            </div>
+        {/* ── Video question ────────────────────────────────────────────────── */}
+        {isVideo && (
+          <div className="space-y-4">
+            {/* Existing approved video */}
+            {answer?.media_url && isLocked ? (
+              <video
+                src={answer.media_url}
+                controls
+                className="w-full rounded-2xl border border-gray-200 max-h-64 bg-black"
+                preload="metadata"
+              />
+            ) : (
+              <RecordMedia
+                type="video"
+                onReady={(file) => setMediaFile(file)}
+                onClear={() => setMediaFile(null)}
+                disabled={uploading || isLocked}
+              />
+            )}
+
+            {uploading && (
+              <div className="text-sm text-indigo-600 text-center font-medium">Качва се...</div>
+            )}
+            {submitError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                {submitError}
+              </div>
+            )}
+
+            {!isLocked && (
+              <button
+                onClick={handleVideoSubmit}
+                disabled={!mediaFile || uploading}
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Изпрати видеото
+              </button>
+            )}
           </div>
         )}
 
-        {/* Video-only indicator */}
-        {isVideoOnly && (
-          <div className="mb-6">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-              Формат на отговора
-            </p>
-            <div className="inline-flex flex-col items-center gap-2 py-4 px-6 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-indigo-700">
-              <span className="text-2xl">🎥</span>
-              <span className="text-xs font-semibold">Видео</span>
-            </div>
-          </div>
-        )}
-
-        {/* Text mode */}
-        {activeTab === 'text' && !isVideoOnly && (
+        {/* ── Text question ─────────────────────────────────────────────────── */}
+        {!isVideo && (
           <div className="space-y-3">
             <div className="relative">
               <textarea
-                rows={4}
+                rows={5}
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
+                maxLength={question.max_length ?? undefined}
                 placeholder="Напишете отговора тук..."
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                disabled={isLocked}
+                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
               />
-              {saveStatus === 'saving' && (
-                <span className="absolute bottom-3 right-3 text-xs text-gray-400">Записва се...</span>
-              )}
-              {saveStatus === 'saved' && (
-                <span className="absolute bottom-3 right-3 text-xs text-green-500">Записано</span>
-              )}
+              <div className="absolute bottom-3 right-3 flex items-center gap-3">
+                {question.max_length && (
+                  <span className="text-xs text-gray-300">
+                    {textValue.length}/{question.max_length}
+                  </span>
+                )}
+                {saveStatus === 'saving' && (
+                  <span className="text-xs text-gray-400">Записва се...</span>
+                )}
+                {saveStatus === 'saved' && (
+                  <span className="text-xs text-green-500">Записано</span>
+                )}
+              </div>
             </div>
 
             {submitError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                 {submitError}
               </div>
             )}
 
-            <button
-              onClick={handleTextSubmit}
-              disabled={answerStatus === 'submitted' || answerStatus === 'approved'}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {answerStatus === 'submitted' ? 'Изчаква одобрение' : 'Изпрати'}
-            </button>
-          </div>
-        )}
-
-        {/* Video / Audio mode */}
-        {(activeTab === 'video' || activeTab === 'audio' || isVideoOnly) && (
-          <div className="space-y-4">
-            <RecordMedia
-              type={activeTab === 'audio' ? 'audio' : 'video'}
-              onReady={(file) => setMediaFile(file)}
-              onClear={() => setMediaFile(null)}
-              disabled={uploading || answerStatus === 'submitted' || answerStatus === 'approved'}
-            />
-
-            {uploading && (
-              <div className="text-sm text-indigo-600 text-center">Качва се...</div>
+            {!isLocked && (
+              <button
+                onClick={handleTextSubmit}
+                disabled={!textValue.trim()}
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Изпрати
+              </button>
             )}
-
-            {submitError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {submitError}
-              </div>
-            )}
-
-            <button
-              onClick={handleMediaSubmit}
-              disabled={!mediaFile || uploading || answerStatus === 'submitted' || answerStatus === 'approved'}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {answerStatus === 'submitted' ? 'Изчаква одобрение' : 'Изпрати'}
-            </button>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between mt-8 pt-4 border-t border-gray-200">
+        <div className="flex justify-between mt-8 pt-5 border-t border-gray-200">
           {prevQuestionId ? (
             <Link
               href={`/my/${studentId}/question/${prevQuestionId}`}
-              className="text-sm text-indigo-600 hover:underline font-medium"
+              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
-              ← Предишен
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Предишен
             </Link>
-          ) : (
-            <span />
-          )}
+          ) : <span />}
           {nextQuestionId ? (
             <Link
               href={`/my/${studentId}/question/${nextQuestionId}`}
-              className="text-sm text-indigo-600 hover:underline font-medium"
+              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
-              Следващ →
+              Следващ
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
             </Link>
-          ) : (
-            <span />
-          )}
+          ) : <span />}
         </div>
+
       </div>
     </div>
   )

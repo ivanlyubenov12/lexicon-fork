@@ -43,6 +43,22 @@ export default function StudentActions({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Link
+        href={`/moderator/${classId}/students/${studentId}/preview`}
+        className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors"
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>auto_stories</span>
+        Профил
+      </Link>
+
+      <Link
+        href={`/moderator/${classId}/students/${studentId}/questionnaire`}
+        className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors"
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>assignment</span>
+        Въпросник
+      </Link>
+
+      <Link
         href={`/moderator/${classId}/students/${studentId}/edit`}
         className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-indigo-600 transition-colors"
       >

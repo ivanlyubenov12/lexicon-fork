@@ -5,9 +5,9 @@ import { notFound } from 'next/navigation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function ClassHomePage({ params }: { params: { classId: string } }) {
+export default async function ClassHomePage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
   const admin = createServiceRoleClient()
 
   const { data: classData } = await admin

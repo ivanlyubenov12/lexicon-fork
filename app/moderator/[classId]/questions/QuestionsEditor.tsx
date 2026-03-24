@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions } from './actions'
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
 
 interface Question {
   id: string
@@ -26,13 +26,19 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   class_voice: 'Гласът на класа',
   better_together: 'По-добри заедно',
   superhero: 'Супергерой',
+  video: 'Видео въпрос',
+}
+
+// Video questions require video, all others are text-only
+function mediaFlagsForType(type: QuestionType) {
+  return type === 'video'
+    ? { allows_text: false, allows_media: true }
+    : { allows_text: true, allows_media: false }
 }
 
 const EMPTY_FORM = {
   text: '',
   type: 'personal' as QuestionType,
-  allows_text: true,
-  allows_media: true,
   max_length: '',
 }
 
@@ -101,36 +107,23 @@ function QuestionForm({
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Разрешена медия
-        </label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.allows_text}
-              onChange={(e) => set('allows_text', e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">Текст</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.allows_media}
-              onChange={(e) => set('allows_media', e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">Видео / аудио / снимка</span>
-          </label>
-        </div>
+      {/* Format indicator (derived from type, not editable) */}
+      <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-100">
+        <span className="material-symbols-outlined text-sm text-gray-400" style={{ fontVariationSettings: "'FILL' 1" }}>
+          {form.type === 'video' ? 'videocam' : 'article'}
+        </span>
+        <span>
+          Формат на отговора:&nbsp;
+          <strong className="text-gray-700">
+            {form.type === 'video' ? 'само видео' : 'само текст'}
+          </strong>
+        </span>
       </div>
 
       <div className="flex gap-2 pt-1">
         <button
           onClick={() => onSave(form)}
-          disabled={isPending || !form.text.trim() || (!form.allows_text && !form.allows_media)}
+          disabled={isPending || !form.text.trim()}
           className="bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
         >
           {isPending ? 'Запазване...' : 'Запази'}
@@ -173,8 +166,7 @@ function QuestionCard({
       const result = await updateQuestion(classId, question.id, {
         text: form.text,
         type: form.type,
-        allows_text: form.allows_text,
-        allows_media: form.allows_media,
+        ...mediaFlagsForType(form.type),
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: question.order_index,
       })
@@ -199,8 +191,6 @@ function QuestionCard({
           initial={{
             text: question.text,
             type: question.type,
-            allows_text: question.allows_text,
-            allows_media: question.allows_media,
             max_length: question.max_length?.toString() ?? '',
           }}
           onSave={handleSave}
@@ -235,18 +225,17 @@ function QuestionCard({
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="inline-flex items-center text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-100 text-amber-700">
-              Задължителен
+              {TYPE_LABELS[question.type]}
             </span>
-            {question.allows_text && (
+            {question.type === 'video' ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
+                <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>videocam</span>
+                Само видео
+              </span>
+            ) : (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>article</span>
-                Текст
-              </span>
-            )}
-            {question.allows_media && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>mic</span>
-                Медия
+                Само текст
               </span>
             )}
           </div>
@@ -259,8 +248,6 @@ function QuestionCard({
             {question.text}
           </p>
 
-          {/* Type label */}
-          <p className="text-xs text-gray-400 mt-2">{TYPE_LABELS[question.type]}</p>
         </div>
 
         {/* Actions — appear on hover */}
@@ -377,8 +364,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
       const result = await createQuestion(classId, {
         text: form.text,
         type: form.type,
-        allows_text: form.allows_text,
-        allows_media: form.allows_media,
+        ...mediaFlagsForType(form.type),
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: nextIndex,
       })
@@ -394,8 +380,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             id: 'pending-' + Date.now(),
             text: form.text,
             type: form.type,
-            allows_text: form.allows_text,
-            allows_media: form.allows_media,
+            ...mediaFlagsForType(form.type),
             max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
             order_index: nextIndex,
           },
@@ -519,21 +504,24 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
           isPending={isPending}
         />
 
-        {/* Groups card */}
-        <div className="relative overflow-hidden bg-indigo-700 rounded-2xl p-6 text-white">
+        {/* Groups card — links to polls page */}
+        <a
+          href={`/moderator/${classId}/polls`}
+          className="relative overflow-hidden bg-indigo-700 rounded-2xl p-6 text-white hover:bg-indigo-600 transition-colors block"
+        >
           <div className="relative z-10">
             <p className="text-lg font-bold mb-2">Групови въпроси</p>
             <p className="text-sm text-indigo-200 mb-5 leading-relaxed">
               Създай анкети за целия клас – „Най-голям шегаджия", „Бъдещ президент" и др.
             </p>
-            <span className="text-white font-semibold text-sm border-b border-white/40 pb-0.5 cursor-default opacity-60">
-              Очаквайте скоро
+            <span className="text-white font-semibold text-sm border-b border-white/60 pb-0.5">
+              Управлявай анкетите →
             </span>
           </div>
           <div className="absolute right-4 bottom-3 opacity-10 pointer-events-none">
             <span className="material-symbols-outlined" style={{ fontSize: 96 }}>bar_chart</span>
           </div>
-        </div>
+        </a>
       </div>
 
       {/* ── Footer ─────────────────────────────────────────────────── */}

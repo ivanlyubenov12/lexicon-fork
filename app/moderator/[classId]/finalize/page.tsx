@@ -6,9 +6,9 @@ import { createServerClient, createServiceRoleClient } from '@/lib/supabase/serv
 import ModeratorSidebar from '../ModeratorSidebar'
 import FinalizeView from './FinalizeView'
 
-export default async function FinalizePage({ params }: { params: { classId: string } }) {
+export default async function FinalizePage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
 
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()

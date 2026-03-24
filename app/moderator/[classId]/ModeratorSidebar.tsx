@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LogoutButton from './LogoutButton'
 
 type ActiveNav =
   | 'dashboard'
@@ -6,6 +7,7 @@ type ActiveNav =
   | 'answers'
   | 'messages'
   | 'questions'
+  | 'polls'
   | 'events'
   | 'superhero'
   | 'finalize'
@@ -25,6 +27,7 @@ const NAV_ITEMS = [
   { key: 'answers', icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
   { key: 'messages', icon: 'forum', label: 'Послания', sub: '/messages' },
   { key: 'questions', icon: 'quiz', label: 'Въпросник', sub: '/questions' },
+  { key: 'polls', icon: 'poll', label: 'Анкети', sub: '/polls' },
   { key: 'events', icon: 'calendar_month', label: 'Събития', sub: '/events' },
 ] as const
 
@@ -86,6 +89,7 @@ export default function ModeratorSidebar({ classId, namePart, schoolYear, logoUr
 
       {/* Bottom */}
       <div className="pt-4 space-y-2">
+        <LogoutButton />
         <Link
           href={base}
           className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"

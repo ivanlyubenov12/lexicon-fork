@@ -4,11 +4,11 @@ import JoinForm from './JoinForm'
 import JoinLoginForm from './JoinLoginForm'
 
 interface Props {
-  params: { invite_token: string }
+  params: Promise<{ invite_token: string }>
 }
 
 export default async function JoinPage({ params }: Props) {
-  const { invite_token } = params
+  const { invite_token } = await params
   const admin = createServiceRoleClient()
 
   const { data: student, error } = await admin

@@ -83,19 +83,10 @@ export default function ClassVoiceSection({ classId, questions }: Props) {
   if (questions.length === 0) return null
 
   return (
-    <div className="mt-8">
-      <div className="flex items-center gap-2 mb-1">
-        <h3 className="text-sm font-semibold text-gray-700">Анонимен глас на класа</h3>
-        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">анонимно</span>
-      </div>
-      <p className="text-xs text-gray-400 mb-4">
-        Отговорите са напълно анонимни — никой не може да разбере кой какво е написал.
-      </p>
-      <div className="space-y-3">
-        {questions.map((q) => (
-          <ClassVoiceQuestion key={q.id} classId={classId} question={q} />
-        ))}
-      </div>
+    <div className="space-y-3">
+      {questions.map((q) => (
+        <ClassVoiceQuestion key={q.id} classId={classId} question={q} />
+      ))}
     </div>
   )
 }

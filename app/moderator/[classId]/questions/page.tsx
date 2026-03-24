@@ -4,9 +4,9 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import ModeratorSidebar from '../ModeratorSidebar'
 import QuestionsEditor from './QuestionsEditor'
 
-export default async function QuestionsPage({ params }: { params: { classId: string } }) {
+export default async function QuestionsPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
   const admin = createServiceRoleClient()
 
   const { data: classData } = await admin

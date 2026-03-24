@@ -4,9 +4,9 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 
-export default async function ClassEntryPage({ params }: { params: { classId: string } }) {
+export default async function ClassEntryPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
 
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()

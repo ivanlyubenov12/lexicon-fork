@@ -16,8 +16,8 @@ interface MessageRow {
   author: { first_name: string; last_name: string }
 }
 
-export default async function MessagesPage({ params }: { params: { classId: string } }) {
-  const { classId } = params
+export default async function MessagesPage({ params }: { params: Promise<{ classId: string }> }) {
+  const { classId } = await params
   const supabase = createServiceRoleClient()
 
   const { data: classData } = await supabase

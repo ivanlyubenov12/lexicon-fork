@@ -18,9 +18,9 @@ interface AnswerRow {
   questions: { text: string; order_index: number }
 }
 
-export default async function AnswersPage({ params }: { params: { classId: string } }) {
+export default async function AnswersPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
   const supabase = createServiceRoleClient()
 
   const { data: classData } = await supabase

@@ -5,9 +5,9 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 // Uses the browser to print the /class/[classId]/home page
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
-  const { classId } = params
+  const { classId } = await params
   const admin = createServiceRoleClient()
 
   // Verify class is published

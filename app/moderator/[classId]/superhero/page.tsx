@@ -5,9 +5,9 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import ModeratorSidebar from '../ModeratorSidebar'
 import SuperheroEditor from './SuperheroEditor'
 
-export default async function SuperheroPage({ params }: { params: { classId: string } }) {
+export default async function SuperheroPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
   const supabase = createServiceRoleClient()
 
   const { data: classData } = await supabase

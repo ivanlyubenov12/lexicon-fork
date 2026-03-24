@@ -7,7 +7,7 @@ export async function createQuestion(
   classId: string,
   data: {
     text: string
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero'
+    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null
@@ -41,7 +41,7 @@ export async function updateQuestion(
   questionId: string,
   data: {
     text: string
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero'
+    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null

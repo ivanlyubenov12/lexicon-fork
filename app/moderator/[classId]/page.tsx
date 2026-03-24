@@ -4,8 +4,9 @@ import { createServerClient, createServiceRoleClient } from '@/lib/supabase/serv
 import SetupWizard from './SetupWizard'
 import Dashboard from './Dashboard'
 
-export default async function ModeratorDashboard({ params }: { params: { classId: string } }) {
+export default async function ModeratorDashboard({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
+  const { classId } = await params
   const supabase = createServerClient()
 
   // 1. Get current user — redirect to login if not authenticated
@@ -24,7 +25,7 @@ export default async function ModeratorDashboard({ params }: { params: { classId
   const { data: classData, error: classError } = await adminClient
     .from('classes')
     .select('id, name, school_year, status, school_logo_url')
-    .eq('id', params.classId)
+    .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
 
@@ -36,14 +37,14 @@ export default async function ModeratorDashboard({ params }: { params: { classId
 
   // 3. First-time setup: show wizard when class name is still empty
   if (!classData.name) {
-    return <SetupWizard classId={params.classId} />
+    return <SetupWizard classId={classId} />
   }
 
   // 4. Fetch students
   const { data: students } = await adminClient
     .from('students')
     .select('id, first_name, last_name, invite_accepted_at')
-    .eq('class_id', params.classId)
+    .eq('class_id', classId)
     .order('last_name', { ascending: true })
 
   // 5. Fetch pending answers count
@@ -70,7 +71,7 @@ export default async function ModeratorDashboard({ params }: { params: { classId
   const { count: questionCount } = await adminClient
     .from('questions')
     .select('id', { count: 'exact', head: true })
-    .eq('class_id', params.classId)
+    .eq('class_id', classId)
 
   const studentIds = (students ?? []).map((s) => s.id)
 
@@ -96,7 +97,7 @@ export default async function ModeratorDashboard({ params }: { params: { classId
   const { data: events } = await adminClient
     .from('events')
     .select('id, title, event_date')
-    .eq('class_id', params.classId)
+    .eq('class_id', classId)
     .order('order_index')
 
   return (

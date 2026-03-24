@@ -9,10 +9,10 @@ import StudentLexiconView from './StudentLexiconView'
 export default async function LexiconStudentPage({
   params,
 }: {
-  params: { classId: string; studentId: string }
+  params: Promise<{ classId: string; studentId: string }>
 }) {
   noStore()
-  const { classId, studentId } = params
+  const { classId, studentId } = await params
   const admin = createServiceRoleClient()
 
   // Verify class is published
@@ -34,41 +34,12 @@ export default async function LexiconStudentPage({
 
   if (!student) notFound()
 
-  // All questions (personal + class tab types)
-  const { data: systemPersonal } = await admin
-    .from('questions')
-    .select('id, text, order_index, type')
-    .is('class_id', null)
-    .eq('type', 'personal')
-    .order('order_index')
-
-  const { data: classPersonal } = await admin
+  // Only questions the moderator explicitly added to this class
+  const { data: allQuestions } = await admin
     .from('questions')
     .select('id, text, order_index, type')
     .eq('class_id', classId)
-    .eq('type', 'personal')
     .order('order_index')
-
-  const { data: systemClass } = await admin
-    .from('questions')
-    .select('id, text, order_index, type')
-    .is('class_id', null)
-    .in('type', ['superhero', 'better_together'])
-    .order('order_index')
-
-  const { data: classSpecificClass } = await admin
-    .from('questions')
-    .select('id, text, order_index, type')
-    .eq('class_id', classId)
-    .in('type', ['superhero', 'better_together'])
-    .order('order_index')
-
-  const allQuestions = [
-    ...(systemPersonal ?? []),
-    ...(classPersonal ?? []),
-    ...(systemClass ?? []),
-    ...(classSpecificClass ?? []),
-  ].sort((a, b) => a.order_index - b.order_index)
 
   // Approved answers for this student
   const { data: answers } = await admin
@@ -121,7 +92,7 @@ export default async function LexiconStudentPage({
       classId={classId}
       className={classData.name}
       student={student}
-      questions={allQuestions}
+      questions={allQuestions ?? []}
       answers={answers ?? []}
       messages={messagesWithAuthors}
       prevStudentId={prevStudentId}

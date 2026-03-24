@@ -17,9 +17,9 @@ interface StudentRow {
   invite_token: string
 }
 
-export default async function StudentsPage({ params }: { params: { classId: string } }) {
+export default async function StudentsPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
-  const { classId } = params
+  const { classId } = await params
   const supabase = createServiceRoleClient()
 
   const { data: classData } = await supabase

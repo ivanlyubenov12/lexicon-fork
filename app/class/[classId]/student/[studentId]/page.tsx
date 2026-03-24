@@ -9,10 +9,10 @@ import StudentReaderView from './StudentReaderView'
 export default async function StudentProfilePage({
   params,
 }: {
-  params: { classId: string; studentId: string }
+  params: Promise<{ classId: string; studentId: string }>
 }) {
   noStore()
-  const { classId, studentId } = params
+  const { classId, studentId } = await params
   const admin = createServiceRoleClient()
 
   const { data: classData } = await admin

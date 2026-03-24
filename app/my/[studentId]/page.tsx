@@ -5,11 +5,11 @@ import { createServerClient, createServiceRoleClient } from '@/lib/supabase/serv
 import StudentProfileParent from './StudentProfileParent'
 
 interface Props {
-  params: { studentId: string }
+  params: Promise<{ studentId: string }>
 }
 
 export default async function MyChildPage({ params }: Props) {
-  const { studentId } = params
+  const { studentId } = await params
 
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -33,53 +33,18 @@ export default async function MyChildPage({ params }: Props) {
     .eq('id', student.class_id)
     .single()
 
-  // Personal questions (tab 1)
-  const { data: systemPersonal } = await admin
-    .from('questions')
-    .select('id, text, order_index, allows_text, allows_media, type')
-    .is('class_id', null)
-    .eq('type', 'personal')
-    .order('order_index')
-
-  const { data: classPersonal } = await admin
+  // Only fetch questions the moderator explicitly added to this class
+  const { data: allClassQuestions } = await admin
     .from('questions')
     .select('id, text, order_index, allows_text, allows_media, type')
     .eq('class_id', student.class_id)
-    .eq('type', 'personal')
     .order('order_index')
 
-  const personalQuestions = [
-    ...(systemPersonal ?? []),
-    ...(classPersonal ?? []),
-  ].sort((a, b) => a.order_index - b.order_index)
-
-  // Class voice questions — anonymous (tab 3, bottom section)
-  const { data: classVoiceQuestions } = await admin
-    .from('questions')
-    .select('id, text, order_index')
-    .is('class_id', null)
-    .eq('type', 'class_voice')
-    .order('order_index')
-
-  // Class questions — superhero + better_together (tab 3)
-  const { data: systemClass } = await admin
-    .from('questions')
-    .select('id, text, order_index, allows_text, allows_media, type')
-    .is('class_id', null)
-    .in('type', ['superhero', 'better_together'])
-    .order('order_index')
-
-  const { data: classSpecificClass } = await admin
-    .from('questions')
-    .select('id, text, order_index, allows_text, allows_media, type')
-    .eq('class_id', student.class_id)
-    .in('type', ['superhero', 'better_together'])
-    .order('order_index')
-
-  const classQuestions = [
-    ...(systemClass ?? []),
-    ...(classSpecificClass ?? []),
-  ].sort((a, b) => a.order_index - b.order_index)
+  const personalQuestions = (allClassQuestions ?? []).filter(q => q.type === 'personal')
+  const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'class_voice')
+  const classQuestions = (allClassQuestions ?? []).filter(q =>
+    ['superhero', 'better_together', 'video'].includes(q.type)
+  )
 
   // All answers for this student
   const { data: answers } = await admin
@@ -101,6 +66,24 @@ export default async function MyChildPage({ params }: Props) {
     .select('recipient_student_id, status, content')
     .eq('author_student_id', studentId)
 
+  // Polls for this class
+  const { data: polls } = await admin
+    .from('class_polls')
+    .select('id, question, order_index')
+    .eq('class_id', student.class_id)
+    .order('order_index')
+
+  // This student's existing votes
+  const { data: myVotes } = await admin
+    .from('class_poll_votes')
+    .select('poll_id, nominee_student_id')
+    .eq('voter_student_id', studentId)
+
+  const existingVotes: Record<string, string> = {}
+  for (const v of myVotes ?? []) {
+    existingVotes[v.poll_id] = v.nominee_student_id
+  }
+
   return (
     <StudentProfileParent
       student={student}
@@ -112,6 +95,8 @@ export default async function MyChildPage({ params }: Props) {
       classId={student.class_id}
       classmates={classmates ?? []}
       sentMessages={sentMessages ?? []}
+      polls={polls ?? []}
+      existingVotes={existingVotes}
     />
   )
 }

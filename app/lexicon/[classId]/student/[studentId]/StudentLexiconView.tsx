@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useRef } from 'react'
 
 interface Question {
   id: string
@@ -36,31 +37,81 @@ interface Props {
   messages: Message[]
   prevStudentId: string | null
   nextStudentId: string | null
+  /** Override nav links (e.g. for moderator preview) */
+  prevHref?: string | null
+  nextHref?: string | null
+  /** Override the back link */
+  backHref?: string
 }
 
-function AnswerCard({ question, answer }: { question: Question; answer: Answer }) {
+function AudioPlayer({ src }: { src: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+
+  function toggle() {
+    if (!audioRef.current) return
+    if (playing) {
+      audioRef.current.pause()
+    } else {
+      audioRef.current.play()
+    }
+    setPlaying(!playing)
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5">
-      <p className="text-xs font-semibold text-indigo-500 mb-2">
-        {question.order_index}. {question.text}
-      </p>
-      {answer.text_content && (
-        <p className="text-sm text-gray-800 leading-relaxed">{answer.text_content}</p>
-      )}
-      {answer.media_url && answer.media_type === 'video' && (
+    <div className="bg-white/20 p-4 rounded-xl backdrop-blur-md">
+      <audio ref={audioRef} src={src} preload="metadata" onEnded={() => setPlaying(false)} />
+      <div className="flex items-center space-x-4">
+        <button onClick={toggle}>
+          <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+            {playing ? 'pause_circle' : 'play_circle'}
+          </span>
+        </button>
+        <div className="flex-1 h-1 bg-white/30 rounded-full">
+          <div className="h-full w-1/3 bg-white rounded-full" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VideoCard({ answer, question }: { answer: Answer; question: Question }) {
+  const [playing, setPlaying] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  function handlePlay() {
+    setPlaying(true)
+    videoRef.current?.play()
+  }
+
+  return (
+    <div className="bg-indigo-700 text-white p-8 rounded-2xl shadow-sm flex flex-col justify-between overflow-hidden relative">
+      <div className="relative z-10 mb-4">
+        <span className="material-symbols-outlined text-4xl mb-3 block" style={{ fontVariationSettings: "'FILL' 1" }}>
+          videocam
+        </span>
+        <h3 className="font-bold text-lg mb-1" style={{ fontFamily: 'Noto Serif, serif' }}>
+          {question.text}
+        </h3>
+      </div>
+      <div className="relative group cursor-pointer" onClick={handlePlay}>
         <video
-          src={answer.media_url}
-          controls
-          className="w-full rounded-xl mt-2 max-h-64"
+          ref={videoRef}
+          src={answer.media_url!}
+          className="w-full h-44 object-cover rounded-xl opacity-70 group-hover:opacity-90 transition-opacity"
           preload="metadata"
+          controls={playing}
         />
-      )}
-      {answer.media_url && answer.media_type === 'audio' && (
-        <audio src={answer.media_url} controls className="w-full mt-2" preload="metadata" />
-      )}
-      {answer.media_url && !answer.media_type && (
-        <img src={answer.media_url} alt="" className="w-full rounded-xl mt-2 object-cover max-h-80" />
-      )}
+        {!playing && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-indigo-700 text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                play_arrow
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -74,107 +125,399 @@ export default function StudentLexiconView({
   messages,
   prevStudentId,
   nextStudentId,
+  prevHref,
+  nextHref,
+  backHref,
 }: Props) {
+  const resolvedPrevHref = prevHref !== undefined ? prevHref : (prevStudentId ? `/lexicon/${classId}/student/${prevStudentId}` : null)
+  const resolvedNextHref = nextHref !== undefined ? nextHref : (nextStudentId ? `/lexicon/${classId}/student/${nextStudentId}` : null)
+  const resolvedBackHref = backHref ?? `/lexicon/${classId}/students`
   const answerMap = new Map(answers.map((a) => [a.question_id, a]))
   const answeredQuestions = questions.filter((q) => answerMap.has(q.id))
 
+  // Categorise answers for bento layout
+  const textQA = answeredQuestions
+    .filter((q) => {
+      const a = answerMap.get(q.id)!
+      return a.text_content && !a.media_url
+    })
+    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+
+  const videoQA = answeredQuestions
+    .filter((q) => answerMap.get(q.id)?.media_type === 'video')
+    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+
+  const audioQA = answeredQuestions
+    .filter((q) => answerMap.get(q.id)?.media_type === 'audio')
+    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+
+  const imageQA = answeredQuestions
+    .filter((q) => {
+      const a = answerMap.get(q.id)!
+      return a.media_url && !a.media_type
+    })
+    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+
+  const featuredText = textQA[0] ?? null
+  const quoteText = textQA[1] ?? textQA[0] ?? null
+  const extraText = textQA.slice(2)
+  const firstVideo = videoQA[0] ?? null
+  const firstAudio = audioQA[0] ?? null
+  const extraAnswers = [
+    ...videoQA.slice(1),
+    ...audioQA.slice(1),
+    ...imageQA,
+    ...extraText,
+  ]
+
+  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header nav */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href={`/lexicon/${classId}/students`} className="text-gray-400 hover:text-gray-600 text-sm">
-            ← {className}
+    <div className="bg-[#faf9f8] min-h-screen" style={{ fontFamily: 'Manrope, sans-serif' }}>
+
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      <nav className="w-full top-0 sticky z-50 bg-[#faf9f8]/90 backdrop-blur-md border-b border-[#eeeeed]">
+        <div className="flex justify-between items-center px-8 py-4 max-w-screen-xl mx-auto">
+          <Link
+            href={resolvedBackHref}
+            className="text-xl font-bold text-indigo-900"
+            style={{ fontFamily: 'Noto Serif, serif' }}
+          >
+            Един неразделен клас
           </Link>
-          <div className="flex items-center gap-3">
-            {prevStudentId && (
+          <div className="flex items-center gap-4">
+            {resolvedPrevHref && (
               <Link
-                href={`/lexicon/${classId}/student/${prevStudentId}`}
-                className="text-gray-400 hover:text-indigo-600 text-sm"
+                href={resolvedPrevHref}
+                className="flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-700 transition-colors font-medium"
               >
-                ←
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Предишно
               </Link>
             )}
-            {nextStudentId && (
+            {resolvedNextHref && (
               <Link
-                href={`/lexicon/${classId}/student/${nextStudentId}`}
-                className="text-gray-400 hover:text-indigo-600 text-sm"
+                href={resolvedNextHref}
+                className="flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-700 transition-colors font-medium"
               >
-                →
+                Следващо
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
               </Link>
             )}
           </div>
         </div>
-      </div>
+      </nav>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
-        {/* Profile header */}
-        <div className="flex flex-col items-center text-center pb-2">
-          {student.photo_url ? (
-            <img
-              src={student.photo_url}
-              alt={student.first_name}
-              className="w-28 h-28 rounded-full object-cover shadow-md mb-3"
-            />
-          ) : (
-            <div className="w-28 h-28 rounded-full bg-indigo-100 flex items-center justify-center mb-3 shadow-md">
-              <span className="text-indigo-400 text-4xl font-bold">{student.first_name[0]}</span>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+
+        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end mb-24">
+
+          {/* Portrait */}
+          <div className="lg:col-span-5 relative group">
+            <div className="absolute -top-6 -left-6 w-32 h-32 bg-amber-100 rounded-full -z-10 opacity-40" />
+            <div
+              className="overflow-hidden rounded-2xl transform -rotate-1 group-hover:rotate-0 transition-transform duration-700"
+              style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.12)' }}
+            >
+              {student.photo_url ? (
+                <img
+                  src={student.photo_url}
+                  alt={`${student.first_name} ${student.last_name}`}
+                  className="w-full aspect-[3/4] object-cover"
+                />
+              ) : (
+                <div className="w-full aspect-[3/4] bg-indigo-100 flex items-center justify-center">
+                  <span
+                    className="text-indigo-300 font-bold"
+                    style={{ fontSize: 120, fontFamily: 'Noto Serif, serif' }}
+                  >
+                    {initials}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-          <h1 className="text-2xl font-bold text-gray-900">
-            {student.first_name} {student.last_name}
-          </h1>
-        </div>
 
-        {/* Answers */}
-        {answeredQuestions.length > 0 ? (
-          <div className="space-y-4">
-            {answeredQuestions.map((q) => {
-              const answer = answerMap.get(q.id)!
-              return <AnswerCard key={q.id} question={q} answer={answer} />
-            })}
+            {/* Quote overlay card */}
+            {quoteText && (
+              <div
+                className="absolute -bottom-8 -right-8 bg-white/80 backdrop-blur-md p-5 rounded-xl hidden lg:block max-w-[200px]"
+                style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.10)' }}
+              >
+                <p
+                  className="text-amber-700 text-base italic leading-snug"
+                  style={{ fontFamily: 'Noto Serif, serif' }}
+                >
+                  „{quoteText.answer.text_content?.slice(0, 80)}…"
+                </p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-            <p className="text-sm text-gray-400">Все още няма одобрени отговори.</p>
-          </div>
-        )}
 
-        {/* Peer messages */}
-        {messages.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">Послания от съучениците</h2>
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="bg-indigo-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-800 leading-relaxed mb-2">{msg.content}</p>
-                  <p className="text-xs text-indigo-400 text-right">— {msg.authorName}</p>
+          {/* Info */}
+          <div className="lg:col-span-7 pb-4">
+            <p className="text-amber-700 uppercase tracking-widest text-xs font-bold mb-4">
+              {className}
+            </p>
+            <h1
+              className="text-6xl lg:text-8xl font-bold text-indigo-800 mb-6 leading-tight"
+              style={{ fontFamily: 'Noto Serif, serif' }}
+            >
+              {student.first_name}
+              <br />
+              {student.last_name}
+            </h1>
+            <div className="flex items-center gap-6 text-slate-500 font-medium text-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">school</span>
+                <span>{className.split(' — ')[0]}</span>
+              </div>
+              {answeredQuestions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">edit_note</span>
+                  <span>{answeredQuestions.length} отговора</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Bento: Живи спомени ───────────────────────────────────────── */}
+        {answeredQuestions.length > 0 && (
+          <section className="mb-24">
+            <h2
+              className="text-3xl font-bold text-indigo-800 mb-12 flex items-center gap-4"
+              style={{ fontFamily: 'Noto Serif, serif' }}
+            >
+              <span className="w-12 h-px bg-indigo-700 block" />
+              Живи спомени
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+              {/* Featured text answer — wide */}
+              {featuredText && (
+                <div
+                  className="md:col-span-2 bg-white p-10 rounded-2xl relative overflow-hidden group"
+                  style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                    <span className="material-symbols-outlined" style={{ fontSize: 96 }}>auto_stories</span>
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">
+                    {featuredText.question.text}
+                  </p>
+                  <p className="text-slate-600 leading-relaxed text-lg">
+                    {featuredText.answer.text_content}
+                  </p>
+                </div>
+              )}
+
+              {/* Video answer */}
+              {firstVideo ? (
+                <VideoCard answer={firstVideo.answer} question={firstVideo.question} />
+              ) : firstAudio ? null : (
+                /* Placeholder if no video and no audio — amber card */
+                featuredText && (
+                  <div className="bg-gradient-to-br from-amber-100 to-amber-200 p-8 rounded-2xl flex flex-col justify-center gap-3"
+                    style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                  >
+                    <span className="material-symbols-outlined text-4xl text-amber-700" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      volunteer_activism
+                    </span>
+                    <p className="font-bold text-amber-900 text-lg" style={{ fontFamily: 'Noto Serif, serif' }}>
+                      {className.split(' — ')[0]}
+                    </p>
+                    <p className="text-amber-800 text-sm leading-relaxed">
+                      Спомен от учебната година
+                    </p>
+                  </div>
+                )
+              )}
+
+              {/* Audio answer */}
+              {firstAudio && (
+                <div
+                  className="bg-amber-600 text-white p-8 rounded-2xl flex flex-col justify-between"
+                  style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                >
+                  <div>
+                    <h3
+                      className="text-xl font-bold mb-3 flex items-center gap-2"
+                      style={{ fontFamily: 'Noto Serif, serif' }}
+                    >
+                      <span className="material-symbols-outlined">mic</span>
+                      Гласова бележка
+                    </h3>
+                    <p className="text-sm italic opacity-80 mb-6">
+                      „{firstAudio.question.text}"
+                    </p>
+                  </div>
+                  <AudioPlayer src={firstAudio.answer.media_url!} />
+                </div>
+              )}
+
+              {/* Video shown alongside audio if both exist */}
+              {firstVideo && firstAudio && (
+                <VideoCard answer={firstVideo.answer} question={firstVideo.question} />
+              )}
+
+              {/* Quote card — wide */}
+              {quoteText && textQA.length > 1 && (
+                <div
+                  className="md:col-span-2 bg-[#f4f3f2] p-10 rounded-2xl flex items-center justify-center text-center"
+                  style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.04)' }}
+                >
+                  <div className="max-w-lg">
+                    <span className="material-symbols-outlined text-indigo-400 text-5xl mb-5 block">
+                      format_quote
+                    </span>
+                    <p
+                      className="text-2xl italic text-indigo-900 mb-5 leading-relaxed"
+                      style={{ fontFamily: 'Noto Serif, serif' }}
+                    >
+                      „{quoteText.answer.text_content}"
+                    </p>
+                    <p className="text-xs uppercase tracking-widest text-amber-700 font-bold">
+                      — {student.first_name}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Image answers */}
+              {imageQA.map(({ question, answer }) => (
+                <div
+                  key={question.id}
+                  className="bg-white rounded-2xl overflow-hidden"
+                  style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                >
+                  <img
+                    src={answer.media_url!}
+                    alt={question.text}
+                    className="w-full h-56 object-cover"
+                  />
+                  <div className="p-5">
+                    <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider">
+                      {question.text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Extra text answers */}
+              {extraAnswers.map(({ question, answer }) => (
+                <div
+                  key={question.id}
+                  className="bg-white p-7 rounded-2xl"
+                  style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                >
+                  <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">
+                    {question.text}
+                  </p>
+                  {answer.text_content && (
+                    <p className="text-slate-600 leading-relaxed">{answer.text_content}</p>
+                  )}
+                  {answer.media_url && answer.media_type === 'video' && (
+                    <video src={answer.media_url} controls className="w-full rounded-xl mt-2 max-h-64" preload="metadata" />
+                  )}
+                  {answer.media_url && answer.media_type === 'audio' && (
+                    <audio src={answer.media_url} controls className="w-full mt-2" preload="metadata" />
+                  )}
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Bottom navigation */}
-        <div className="flex justify-between pt-4">
-          {prevStudentId ? (
-            <Link
-              href={`/lexicon/${classId}/student/${prevStudentId}`}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+        {/* ── Messages ──────────────────────────────────────────────────── */}
+        {messages.length > 0 && (
+          <section className="max-w-3xl mx-auto mb-16">
+            <h2
+              className="text-3xl font-bold text-indigo-800 mb-12 text-center"
+              style={{ fontFamily: 'Noto Serif, serif' }}
             >
-              ← Предишно дете
+              Пожелания от класа
+            </h2>
+            <div className="space-y-6">
+              {messages.map((msg) => {
+                const initial = msg.authorName[0]?.toUpperCase() ?? '?'
+                return (
+                  <div key={msg.id} className="flex items-start gap-5">
+                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
+                      {initial}
+                    </div>
+                    <div
+                      className="bg-white p-6 rounded-2xl flex-1"
+                      style={{ boxShadow: '0 20px 50px -12px rgba(26,28,28,0.06)' }}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-bold text-indigo-700 text-sm">{msg.authorName}</h4>
+                      </div>
+                      <p className="text-slate-600 italic leading-relaxed text-sm">
+                        „{msg.content}"
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Prev / Next navigation ────────────────────────────────────── */}
+        <div className="flex justify-between items-center pt-8 border-t border-gray-100 max-w-3xl mx-auto">
+          {resolvedPrevHref ? (
+            <Link
+              href={resolvedPrevHref}
+              className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Предишно дете
             </Link>
           ) : <span />}
-          {nextStudentId ? (
+          <Link
+            href={resolvedBackHref}
+            className="text-sm text-slate-400 hover:text-indigo-600 transition-colors"
+          >
+            Всички деца
+          </Link>
+          {resolvedNextHref ? (
             <Link
-              href={`/lexicon/${classId}/student/${nextStudentId}`}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+              href={resolvedNextHref}
+              className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
             >
-              Следващо дете →
+              Следващо дете
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
             </Link>
           ) : <span />}
         </div>
-      </div>
-    </main>
+
+      </main>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer className="w-full border-t border-indigo-50 mt-16">
+        <div className="max-w-7xl mx-auto py-10 px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div>
+            <p
+              className="italic text-lg text-indigo-900 font-bold"
+              style={{ fontFamily: 'Noto Serif, serif' }}
+            >
+              Един неразделен клас.
+            </p>
+            <p className="text-xs uppercase tracking-widest text-slate-400 mt-1">
+              © {new Date().getFullYear()} The Living Archive.
+            </p>
+          </div>
+          <Link
+            href={resolvedBackHref}
+            className="text-xs uppercase tracking-widest text-slate-400 hover:text-amber-600 transition-colors"
+          >
+            ← Обратно към класа
+          </Link>
+        </div>
+      </footer>
+
+    </div>
   )
 }

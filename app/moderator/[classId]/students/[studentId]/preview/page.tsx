@@ -1,0 +1,113 @@
+export const dynamic = 'force-dynamic'
+
+import { unstable_noStore as noStore } from 'next/cache'
+import { notFound } from 'next/navigation'
+import { createServiceRoleClient } from '@/lib/supabase/server'
+import StudentLexiconView from '@/app/lexicon/[classId]/student/[studentId]/StudentLexiconView'
+import Link from 'next/link'
+
+export default async function ModeratorStudentPreview({
+  params,
+}: {
+  params: Promise<{ classId: string; studentId: string }>
+}) {
+  noStore()
+  const { classId, studentId } = await params
+  const admin = createServiceRoleClient()
+
+  const { data: classData } = await admin
+    .from('classes')
+    .select('id, name')
+    .eq('id', classId)
+    .single()
+
+  if (!classData) notFound()
+
+  const { data: student } = await admin
+    .from('students')
+    .select('id, first_name, last_name, photo_url, class_id')
+    .eq('id', studentId)
+    .eq('class_id', classId)
+    .single()
+
+  if (!student) notFound()
+
+  const { data: allQuestions } = await admin
+    .from('questions')
+    .select('id, text, order_index, type')
+    .eq('class_id', classId)
+    .order('order_index')
+
+  const { data: answers } = await admin
+    .from('answers')
+    .select('question_id, text_content, media_url, media_type')
+    .eq('student_id', studentId)
+    .eq('status', 'approved')
+
+  const { data: receivedMessages } = await admin
+    .from('peer_messages')
+    .select('id, content, author_student_id')
+    .eq('recipient_student_id', studentId)
+    .eq('status', 'approved')
+
+  const authorIds = [...new Set((receivedMessages ?? []).map((m) => m.author_student_id))]
+  const { data: authors } = authorIds.length > 0
+    ? await admin.from('students').select('id, first_name, last_name').in('id', authorIds)
+    : { data: [] }
+
+  const authorMap = new Map((authors ?? []).map((a) => [a.id, a]))
+  const messagesWithAuthors = (receivedMessages ?? []).map((m) => ({
+    id: m.id,
+    content: m.content,
+    authorName: (() => { const a = authorMap.get(m.author_student_id); return a ? `${a.first_name} ${a.last_name}` : 'Съученик' })(),
+  }))
+
+  const { data: allStudents } = await admin
+    .from('students')
+    .select('id')
+    .eq('class_id', classId)
+    .order('last_name')
+
+  const studentList = allStudents ?? []
+  const currentIndex = studentList.findIndex((s) => s.id === studentId)
+  const prevStudentId = currentIndex > 0 ? studentList[currentIndex - 1].id : null
+  const nextStudentId = currentIndex < studentList.length - 1 ? studentList[currentIndex + 1].id : null
+
+  return (
+    <div>
+      {/* Moderator preview banner */}
+      <div className="bg-indigo-700 text-white px-6 py-3 flex items-center justify-between sticky top-0 z-[100]" style={{ fontFamily: 'Manrope, sans-serif' }}>
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-indigo-300 text-base">visibility</span>
+          <span className="text-sm font-semibold">
+            Преглед на профил — <span className="text-indigo-200">{student.first_name} {student.last_name}</span>
+          </span>
+          <span className="text-xs text-indigo-300 bg-indigo-600 px-2 py-0.5 rounded-full">
+            Само одобрено съдържание
+          </span>
+        </div>
+        <Link
+          href={`/moderator/${classId}/students`}
+          className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors font-medium"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Назад към списъка
+        </Link>
+      </div>
+
+      <StudentLexiconView
+        classId={classId}
+        className={classData.name}
+        student={student}
+        questions={allQuestions ?? []}
+        answers={answers ?? []}
+        messages={messagesWithAuthors}
+        prevStudentId={null}
+        nextStudentId={null}
+        prevHref={prevStudentId ? `/moderator/${classId}/students/${prevStudentId}/preview` : null}
+        nextHref={nextStudentId ? `/moderator/${classId}/students/${nextStudentId}/preview` : null}
+        backHref={`/moderator/${classId}/students`}
+      />
+    </div>
+  )
+}

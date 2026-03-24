@@ -2,8 +2,8 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import ModeratorSidebar from '../../ModeratorSidebar'
 import AddStudentForm from './AddStudentForm'
 
-export default async function NewStudentPage({ params }: { params: { classId: string } }) {
-  const { classId } = params
+export default async function NewStudentPage({ params }: { params: Promise<{ classId: string }> }) {
+  const { classId } = await params
   const supabase = createServiceRoleClient()
 
   const { data: classData } = await supabase
