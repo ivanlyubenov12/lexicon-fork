@@ -2,6 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]"
     ]
   }
 }
