@@ -148,7 +148,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
   }
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url}>
+    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id}>
       <LexiconBlocks blocks={blocks} data={lexiconData} />
     </LexiconShell>
   )
