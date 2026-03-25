@@ -111,11 +111,10 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           <p className="font-bold text-gray-800 text-sm truncate">{className}</p>
         </div>
         <Link
-          href={`/lexicon/${classId}`}
-          target="_blank"
+          href={`/moderator/${classId}/preview`}
           className="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 border border-gray-200 rounded-xl px-3 py-2 transition-colors"
         >
-          <span className="material-symbols-outlined text-base">open_in_new</span>
+          <span className="material-symbols-outlined text-base">visibility</span>
           Преглед
         </Link>
         <button

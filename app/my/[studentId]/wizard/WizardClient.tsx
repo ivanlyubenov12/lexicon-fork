@@ -8,8 +8,10 @@ import { saveDraft, submitAnswer } from '../actions'
 interface WizardQuestion {
   id: string
   text: string
+  type: 'video' | 'personal' | 'superhero'
   maxLength: number | null
   existingAnswer: string
+  existingMediaUrl: string | null
   existingStatus: string | null
 }
 
@@ -175,6 +177,123 @@ function QuestionStep({
   )
 }
 
+// ── Video step ────────────────────────────────────────────────────────────────
+
+function VideoStep({
+  studentId,
+  question,
+  onNext,
+  onBack,
+}: {
+  studentId: string
+  question: WizardQuestion
+  onNext: () => void
+  onBack: () => void
+}) {
+  const [videoUrl, setVideoUrl]     = useState<string | null>(question.existingMediaUrl)
+  const [uploading, setUploading]   = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+  const inputRef                    = useRef<HTMLInputElement>(null)
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setError(null)
+    setUploading(true)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res  = await fetch('/api/media/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.error || !data.url) { setError('Качването не успя.'); return }
+      setVideoUrl(data.url)
+    } catch {
+      setError('Качването не успя.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleNext() {
+    if (!videoUrl) { onNext(); return }
+    setSubmitting(true)
+    setError(null)
+    const res = await submitAnswer(studentId, question.id, { media_url: videoUrl, media_type: 'video' })
+    if (res.error) { setError(res.error); setSubmitting(false) }
+    else onNext()
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Видео</p>
+        <h2 className="text-2xl font-bold text-indigo-900 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+          {question.text}
+        </h2>
+      </div>
+
+      <div className="flex flex-col items-center gap-4 py-2">
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            controls
+            className="w-full rounded-2xl border border-gray-200 shadow-sm max-h-56 bg-black"
+          />
+        ) : (
+          <div
+            onClick={() => inputRef.current?.click()}
+            className="w-full h-40 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-indigo-100 transition-colors"
+          >
+            <span className="material-symbols-outlined text-4xl text-indigo-300">videocam</span>
+            <p className="text-sm text-indigo-400 font-medium">Добавете видео</p>
+            <p className="text-xs text-gray-400">MP4, MOV, WebM — до 100 MB</p>
+          </div>
+        )}
+
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="text-xs text-indigo-500 hover:text-indigo-700 underline underline-offset-2 disabled:opacity-50"
+        >
+          {uploading ? 'Качва се...' : videoUrl ? 'Смени видеото' : 'Избери файл'}
+        </button>
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+      </div>
+
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
+      )}
+
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={onBack}
+          className="flex-none px-5 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+        >
+          ← Назад
+        </button>
+        <button
+          onClick={handleNext}
+          disabled={submitting || uploading}
+          className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+        >
+          {submitting ? 'Записва се...' : videoUrl ? 'Напред →' : 'Пропусни →'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main wizard ───────────────────────────────────────────────────────────────
 
 export default function WizardClient({
@@ -292,7 +411,15 @@ export default function WizardClient({
           )}
 
           {/* ── Question ──────────────────────────────────────────────────── */}
-          {step.kind === 'question' && (
+          {step.kind === 'question' && step.question.type === 'video' && (
+            <VideoStep
+              studentId={studentId}
+              question={step.question}
+              onNext={next}
+              onBack={back}
+            />
+          )}
+          {step.kind === 'question' && step.question.type !== 'video' && (
             <QuestionStep
               studentId={studentId}
               question={step.question}

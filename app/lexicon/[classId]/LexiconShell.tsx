@@ -26,20 +26,21 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
       {/* ── Sticky header ────────────────────────────────────────────── */}
       <header
         className="flex flex-col items-center w-full pt-4 px-6 max-w-screen-xl mx-auto sticky top-0 z-40"
-        style={{ backgroundColor: 'var(--lex-bg)' }}
+        style={{
+          backgroundColor: 'color-mix(in srgb, var(--lex-bg) 82%, transparent)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        } as React.CSSProperties}
       >
         <div className="flex items-center justify-between w-full pb-4">
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-              style={{ border: '2px solid color-mix(in srgb, var(--lex-primary) 20%, transparent)', backgroundColor: 'var(--lex-primary-light)' }}
-            >
-              {logoUrl ? (
-                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="material-symbols-outlined text-xl" style={{ color: 'var(--lex-primary)' }}>school</span>
-              )}
-            </div>
+            {logoUrl ? (
+              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-surface-container-low">
+                <img src={logoUrl} alt="" className="w-full h-full object-contain p-0.5" />
+              </div>
+            ) : (
+              <span className="material-symbols-outlined text-xl" style={{ color: 'var(--lex-primary)' }}>school</span>
+            )}
             <h1
               className="text-2xl italic"
               style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}

@@ -25,12 +25,11 @@ export default async function WizardPage({
 
   if (!student || student.parent_user_id !== user.id) redirect('/login')
 
-  // Only personal questions go in the wizard (class-specific only — system questions are templates)
   const { data: questions } = await admin
     .from('questions')
-    .select('id, text, max_length, order_index')
+    .select('id, text, type, max_length, order_index')
     .eq('class_id', student.class_id)
-    .eq('type', 'personal')
+    .in('type', ['video', 'personal', 'superhero'])
     .order('order_index')
 
   const questionIds = (questions ?? []).map(q => q.id)
@@ -38,20 +37,22 @@ export default async function WizardPage({
   const { data: answers } = questionIds.length > 0
     ? await admin
         .from('answers')
-        .select('question_id, text_content, status')
+        .select('question_id, text_content, media_url, status')
         .eq('student_id', studentId)
         .in('question_id', questionIds)
     : { data: [] }
 
   const answerMap = new Map(
-    (answers ?? []).map(a => [a.question_id, { text: a.text_content ?? '', status: a.status }])
+    (answers ?? []).map(a => [a.question_id, { text: a.text_content ?? '', mediaUrl: a.media_url ?? null, status: a.status }])
   )
 
   const wizardQuestions = (questions ?? []).map(q => ({
     id: q.id,
     text: q.text,
+    type: q.type as 'video' | 'personal' | 'superhero',
     maxLength: q.max_length ?? null,
     existingAnswer: answerMap.get(q.id)?.text ?? '',
+    existingMediaUrl: answerMap.get(q.id)?.mediaUrl ?? null,
     existingStatus: answerMap.get(q.id)?.status ?? null,
   }))
 

@@ -13,7 +13,7 @@ export function LexiconHeaderNav({ classId, basePath }: { classId: string; baseP
   const pathname = usePathname()
   const base = basePath ?? `/lexicon/${classId}`
   return (
-    <nav className="flex gap-8 w-full pt-3 overflow-x-auto hide-scrollbar" style={{ borderTop: '1px solid color-mix(in srgb, var(--lex-text) 10%, transparent)' }}>
+    <nav className="flex gap-8 w-full pt-2 overflow-x-auto hide-scrollbar">
       {NAV_ITEMS.map(item => {
         const href = `${base}${item.path}`
         const active = item.exact ? pathname === href : !!pathname?.startsWith(href)
@@ -21,11 +21,11 @@ export function LexiconHeaderNav({ classId, basePath }: { classId: string; baseP
           <Link
             key={item.label}
             href={href}
-            className="pb-1 tracking-tight whitespace-nowrap transition-colors duration-200"
+            className="pb-2 tracking-wide whitespace-nowrap transition-colors duration-200 font-label text-sm"
             style={{
               color: active ? 'var(--lex-primary)' : 'var(--lex-muted)',
-              borderBottom: active ? '2px solid var(--lex-secondary)' : '2px solid transparent',
-              fontWeight: active ? 600 : 500,
+              borderBottom: active ? '2px solid var(--lex-primary)' : '2px solid transparent',
+              fontWeight: active ? 700 : 500,
             }}
           >
             {item.label}

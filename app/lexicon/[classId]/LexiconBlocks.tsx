@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import type { Block } from '@/lib/templates/types'
 
+function cardRotation(id: string): string {
+  const n = parseInt(id.replace(/-/g, '').slice(0, 4), 16) % 7
+  return `rotate(${n - 3}deg)` // deterministic -3..+3 deg per student
+}
+
 // ── Exported data types ────────────────────────────────────────────────────
 
 export interface QuestionAnswer {
@@ -87,42 +92,70 @@ function SuperheroBlock({ data }: { data: LexiconData }) {
 }
 
 function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
-  const { classId, studentList, teaserMap } = data
-  const showTeaser = (config.showTeaser as boolean) ?? true
+  const { classId, studentList } = data
   const base = basePath ?? `/lexicon/${classId}`
   if (studentList.length === 0) return null
 
+  // Show preview of first 8, link out for all
+  const preview = studentList.slice(0, 8)
+
   return (
-    <section className="mb-16">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите съученици</h3>
-        <Link href={`${base}/students`} className="font-semibold text-sm tracking-widest uppercase" style={{ color: 'var(--lex-secondary)' }}>
-          {studentList.length} ученици
+    <section className="mb-20">
+      {/* Header — editorial asymmetric */}
+      <div className="flex items-baseline justify-between mb-14">
+        <h3
+          className="font-headline font-bold text-on-surface leading-none"
+          style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}
+        >
+          Учениците
+        </h3>
+        <Link
+          href={`${base}/students`}
+          className="text-xs font-bold tracking-[0.25em] uppercase text-on-surface-variant hover:text-primary transition-colors duration-200"
+        >
+          {studentList.length} ученици →
         </Link>
       </div>
-      <div className="flex gap-6 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6">
-        {studentList.map(student => {
-          const teaser = teaserMap[student.id]
+
+      {/* Magazine grid — alternating vertical offsets */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-14 gap-x-8">
+        {preview.map((student, i) => {
           const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+          const rotation = cardRotation(student.id)
+          // columns 2 and 4 (index 1 and 3 in a row of 4) get a vertical offset
+          const isOffset = i % 4 === 1 || i % 4 === 3
           return (
-            <Link key={student.id} href={`${base}/student/${student.id}`} className="flex-none w-48 group">
-              <div className="p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl" style={{ backgroundColor: 'var(--lex-surface)', borderRadius: 'var(--lex-radius-card)' }}>
-                <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4" style={{ border: '4px solid var(--lex-card)' }}>
-                  {student.photo_url
-                    ? <img src={student.photo_url} alt={student.first_name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--lex-primary-light)' }}>
-                        <span className="font-bold text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{initials}</span>
-                      </div>
-                  }
+            <Link
+              key={student.id}
+              href={`${base}/student/${student.id}`}
+              className={`group relative pt-5 transition-transform duration-300 hover:-translate-y-2 ${isOffset ? 'lg:mt-10' : ''}`}
+            >
+              {/* Washi tape */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-4 tape-overlay z-10 pointer-events-none" />
+
+              {/* Polaroid */}
+              <div
+                className="bg-surface-container-lowest p-3 polaroid-frame transition-transform duration-500 group-hover:rotate-0"
+                style={{ transform: rotation }}
+              >
+                <div className="aspect-[4/5] overflow-hidden bg-surface-container">
+                  {student.photo_url ? (
+                    <img
+                      src={student.photo_url}
+                      alt={student.first_name}
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-surface-container-high">
+                      <span className="font-headline text-2xl font-bold text-on-surface-variant">{initials}</span>
+                    </div>
+                  )}
                 </div>
-                <h4 className="text-lg mb-1" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>
-                  {student.first_name} {student.last_name[0]}.
-                </h4>
-                {showTeaser && teaser && (
-                  <p className="text-xs leading-relaxed italic" style={{ color: 'var(--lex-secondary)' }}>
-                    „{teaser.slice(0, 50)}{teaser.length > 50 ? '…' : ''}"
-                  </p>
-                )}
+                <div className="mt-4 pb-1">
+                  <h4 className="font-headline text-base font-bold text-on-surface leading-tight">
+                    {student.first_name} {student.last_name}
+                  </h4>
+                </div>
               </div>
             </Link>
           )
@@ -184,7 +217,7 @@ function AnswerCard({ answer }: { answer: QuestionAnswer }) {
   const s = answer.student
   const initials = s ? `${s.first_name[0]}${s.last_name[0]}`.toUpperCase() : '?'
   return (
-    <div className="p-5" style={{ backgroundColor: 'var(--lex-surface)', borderRadius: 'var(--lex-radius)', border: '1px solid color-mix(in srgb, var(--lex-primary) 8%, transparent)' }}>
+    <div className="p-5" style={{ backgroundColor: 'var(--lex-surface)', borderRadius: 'var(--lex-radius)' }}>
       {answer.media_url && (answer.media_type?.startsWith('image') ?? true) && (
         <img src={answer.media_url} alt="" className="w-full rounded-xl mb-4 object-cover max-h-64" />
       )}
@@ -194,7 +227,7 @@ function AnswerCard({ answer }: { answer: QuestionAnswer }) {
         </p>
       )}
       {s && (
-        <div className="flex items-center gap-2 mt-auto pt-2" style={{ borderTop: '1px solid color-mix(in srgb, var(--lex-primary) 6%, transparent)' }}>
+        <div className="flex items-center gap-2 mt-4 pt-0">
           <div className="w-7 h-7 rounded-full overflow-hidden flex-none" style={{ backgroundColor: 'var(--lex-primary-light)' }}>
             {s.photo_url
               ? <img src={s.photo_url} alt={s.first_name} className="w-full h-full object-cover" />
