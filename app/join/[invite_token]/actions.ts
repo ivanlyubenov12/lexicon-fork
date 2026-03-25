@@ -2,6 +2,34 @@
 
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 
+export async function sendJoinMagicLink(
+  inviteToken: string,
+  email: string,
+): Promise<{ error: string | null }> {
+  const admin = createServiceRoleClient()
+  const { data: student } = await admin
+    .from('students')
+    .select('id')
+    .eq('invite_token', inviteToken)
+    .single()
+
+  if (!student) return { error: 'Невалиден линк.' }
+
+  const supabase = createServerClient()
+  const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: {
+      emailRedirectTo: `${siteUrl}/auth/callback?invite_token=${inviteToken}`,
+      shouldCreateUser: true,
+    },
+  })
+
+  if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+  return { error: null }
+}
+
 interface State {
   error: string | null
   redirectTo: string | null

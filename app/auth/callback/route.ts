@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
-// GET /auth/callback — handles magic link (token_hash) and OAuth (code) flows for moderators
-// Parents no longer use this route — they register/login directly on /join/[invite_token]
+// GET /auth/callback — handles magic link flows for both moderators and parents
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
 
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type') as EmailOtpType | null
-  const code = searchParams.get('code')
+  const token_hash  = searchParams.get('token_hash')
+  const type        = searchParams.get('type') as EmailOtpType | null
+  const code        = searchParams.get('code')
+  const inviteToken = searchParams.get('invite_token')
 
   const supabase = createServerClient()
 
@@ -28,7 +28,29 @@ export async function GET(request: NextRequest) {
 
   const admin = createServiceRoleClient()
 
-  // Moderator with a class
+  // ── Parent join via invite link ────────────────────────────────────────────
+  if (inviteToken) {
+    const { data: student } = await admin
+      .from('students')
+      .select('id, invite_accepted_at')
+      .eq('invite_token', inviteToken)
+      .single()
+
+    if (student) {
+      // Link student to this user (idempotent)
+      await admin
+        .from('students')
+        .update({
+          parent_user_id: user.id,
+          ...(student.invite_accepted_at ? {} : { invite_accepted_at: new Date().toISOString() }),
+        })
+        .eq('id', student.id)
+
+      return NextResponse.redirect(`${origin}/my/${student.id}/wizard`)
+    }
+  }
+
+  // ── Moderator with a class ─────────────────────────────────────────────────
   const { data: classData } = await admin
     .from('classes')
     .select('id')
@@ -39,18 +61,18 @@ export async function GET(request: NextRequest) {
 
   if (classData) return NextResponse.redirect(`${origin}/moderator/${classData.id}`)
 
-  // Parent with a linked student
+  // ── Parent with a linked student ───────────────────────────────────────────
   const { data: studentData } = await admin
     .from('students')
     .select('id')
     .eq('parent_user_id', user.id)
     .single()
 
-  if (studentData) return NextResponse.redirect(`${origin}/my/${studentData.id}`)
+  if (studentData) return NextResponse.redirect(`${origin}/my/${studentData.id}/wizard`)
 
-  // Admin
+  // ── Admin ──────────────────────────────────────────────────────────────────
   if (user.email === process.env.ADMIN_EMAIL) return NextResponse.redirect(`${origin}/admin`)
 
-  // Moderator with no class yet
+  // ── Moderator with no class yet ────────────────────────────────────────────
   return NextResponse.redirect(`${origin}/moderator`)
 }

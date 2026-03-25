@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
-import JoinRegisterForm from './JoinRegisterForm'
-import JoinLoginForm from './JoinLoginForm'
+import JoinEmailForm from './JoinEmailForm'
 
 interface Props {
   params: Promise<{ invite_token: string }>
@@ -29,54 +28,18 @@ export default async function JoinPage({ params }: Props) {
     )
   }
 
-  // If already logged in → go straight to student profile
+  // If already logged in → go straight to wizard
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect(`/my/${student.id}`)
-
-  const parentEmail = student.parent_email ?? ''
-
-  // Check if this email already has a parent account on another student
-  const { data: existingParentRow } = await admin
-    .from('students')
-    .select('parent_user_id')
-    .eq('parent_email', parentEmail)
-    .not('parent_user_id', 'is', null)
-    .limit(1)
-    .maybeSingle()
-
-  const parentAccountExists = !!existingParentRow?.parent_user_id
+  if (user) redirect(`/my/${student.id}/wizard`)
 
   return (
     <JoinShell student={student}>
-      {/* Invite already accepted — show login */}
-      {student.invite_accepted_at !== null && (
-        <JoinLoginForm
-          studentId={student.id}
-          studentName={`${student.first_name} ${student.last_name}`}
-          parentEmail={parentEmail}
-          reason="already_accepted"
-        />
-      )}
-
-      {/* New invite, but parent already has an account (second child etc.) */}
-      {student.invite_accepted_at === null && parentAccountExists && (
-        <JoinLoginForm
-          studentId={student.id}
-          studentName={`${student.first_name} ${student.last_name}`}
-          parentEmail={parentEmail}
-          reason="account_exists"
-        />
-      )}
-
-      {/* New invite, new parent — registration */}
-      {student.invite_accepted_at === null && !parentAccountExists && (
-        <JoinRegisterForm
-          studentId={student.id}
-          studentName={`${student.first_name} ${student.last_name}`}
-          parentEmail={parentEmail}
-        />
-      )}
+      <JoinEmailForm
+        inviteToken={invite_token}
+        parentEmail={student.parent_email ?? ''}
+        studentFirstName={student.first_name}
+      />
     </JoinShell>
   )
 }

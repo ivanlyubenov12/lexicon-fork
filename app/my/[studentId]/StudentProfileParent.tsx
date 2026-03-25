@@ -305,6 +305,13 @@ export default function StudentProfileParent({
               <span className="text-xs text-gray-400 font-medium">{doneCount}/{totalSections} секции</span>
             </div>
           </div>
+          <Link
+            href={`/my/${student.id}/wizard`}
+            className="flex-none flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">edit</span>
+            Редактирай
+          </Link>
         </div>
       </div>
 
