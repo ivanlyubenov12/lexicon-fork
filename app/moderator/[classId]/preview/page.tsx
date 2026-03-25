@@ -232,7 +232,7 @@ export default async function ModeratorPreviewPage({
       {/* Lexicon content pushed below banner */}
       <div className="pt-10">
         <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={`/moderator/${classId}/preview`}>
-          <LexiconBlocks blocks={blocks} data={lexiconData} />
+          <LexiconBlocks blocks={blocks} data={lexiconData} basePath={`/moderator/${classId}/preview`} />
         </LexiconShell>
       </div>
     </>

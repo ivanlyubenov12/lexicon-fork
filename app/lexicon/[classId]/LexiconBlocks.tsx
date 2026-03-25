@@ -86,16 +86,17 @@ function SuperheroBlock({ data }: { data: LexiconData }) {
   )
 }
 
-function StudentsGridBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
+function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
   const { classId, studentList, teaserMap } = data
   const showTeaser = (config.showTeaser as boolean) ?? true
+  const base = basePath ?? `/lexicon/${classId}`
   if (studentList.length === 0) return null
 
   return (
     <section className="mb-16">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите съученици</h3>
-        <Link href={`/lexicon/${classId}/students`} className="font-semibold text-sm tracking-widest uppercase" style={{ color: 'var(--lex-secondary)' }}>
+        <Link href={`${base}/students`} className="font-semibold text-sm tracking-widest uppercase" style={{ color: 'var(--lex-secondary)' }}>
           {studentList.length} ученици
         </Link>
       </div>
@@ -104,7 +105,7 @@ function StudentsGridBlock({ data, config }: { data: LexiconData; config: Record
           const teaser = teaserMap[student.id]
           const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
           return (
-            <Link key={student.id} href={`/lexicon/${classId}/student/${student.id}`} className="flex-none w-48 group">
+            <Link key={student.id} href={`${base}/student/${student.id}`} className="flex-none w-48 group">
               <div className="p-5 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl" style={{ backgroundColor: 'var(--lex-surface)', borderRadius: 'var(--lex-radius-card)' }}>
                 <div className="w-24 h-24 mx-auto rounded-full overflow-hidden mb-4" style={{ border: '4px solid var(--lex-card)' }}>
                   {student.photo_url
@@ -289,18 +290,19 @@ function PollBlock({ data, config }: { data: LexiconData; config: Record<string,
   )
 }
 
-function EventsBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
+function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
   const { classId, eventList } = data
   const limit = (config.limit as number) ?? 4
   const style = (config.style as string) ?? 'polaroids'
   const items = eventList.slice(0, limit)
+  const base = basePath ?? `/lexicon/${classId}`
   if (items.length === 0) return null
 
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите спомени</h3>
-        <Link href={`/lexicon/${classId}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
+        <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
       </div>
       <div className={style === 'timeline' ? 'space-y-4' : 'columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6'}>
         {items.map((event, i) => {
@@ -368,7 +370,7 @@ function PlaceholderBlock({ icon, text, color }: { icon: string; text: string; c
 
 // ── Main renderer ──────────────────────────────────────────────────────────
 
-export default function LexiconBlocks({ blocks, data }: { blocks: Block[]; data: LexiconData }) {
+export default function LexiconBlocks({ blocks, data, basePath }: { blocks: Block[]; data: LexiconData; basePath?: string }) {
   return (
     <>
       {blocks.map(block => {
@@ -376,12 +378,12 @@ export default function LexiconBlocks({ blocks, data }: { blocks: Block[]; data:
         switch (block.type) {
           case 'hero':          return <HeroBlock          key={block.id} data={data} />
           case 'superhero':     return <SuperheroBlock     key={block.id} data={data} />
-          case 'students_grid': return <StudentsGridBlock  key={block.id} data={data} config={cfg} />
+          case 'students_grid': return <StudentsGridBlock  key={block.id} data={data} config={cfg} basePath={basePath} />
           case 'question':      return <QuestionBlock      key={block.id} data={data} config={cfg} />
           case 'photo_gallery': return <PhotoGalleryBlock  key={block.id} data={data} config={cfg} />
           case 'class_voice':   return <ClassVoiceBlock    key={block.id} data={data} config={cfg} />
           case 'poll':          return <PollBlock          key={block.id} data={data} config={cfg} />
-          case 'events':        return <EventsBlock        key={block.id} data={data} config={cfg} />
+          case 'events':        return <EventsBlock        key={block.id} data={data} config={cfg} basePath={basePath} />
           default:              return null
         }
       })}
