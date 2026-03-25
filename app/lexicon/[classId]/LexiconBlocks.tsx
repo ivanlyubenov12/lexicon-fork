@@ -277,26 +277,13 @@ function PollBlock({ data, config }: { data: LexiconData; config: Record<string,
   const poll = data.pollData[pid]
   if (!poll || poll.nominees.length === 0) return <PlaceholderBlock icon="bar_chart" text="Все още няма гласове за тази анкета" color="primary" />
 
+  const winner = poll.nominees[0]
+
   return (
-    <section className="mb-16">
-      <div className="p-8" style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}>
-        <h4 className="text-xs font-bold uppercase tracking-[0.2em] mb-8" style={{ color: 'var(--lex-secondary)' }}>{poll.question}</h4>
-        <div className="space-y-5">
-          {poll.nominees.map((n, i) => (
-            <div key={i} className="space-y-2">
-              <div className="flex justify-between text-sm font-semibold">
-                <span style={{ color: 'var(--lex-text)' }}>{n.name}</span>
-                <span style={{ color: 'var(--lex-muted)' }}>{n.pct}%</span>
-              </div>
-              <div className="h-3 w-full rounded-full overflow-hidden" style={{ backgroundColor: 'color-mix(in srgb, var(--lex-muted) 15%, transparent)' }}>
-                <div className="h-full rounded-full transition-all duration-700" style={{
-                  width: `${n.pct}%`,
-                  backgroundColor: i === 0 ? 'var(--lex-primary)' : i === 1 ? 'var(--lex-accent)' : 'color-mix(in srgb, var(--lex-primary) 50%, transparent)',
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
+    <section className="mb-8">
+      <div className="flex items-baseline gap-3 flex-wrap">
+        <span className="text-sm font-semibold" style={{ color: 'var(--lex-muted)' }}>{poll.question}:</span>
+        <span className="text-lg font-bold" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{winner.name}</span>
       </div>
     </section>
   )
