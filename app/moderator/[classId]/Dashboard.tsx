@@ -182,7 +182,14 @@ export default function Dashboard({
         </nav>
 
         {/* Bottom */}
-        <div className="pt-4 space-y-1">
+        <div className="pt-4 space-y-2">
+          <Link
+            href={`${base}/preview`}
+            className="w-full flex items-center justify-center gap-2 border border-indigo-200 text-indigo-600 py-2.5 px-4 rounded-xl font-semibold text-sm text-center hover:bg-indigo-50 transition-colors"
+          >
+            <Icon name="preview" className="text-base" />
+            Превю
+          </Link>
           <Link
             href={`${base}/finalize`}
             className="w-full block bg-gradient-to-br from-indigo-600 to-indigo-500 text-white py-3 px-4 rounded-xl font-bold text-sm text-center shadow hover:opacity-90 transition-opacity"
