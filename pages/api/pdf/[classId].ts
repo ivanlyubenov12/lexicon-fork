@@ -14,12 +14,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, superhero_image_url, superhero_prompt')
+    .select('id, name, school_year, school_logo_url, superhero_image_url, superhero_prompt, plan')
     .eq('id', classId)
     .single()
 
   if (!cls) {
     res.status(404).send('Class not found')
+    return
+  }
+
+  if (cls.plan !== 'premium') {
+    res.status(403).send('PDF export requires Premium plan')
     return
   }
 

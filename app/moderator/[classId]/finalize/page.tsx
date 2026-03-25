@@ -18,7 +18,7 @@ export default async function FinalizePage({ params }: { params: Promise<{ class
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, status, superhero_image_url')
+    .select('id, name, school_year, school_logo_url, status, plan, superhero_image_url')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -88,6 +88,7 @@ export default async function FinalizePage({ params }: { params: Promise<{ class
         <FinalizeView
           classId={classId}
           className={classData.name}
+          classPlan={(classData.plan as 'basic' | 'premium' | null) ?? null}
           classStatus={classData.status}
           totalStudents={totalStudents}
           acceptedStudents={acceptedStudents}

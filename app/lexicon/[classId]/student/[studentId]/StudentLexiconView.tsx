@@ -45,6 +45,8 @@ interface Props {
   nextHref?: string | null
   /** Override the back link */
   backHref?: string
+  /** Whether premium features (video) are visible */
+  isPremium?: boolean
 }
 
 function AudioPlayer({ src }: { src: string }) {
@@ -132,6 +134,7 @@ export default function StudentLexiconView({
   prevHref,
   nextHref,
   backHref,
+  isPremium = false,
 }: Props) {
   const resolvedPrevHref = prevHref !== undefined ? prevHref : (prevStudentId ? `/lexicon/${classId}/student/${prevStudentId}` : null)
   const resolvedNextHref = nextHref !== undefined ? nextHref : (nextStudentId ? `/lexicon/${classId}/student/${nextStudentId}` : null)
@@ -147,9 +150,11 @@ export default function StudentLexiconView({
     })
     .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
 
-  const videoQA = answeredQuestions
-    .filter((q) => answerMap.get(q.id)?.media_type === 'video')
-    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+  const videoQA = isPremium
+    ? answeredQuestions
+        .filter((q) => answerMap.get(q.id)?.media_type === 'video')
+        .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+    : []
 
   const audioQA = answeredQuestions
     .filter((q) => answerMap.get(q.id)?.media_type === 'audio')
