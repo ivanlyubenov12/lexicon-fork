@@ -81,7 +81,7 @@ export default function HomePage() {
                 Разгледайте демо
               </Link>
             </div>
-            <p className="text-slate-400 text-sm">69.99 EUR · еднократно · без абонамент</p>
+            <p className="text-slate-400 text-sm">от 29.99 EUR · еднократно · без абонамент</p>
           </div>
 
           {/* Right — photo composition */}
@@ -275,7 +275,7 @@ export default function HomePage() {
 
       {/* ── Pricing ────────────────────────────────────────────────────── */}
       <section className="py-24 px-8 bg-[#faf9f8]">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2
               className="text-4xl font-bold text-indigo-800 mb-4"
@@ -291,73 +291,87 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch pt-4">
-            {/* Free */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-3xl mx-auto pt-4">
+            {/* Basic */}
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col hover:scale-[1.01] transition-all">
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Начален Клас</h3>
-                <p className="text-slate-500 text-sm">За малки класове или начало на проекта.</p>
+              <div className="mb-6">
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Дигитален</span>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Basic</h3>
+                <p className="text-slate-500 text-sm">Пълен дигитален лексикон, достъпен онлайн за целия клас.</p>
               </div>
               <div className="mb-8">
                 <span
                   className="text-4xl font-bold text-indigo-700"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
-                  0 лв.
+                  29.99
                 </span>
-                <span className="text-slate-500"> /месец</span>
+                <span className="text-slate-400 text-lg font-semibold"> EUR</span>
+                <p className="text-xs text-slate-400 mt-1">еднократно · без абонамент</p>
               </div>
-              <ul className="space-y-4 mb-10 flex-grow">
-                {['До 15 ученика', 'Дигитален лексикон (текст)', '1GB облачно пространство'].map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-slate-500">
-                    <span className="material-symbols-outlined text-green-500 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <ul className="space-y-3 mb-10 flex-grow">
+                {[
+                  'Неограничен брой ученици',
+                  'Дигитален лексикон онлайн',
+                  'Профили с текст и аудио',
+                  'Послания между съученици',
+                  'AI Супергерой образ',
+                  'Модераторски панел',
+                  'Достъп завинаги',
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-sm text-slate-600">
+                    <span className="material-symbols-outlined text-indigo-400 flex-shrink-0" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     {f}
                   </li>
                 ))}
-                <li className="flex items-center gap-3 text-sm text-slate-300 line-through">
-                  <span className="material-symbols-outlined text-slate-300 text-lg">cancel</span>
-                  Видео и аудио записи
+                <li className="flex items-center gap-3 text-sm text-slate-300">
+                  <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18 }}>cancel</span>
+                  Видео въпроси
+                </li>
+                <li className="flex items-center gap-3 text-sm text-slate-300">
+                  <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18 }}>cancel</span>
+                  PDF за сваляне
                 </li>
               </ul>
               <Link
                 href="/register"
                 className="w-full py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 font-bold text-center hover:bg-indigo-50 transition-colors mt-auto"
               >
-                Започнете безплатно
+                Започнете с Basic
               </Link>
             </div>
 
-            {/* Featured */}
+            {/* Premium — featured */}
             <div className="bg-indigo-700 text-white p-8 rounded-3xl shadow-2xl flex flex-col relative lg:scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-                Най-популярно
+                Най-пълен
               </div>
-              <div className="mb-8 pt-2">
-                <h3 className="text-xl font-bold mb-2">Неразделен Клас</h3>
-                <p className="text-indigo-200 text-sm">Пълното изживяване за целия клас.</p>
+              <div className="mb-6 pt-2">
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-indigo-300 mb-3">Дигитален + PDF + Видео</span>
+                <h3 className="text-xl font-bold mb-2">Premium</h3>
+                <p className="text-indigo-200 text-sm">Пълното изживяване — с видео спомени и PDF за печат.</p>
               </div>
               <div className="mb-8">
                 <span
                   className="text-4xl font-bold"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
-                  69.99 EUR
+                  59.99
                 </span>
-                <span className="text-indigo-300"> /еднократно</span>
+                <span className="text-indigo-300 text-lg font-semibold"> EUR</span>
+                <p className="text-xs text-indigo-300 mt-1">еднократно · без абонамент</p>
               </div>
-              <ul className="space-y-4 mb-10 flex-grow">
+              <ul className="space-y-3 mb-10 flex-grow">
                 {[
-                  'Неограничен брой ученици',
-                  'Видео & аудио съдържание',
-                  '50GB облачно пространство',
-                  'Модераторски панел',
-                  'Послания между деца',
-                  'AI Супергерой образ',
+                  'Всичко от Basic',
+                  'Видео въпроси в анкетата',
+                  'PDF лексикон за сваляне',
+                  'Подходящ за печат',
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-3 text-sm">
                     <span
-                      className="material-symbols-outlined text-amber-300 text-lg"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
+                      className="material-symbols-outlined text-amber-300 flex-shrink-0"
+                      style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}
                     >
                       stars
                     </span>
@@ -369,45 +383,11 @@ export default function HomePage() {
                 href="/register"
                 className="w-full py-4 rounded-xl bg-gradient-to-br from-amber-300 to-amber-400 text-amber-900 font-bold text-lg text-center shadow-lg hover:brightness-110 transition-all mt-auto"
               >
-                Изберете за класа
-              </Link>
-            </div>
-
-            {/* Print */}
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col hover:scale-[1.01] transition-all">
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Жив Архив</h3>
-                <p className="text-slate-500 text-sm">За тези, които искат физическо копие на историята.</p>
-              </div>
-              <div className="mb-8">
-                <span
-                  className="text-4xl font-bold text-indigo-700"
-                  style={{ fontFamily: 'Noto Serif, serif' }}
-                >
-                  По заявка
-                </span>
-              </div>
-              <ul className="space-y-4 mb-10 flex-grow">
-                {[
-                  'Всичко от Неразделен Клас',
-                  'Луксозен принтиран фотоалбум',
-                  'Професионален дизайн',
-                  'QR кодове към видео спомените',
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-slate-500">
-                    <span className="material-symbols-outlined text-green-500 text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/contact"
-                className="w-full py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 font-bold text-center hover:bg-indigo-50 transition-colors mt-auto"
-              >
-                Свържете се с нас
+                Изберете Premium
               </Link>
             </div>
           </div>
+          <p className="text-center text-xs text-slate-400 mt-8">Регистрацията е безплатна — плащате само при публикуване. Можете да надградите от Basic към Premium по всяко време (доплащате само разликата).</p>
         </div>
       </section>
 
@@ -472,7 +452,7 @@ export default function HomePage() {
               Създай профил на класа
             </Link>
           </div>
-          <p className="text-slate-400 text-sm relative z-10">69.99 EUR · еднократно · без абонамент</p>
+          <p className="text-slate-400 text-sm relative z-10">от 29.99 EUR · еднократно · без абонамент</p>
         </div>
       </section>
 

@@ -2,51 +2,41 @@ import Link from 'next/link'
 
 const tiers = [
   {
-    name: 'Пробен',
-    price: null,
-    priceNote: 'Безплатно',
-    desc: 'Регистрирайте се и попълнете лексикона без никакво плащане.',
+    name: 'Basic',
+    badge: 'Дигитален',
+    price: '29.99',
+    priceNote: 'EUR · еднократно',
+    desc: 'Пълен дигитален лексикон, достъпен онлайн за целия клас.',
     features: [
-      'До 30 деца в класа',
-      'Всички въпроси и профили',
-      'Послания от съученици',
-      'Преглед на лексикона',
+      'Неограничен брой ученици',
+      'Дигитален лексикон онлайн',
+      'Профили с текст и аудио',
+      'Послания между съученици',
+      'AI Супергерой образ',
+      'Модераторски панел',
+      'Достъп завинаги',
     ],
-    cta: 'Започни безплатно',
+    missing: ['Видео въпроси', 'PDF за сваляне'],
+    cta: 'Започни с Basic →',
     ctaHref: '/register',
     featured: false,
   },
   {
-    name: 'Един клас',
-    price: '69.99',
+    name: 'Premium',
+    badge: 'Дигитален + PDF + Видео',
+    price: '59.99',
     priceNote: 'EUR · еднократно',
-    desc: 'Публикувайте завършения лексикон и го споделете с родителите.',
+    desc: 'Пълното изживяване — с видео спомени и PDF лексикон за печат.',
     features: [
-      'Всичко от Пробен',
-      'Публикуване за родителите',
-      'AI-генериран супергерой',
-      'Сваляне на PDF',
-      'Достъп завинаги',
-      'Без абонамент',
+      'Всичко от Basic',
+      'Видео въпроси в анкетата',
+      'PDF лексикон за сваляне',
+      'Подходящ за печат',
     ],
-    cta: 'Създай лексикон →',
+    missing: [],
+    cta: 'Започни с Premium →',
     ctaHref: '/register',
     featured: true,
-  },
-  {
-    name: 'По заявка',
-    price: null,
-    priceNote: 'Свържете се',
-    desc: 'За училища с много паралелки или специални изисквания.',
-    features: [
-      'Неограничени класове',
-      'Персонализиран дизайн',
-      'Приоритетна поддръжка',
-      'Фактура за юридическо лице',
-    ],
-    cta: 'Пишете ни',
-    ctaHref: '/contact',
-    featured: false,
   },
 ]
 
@@ -56,12 +46,16 @@ const faqs = [
     a: 'Регистрацията е безплатна. Плащате само когато сте готови да публикувате лексикона — преди да го видят родителите.',
   },
   {
-    q: 'Какво се случва, ако не ми хареса?',
-    a: 'Ако лексиконът не е публикуван и имате проблем, свържете се с нас — ще намерим решение.',
+    q: 'Каква е разликата между Basic и Premium?',
+    a: 'Basic включва пълен дигитален лексикон с текст и аудио (29.99 EUR). Premium добавя видео въпроси в анкетата и PDF лексикон за сваляне и печат (59.99 EUR).',
+  },
+  {
+    q: 'Мога ли да надградя от Basic към Premium?',
+    a: 'Да — доплащате само разликата от 30 EUR. Можете да надградите по всяко време след публикуване.',
   },
   {
     q: 'Може ли да го ползват повече класове?',
-    a: 'Всеки клас е отделен лексикон с отделно плащане от 69.99 EUR. Ако имате нужда от повече класове, пишете ни.',
+    a: 'Всеки клас е отделен лексикон с отделно плащане. Ако имате нужда от повече класове, пишете ни.',
   },
   {
     q: 'Какви начини на плащане се приемат?',
@@ -90,56 +84,56 @@ export default function PricingPage() {
             Просто и честно
           </h1>
           <p className="text-gray-500 text-lg leading-relaxed">
-            Един клас. Едно плащане. Спомен за цял живот.
+            Два плана. Едно плащане. Спомен за цял живот.
           </p>
         </div>
       </section>
 
       {/* ── Pricing tiers ─────────────────────────────────────────────────── */}
       <section className="bg-[#f4f3f2] py-20 px-6">
-        <div className="max-w-5xl mx-auto grid sm:grid-cols-3 gap-6 items-stretch">
+        <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-6 items-stretch">
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`flex flex-col rounded-3xl p-8 shadow-sm ${
+              className={`flex flex-col rounded-3xl p-8 shadow-sm relative ${
                 tier.featured
                   ? 'bg-indigo-700 text-white ring-2 ring-indigo-600 lg:scale-105'
                   : 'bg-white text-gray-900'
               }`}
             >
-              <div className="mb-6">
+              {tier.featured && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                  Най-пълен
+                </div>
+              )}
+              <div className="mb-6 pt-2">
                 <p
-                  className={`text-xs font-bold uppercase tracking-widest mb-3 ${
-                    tier.featured ? 'text-indigo-200' : 'text-indigo-500'
+                  className={`text-xs font-bold uppercase tracking-widest mb-2 ${
+                    tier.featured ? 'text-indigo-300' : 'text-indigo-400'
                   }`}
+                >
+                  {tier.badge}
+                </p>
+                <p
+                  className={`text-2xl font-bold mb-4 ${tier.featured ? 'text-white' : 'text-gray-900'}`}
+                  style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   {tier.name}
                 </p>
-                {tier.price ? (
-                  <div className="flex items-end gap-1 mb-1">
-                    <span
-                      className="text-5xl font-black"
-                      style={{ fontFamily: 'Noto Serif, serif' }}
-                    >
-                      {tier.price}
-                    </span>
-                    <span className={`text-lg font-bold mb-1.5 ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
-                      EUR
-                    </span>
-                  </div>
-                ) : (
-                  <p
-                    className={`text-3xl font-bold mb-1 ${tier.featured ? 'text-white' : 'text-gray-900'}`}
+                <div className="flex items-end gap-1 mb-1">
+                  <span
+                    className="text-5xl font-black"
                     style={{ fontFamily: 'Noto Serif, serif' }}
                   >
-                    {tier.priceNote}
-                  </p>
-                )}
-                {tier.price && (
-                  <p className={`text-xs ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
-                    {tier.priceNote}
-                  </p>
-                )}
+                    {tier.price}
+                  </span>
+                  <span className={`text-lg font-bold mb-1.5 ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                    EUR
+                  </span>
+                </div>
+                <p className={`text-xs ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                  {tier.priceNote}
+                </p>
                 <p className={`text-sm mt-3 leading-relaxed ${tier.featured ? 'text-indigo-100' : 'text-gray-500'}`}>
                   {tier.desc}
                 </p>
@@ -152,11 +146,24 @@ export default function PricingPage() {
                       className={`material-symbols-outlined flex-shrink-0 mt-0.5 ${
                         tier.featured ? 'text-amber-300' : 'text-indigo-400'
                       }`}
-                      style={{ fontSize: 16 }}
+                      style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}
                     >
                       check_circle
                     </span>
                     <span className={tier.featured ? 'text-indigo-100' : 'text-gray-700'}>
+                      {f}
+                    </span>
+                  </li>
+                ))}
+                {tier.missing.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm opacity-40">
+                    <span
+                      className="material-symbols-outlined flex-shrink-0 mt-0.5"
+                      style={{ fontSize: 16 }}
+                    >
+                      cancel
+                    </span>
+                    <span className={tier.featured ? 'text-indigo-200' : 'text-gray-500'}>
                       {f}
                     </span>
                   </li>
@@ -176,8 +183,8 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Регистрацията е безплатна — плащате само при публикуване
+        <p className="text-center text-xs text-gray-400 mt-8">
+          Регистрацията е безплатна — плащате само при публикуване · Надграждане от Basic към Premium по всяко време (доплащате само 30 EUR)
         </p>
       </section>
 
