@@ -11,7 +11,7 @@ export default async function SuperheroPage({ params }: { params: Promise<{ clas
   const { classId } = await params
 
   const auth = createServerClient()
-  const { data: { user } } = await auth.getUser()
+  const { data: { user } } = await auth.auth.getUser()
   if (!user) redirect('/login')
 
   const supabase = createServiceRoleClient()
