@@ -46,7 +46,11 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
   }
   const commentsByEvent: Record<string, Comment[]> = {}
   for (const c of comments ?? []) {
-    const ev = c as Comment & { event_id: string }
+    const raw = c as unknown as Comment & { event_id: string; students: { first_name: string; last_name: string; photo_url: string | null }[] | null }
+    const ev: Comment & { event_id: string } = {
+      ...raw,
+      students: Array.isArray(raw.students) ? (raw.students[0] ?? null) : raw.students,
+    }
     if (!commentsByEvent[ev.event_id]) commentsByEvent[ev.event_id] = []
     commentsByEvent[ev.event_id].push(ev)
   }
