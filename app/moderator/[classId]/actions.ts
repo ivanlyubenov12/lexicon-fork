@@ -132,6 +132,19 @@ export async function completeSetup(classId: string): Promise<{ error: string | 
   return { error: null }
 }
 
+export async function unpublishClass(classId: string): Promise<{ error: string | null }> {
+  const supabase = createServiceRoleClient()
+  const { error } = await supabase
+    .from('classes')
+    .update({ status: 'active', finalized_at: null })
+    .eq('id', classId)
+  if (error) return { error: 'Неуспешно.' }
+  revalidatePath(`/moderator/${classId}`)
+  revalidatePath(`/moderator/${classId}/finalize`)
+  revalidatePath(`/lexicon/${classId}`)
+  return { error: null }
+}
+
 export async function publishClass(classId: string): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
 

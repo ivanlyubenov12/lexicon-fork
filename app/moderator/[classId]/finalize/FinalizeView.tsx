@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { PLANS, type Plan } from '@/lib/stripe'
+import { unpublishClass } from '../actions'
 
 interface Props {
   classId: string
@@ -29,9 +31,19 @@ export default function FinalizeView({
   pendingMessages,
   hasSuperheroImage,
 }: Props) {
+  const router = useRouter()
   const [selected, setSelected] = useState<Plan>(classPlan === 'basic' ? 'premium' : 'basic')
   const [loading, setLoading] = useState(false)
+  const [unpublishing, setUnpublishing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  async function handleUnpublish() {
+    if (!confirm('Сигурен ли си? Лексиконът ще стане недостъпен за родителите.')) return
+    setUnpublishing(true)
+    const result = await unpublishClass(classId)
+    if (result.error) { setError(result.error); setUnpublishing(false) }
+    else router.refresh()
+  }
 
   const isPublished = classStatus === 'published'
   const isUpgrade   = classPlan === 'basic' && selected === 'premium'
@@ -113,6 +125,14 @@ export default function FinalizeView({
                 Изтегли PDF
               </a>
             )}
+            <button
+              onClick={handleUnpublish}
+              disabled={unpublishing}
+              className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 ml-auto"
+            >
+              <span className="material-symbols-outlined text-sm">unpublished</span>
+              {unpublishing ? 'Отменяне...' : 'Отмени публикуването'}
+            </button>
           </div>
         </div>
       )}

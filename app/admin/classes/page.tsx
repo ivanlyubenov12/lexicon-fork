@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import ShowcaseToggle from './ShowcaseToggle'
+import PublishToggle from './PublishToggle'
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   draft:             { label: 'Чернова',    color: 'bg-gray-100 text-gray-500' },
@@ -140,13 +141,16 @@ export default async function AdminClassesPage() {
                     />
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {cls.status === 'published' && (
-                      <Link href={`/lexicon/${cls.id}`} target="_blank"
-                        className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-600 font-semibold">
-                        <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
-                        Лексикон
-                      </Link>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {cls.status === 'published' && (
+                        <Link href={`/lexicon/${cls.id}`} target="_blank"
+                          className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-600 font-semibold">
+                          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
+                          Лексикон
+                        </Link>
+                      )}
+                      <PublishToggle classId={cls.id} isPublished={cls.status === 'published'} />
+                    </div>
                   </td>
                 </tr>
               )

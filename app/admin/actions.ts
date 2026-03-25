@@ -14,6 +14,34 @@ async function assertAdmin() {
   }
 }
 
+// ── Publish / Unpublish ───────────────────────────────────────────────────────
+
+export async function adminUnpublishClass(classId: string): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+  const { error } = await admin
+    .from('classes')
+    .update({ status: 'active', finalized_at: null })
+    .eq('id', classId)
+  if (error) return { error: 'Грешка при запазване.' }
+  revalidatePath('/admin/classes')
+  revalidatePath(`/lexicon/${classId}`)
+  return { error: null }
+}
+
+export async function adminPublishClass(classId: string): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+  const { error } = await admin
+    .from('classes')
+    .update({ status: 'published', finalized_at: new Date().toISOString() })
+    .eq('id', classId)
+  if (error) return { error: 'Грешка при запазване.' }
+  revalidatePath('/admin/classes')
+  revalidatePath(`/lexicon/${classId}`)
+  return { error: null }
+}
+
 // ── Showcase ──────────────────────────────────────────────────────────────────
 
 export async function setShowcaseOrder(
