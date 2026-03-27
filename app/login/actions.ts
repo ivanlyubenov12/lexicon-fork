@@ -54,6 +54,11 @@ export async function loginModerator(prevState: State, formData: FormData): Prom
     return { error: 'Нещо се обърка. Опитайте отново.', redirectTo: null }
   }
 
+  // Check if admin first — takes priority over all other roles
+  if (authData.user.email === process.env.ADMIN_EMAIL) {
+    return { error: null, redirectTo: '/admin' }
+  }
+
   const admin = createServiceRoleClient()
 
   // Check if moderator (has any class)
@@ -78,11 +83,6 @@ export async function loginModerator(prevState: State, formData: FormData): Prom
 
   if (studentData) {
     return { error: null, redirectTo: `/my/${studentData.id}` }
-  }
-
-  // Check if admin
-  if (authData.user.email === process.env.ADMIN_EMAIL) {
-    return { error: null, redirectTo: '/admin' }
   }
 
   // Fall back to role stored in user_metadata at registration
