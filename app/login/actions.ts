@@ -56,17 +56,16 @@ export async function loginModerator(prevState: State, formData: FormData): Prom
 
   const admin = createServiceRoleClient()
 
-  // Check if moderator
+  // Check if moderator (has any class)
   const { data: classData } = await admin
     .from('classes')
     .select('id')
     .eq('moderator_id', authData.user.id)
-    .order('created_at', { ascending: false })
     .limit(1)
     .single()
 
   if (classData) {
-    return { error: null, redirectTo: `/moderator/${classData.id}` }
+    return { error: null, redirectTo: '/moderator' }
   }
 
   // Check if parent

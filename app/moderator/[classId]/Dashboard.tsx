@@ -155,9 +155,11 @@ export default function Dashboard({
       <aside className="w-64 fixed left-0 top-0 h-screen bg-[#f4f3f2] flex flex-col p-4 z-50">
         {/* Brand */}
         <div className="px-2 py-4">
-          <h1 className="text-indigo-900 text-xl font-bold tracking-tight" style={{ fontFamily: 'Noto Serif, serif' }}>
-            Един неразделен клас
-          </h1>
+          <Link href="/moderator" className="block group">
+            <h1 className="text-indigo-900 text-xl font-bold tracking-tight group-hover:text-indigo-600 transition-colors" style={{ fontFamily: 'Noto Serif, serif' }}>
+              Един неразделен клас
+            </h1>
+          </Link>
           <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>
         </div>
 
