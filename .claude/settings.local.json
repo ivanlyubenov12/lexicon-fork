@@ -15,7 +15,8 @@
       "Bash(grep -n \"select.*questions\\\\|from.*questions\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/students/[studentId]/preview/page.tsx)",
       "Read(//Users/andreylyubenov/Desktop/Lexicon_Project/Avatars/**)",
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

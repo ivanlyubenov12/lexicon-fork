@@ -11,6 +11,8 @@ type ActiveNav =
   | 'events'
   | 'superhero'
   | 'layout'
+  | 'lexicon'
+  | 'template'
   | 'finalize'
   | 'seed'
   | 'preview'
@@ -25,15 +27,12 @@ interface Props {
 }
 
 const NAV_ITEMS = [
-  { key: 'dashboard', icon: 'dashboard', label: 'Табло', sub: '' },
-  { key: 'students', icon: 'group', label: 'Деца', sub: '/students' },
-  { key: 'answers', icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
-  { key: 'messages', icon: 'forum', label: 'Послания', sub: '/messages' },
-  { key: 'questions', icon: 'quiz', label: 'Въпросник', sub: '/questions' },
-  { key: 'layout', icon: 'view_quilt', label: 'Лексикон', sub: '/layout' },
-  { key: 'polls', icon: 'poll', label: 'Анкети', sub: '/polls' },
-  { key: 'events', icon: 'photo_album', label: 'Спомени', sub: '/events' },
-  { key: 'preview', icon: 'visibility', label: 'Превю', sub: '/preview' },
+  { key: 'dashboard', icon: 'dashboard',    label: 'Табло',    sub: '' },
+  { key: 'students',  icon: 'group',         label: 'Деца',     sub: '/students' },
+  { key: 'answers',   icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
+  { key: 'lexicon',   icon: 'view_quilt',    label: 'Лексикон', sub: '/lexicon' },
+  { key: 'events',    icon: 'photo_album',   label: 'Спомени',  sub: '/events' },
+  { key: 'preview',   icon: 'visibility',    label: 'Превю',    sub: '/preview' },
 ] as const
 
 export default function ModeratorSidebar({ classId, namePart, schoolYear, logoUrl, active }: Props) {
@@ -76,20 +75,25 @@ export default function ModeratorSidebar({ classId, namePart, schoolYear, logoUr
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.key}
-            href={`${base}${item.sub}`}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
-              active === item.key
-                ? 'bg-white text-indigo-700 font-semibold shadow-sm'
-                : 'text-slate-500 hover:bg-white/50'
-            }`}
-          >
-            <span className="material-symbols-outlined text-xl">{item.icon}</span>
-            {item.label}
-          </Link>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const lexiconActive = item.key === 'lexicon' &&
+            ['lexicon', 'questions', 'polls', 'messages', 'layout', 'template'].includes(active ?? '')
+          const isActive = active === item.key || lexiconActive
+          return (
+            <Link
+              key={item.key}
+              href={`${base}${item.sub}`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
+                isActive
+                  ? 'bg-white text-indigo-700 font-semibold shadow-sm'
+                  : 'text-slate-500 hover:bg-white/50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-xl">{item.icon}</span>
+              {item.label}
+            </Link>
+          )
+        })}
       </nav>
 
       {/* Bottom */}

@@ -120,13 +120,12 @@ export default function Dashboard({
   }
 
   const navItems = [
-    { icon: 'dashboard', label: 'Табло', href: base, active: true },
-    { icon: 'group', label: 'Деца', href: `${base}/students` },
+    { icon: 'dashboard',    label: 'Табло',     href: base,                active: true },
+    { icon: 'group',        label: 'Деца',      href: `${base}/students` },
     { icon: 'volunteer_activism', label: 'Отговори', href: `${base}/answers` },
-    { icon: 'quiz', label: 'Въпросник', href: `${base}/questions` },
+    { icon: 'view_quilt',   label: 'Лексикон',  href: `${base}/lexicon` },
     { icon: 'calendar_month', label: 'Събития', href: `${base}/events` },
-    { icon: 'view_quilt', label: 'Лексикон', href: `${base}/layout` },
-    { icon: 'settings', label: 'Настройки', href: '#', onClick: () => setEditingSettings(true) },
+    { icon: 'settings',     label: 'Настройки', href: '#', onClick: () => setEditingSettings(true) },
   ]
 
   return (

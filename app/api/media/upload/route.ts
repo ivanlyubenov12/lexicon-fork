@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer()
-    let buffer = Buffer.from(arrayBuffer)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let buffer: any = Buffer.from(arrayBuffer)
 
     // Resize images — skip video/audio
     const mime = (file as File).type ?? ''

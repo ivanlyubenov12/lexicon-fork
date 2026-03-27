@@ -402,7 +402,7 @@ function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config:
                 <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl leading-none select-none">👑</div>
                 <div
                   className="w-20 h-20 rounded-full overflow-hidden flex-none flex items-center justify-center ring-4 transition-all group-hover:ring-[color:var(--lex-primary)]"
-                  style={{ backgroundColor: 'var(--lex-primary-light)', ringColor: 'var(--lex-primary-light)' }}
+                  style={{ backgroundColor: 'var(--lex-primary-light)' }}
                 >
                   {winner.photoUrl ? (
                     <img src={winner.photoUrl} alt={winner.name} className="w-full h-full object-cover" />

@@ -27,13 +27,14 @@ export async function applyTemplate(classId: string, preset: QuestionPreset) {
   ])
 
   // Seed questions, polls and wired layout for chosen preset
-  const { blocks, error } = await seedDefaultClass(classId, admin, preset)
-  if (error) return { error }
+  const { blocks } = await seedDefaultClass(classId, admin, preset)
 
-  await admin
-    .from('classes')
-    .update({ layout: blocks, template_id: preset })
-    .eq('id', classId)
+  if (blocks.length > 0) {
+    await admin
+      .from('classes')
+      .update({ layout: blocks, template_id: preset })
+      .eq('id', classId)
+  }
 
-  redirect(`/moderator/${classId}`)
+  redirect(`/moderator/${classId}/lexicon?tab=template`)
 }

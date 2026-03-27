@@ -103,6 +103,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
       pollData[p.id] = {
         question: p.question, totalVotes: total,
         nominees: Object.entries(countMap).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([sid, count]) => ({
+          studentId: sid,
           name: studentMap.get(sid)?.first_name ?? 'Ученик',
           pct: total > 0 ? Math.round((count / total) * 100) : 0,
           photoUrl: studentMap.get(sid)?.photo_url ?? null,
