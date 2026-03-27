@@ -162,20 +162,23 @@ export default function StudentLexiconView({
     .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
     .slice(0, 3)
 
+  // Track IDs already shown in hero so we never repeat them below
+  const shownIds = new Set(featuredQA.map(({ question }) => question.id))
+
   const textQA = answeredQuestions
-    .filter((q) => { const a = answerMap.get(q.id)!; return a.text_content && !a.media_url })
+    .filter((q) => { if (shownIds.has(q.id)) return false; const a = answerMap.get(q.id)!; return a.text_content && !a.media_url })
     .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
 
   const videoQA = isPremium
-    ? answeredQuestions.filter((q) => answerMap.get(q.id)?.media_type === 'video').map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+    ? answeredQuestions.filter((q) => !shownIds.has(q.id) && answerMap.get(q.id)?.media_type === 'video').map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
     : []
 
   const audioQA = answeredQuestions
-    .filter((q) => answerMap.get(q.id)?.media_type === 'audio')
+    .filter((q) => !shownIds.has(q.id) && answerMap.get(q.id)?.media_type === 'audio')
     .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
 
   const imageQA = answeredQuestions
-    .filter((q) => { const a = answerMap.get(q.id)!; return a.media_url && !a.media_type })
+    .filter((q) => { if (shownIds.has(q.id)) return false; const a = answerMap.get(q.id)!; return a.media_url && !a.media_type })
     .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
 
   const featuredText  = textQA[0] ?? null
@@ -184,6 +187,16 @@ export default function StudentLexiconView({
   const firstVideo    = videoQA[0] ?? null
   const firstAudio    = audioQA[0] ?? null
   const extraAnswers  = [...videoQA.slice(1), ...audioQA.slice(1), ...imageQA, ...extraText]
+
+  // Also exclude from unanswered placeholders anything already shown
+  const displayedIds = new Set([
+    ...shownIds,
+    ...(featuredText ? [featuredText.question.id] : []),
+    ...(quoteText ? [quoteText.question.id] : []),
+    ...extraAnswers.map(({ question }) => question.id),
+    ...(firstVideo ? [firstVideo.question.id] : []),
+    ...(firstAudio ? [firstAudio.question.id] : []),
+  ])
   const initials      = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
 
   const prevNextNav = (
@@ -437,7 +450,7 @@ export default function StudentLexiconView({
               ))}
 
               {/* Unanswered question placeholders (moderator preview) */}
-              {unansweredQuestions.map((question) => (
+              {unansweredQuestions.filter((q) => !displayedIds.has(q.id)).map((question) => (
                 <div key={question.id} className="bg-surface-container-lowest p-7 polaroid-frame opacity-40 border-2 border-dashed border-on-surface/10">
                   <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
                     {question.text}

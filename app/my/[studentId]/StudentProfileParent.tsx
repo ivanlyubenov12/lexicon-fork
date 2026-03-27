@@ -34,6 +34,7 @@ interface Props {
   sentMessages: Array<{ recipient_student_id: string; status: string; content: string }>
   polls: Array<{ id: string; question: string; order_index: number }>
   existingVotes: Record<string, string>
+  moderatorName: string | null
   events: Array<{
     id: string
     title: string
@@ -173,6 +174,7 @@ export default function StudentProfileParent({
   sentMessages,
   polls,
   existingVotes,
+  moderatorName,
   events,
 }: Props) {
   const answerMap = new Map(answers.map((a) => [a.question_id, a.status]))
@@ -306,13 +308,22 @@ export default function StudentProfileParent({
               <span className="text-xs text-gray-400 font-medium">{doneCount}/{totalSections} секции</span>
             </div>
           </div>
-          <Link
-            href={`/my/${student.id}/wizard`}
-            className="flex-none flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">edit</span>
-            Редактирай
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              href={`/my/${student.id}/preview`}
+              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">visibility</span>
+              Преглед
+            </Link>
+            <Link
+              href={`/my/${student.id}/wizard`}
+              className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              Редактирай
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -327,7 +338,8 @@ export default function StudentProfileParent({
             <div>
               <p className="text-sm font-bold text-green-800 mb-0.5">Профилът е готов!</p>
               <p className="text-xs text-green-700 leading-relaxed">
-                Отлична работа! Профилът на {student.first_name} е напълно попълнен. Учителят ще прегледа отговорите и ще ги одобри.
+                Отлична работа! Профилът на {student.first_name} е напълно попълнен.{' '}
+                {moderatorName ? `${moderatorName} ще прегледа отговорите и ще ги одобри.` : 'Модераторът ще прегледа отговорите и ще ги одобри.'}
               </p>
             </div>
           </div>

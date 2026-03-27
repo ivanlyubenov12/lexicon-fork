@@ -51,37 +51,37 @@ export default function HomePage() {
 
           {/* Left */}
           <div className="lg:col-span-6 z-10 space-y-8">
-            <span className="inline-block px-4 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest rounded-full">
+            <span className="inline-block px-4 py-1.5 bg-[#ffddb8] text-[#2a1700] text-xs font-bold uppercase tracking-widest rounded-full">
               Дигиталната хроника на вашия клас
             </span>
             <h1
-              className="text-5xl lg:text-7xl font-bold text-indigo-800 leading-tight"
+              className="text-5xl lg:text-7xl font-bold text-[#3632b7] leading-tight"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Спомени, които не{' '}
               <br />
               <span className="italic text-amber-600">избледняват.</span>
             </h1>
-            <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
+            <p className="text-lg text-[#464555] max-w-lg leading-relaxed">
               Традиционният училищен лексикон се преражда в модерна дигитална платформа.
               Съхранете гласовете, снимките и историите на своя клас в едно вечно, неразделено пространство.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-2 bg-indigo-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-800 hover:scale-[1.02] transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 bg-[#3632b7] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-[#2c29a0] hover:scale-[1.02] transition-all duration-300"
               >
                 Започнете архив
                 <span className="material-symbols-outlined">auto_stories</span>
               </Link>
               <Link
                 href="/showcase"
-                className="inline-flex items-center justify-center bg-[#eeeeed] text-indigo-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#e3e2e1] transition-all duration-300"
+                className="inline-flex items-center justify-center bg-[#eeeeed] text-[#3632b7] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#e3e2e1] transition-all duration-300"
               >
                 Разгледайте демо
               </Link>
             </div>
-            <p className="text-slate-400 text-sm">от 29.99 EUR · еднократно · без абонамент</p>
+            <p className="text-[#464555]/60 text-sm">от 29.99 EUR · еднократно · без абонамент</p>
           </div>
 
           {/* Right — photo composition */}
@@ -109,9 +109,9 @@ export default function HomePage() {
               </p>
             </div>
             {/* Video icon card */}
-            <div className="absolute -top-8 -right-2 w-44 aspect-video bg-indigo-100 p-2 rounded-xl rotate-12 shadow-lg flex items-center justify-center">
+            <div className="absolute -top-8 -right-2 w-44 aspect-video bg-[#e2dfff] p-2 rounded-xl rotate-12 shadow-lg flex items-center justify-center">
               <span
-                className="material-symbols-outlined text-indigo-500"
+                className="material-symbols-outlined text-[#3632b7]"
                 style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
               >
                 video_camera_back
@@ -126,12 +126,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 space-y-4">
             <h2
-              className="text-4xl font-bold text-indigo-800"
+              className="text-4xl font-bold text-[#3632b7]"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Повече от просто албум
             </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">
+            <p className="text-[#464555]/80 max-w-2xl mx-auto">
               Проектиран да улови духа на вашия клас чрез модерни технологии и дълбока емоционална връзка.
             </p>
           </div>
@@ -142,12 +142,12 @@ export default function HomePage() {
               <div className="space-y-4">
                 <span className="material-symbols-outlined text-4xl text-amber-600">history_edu</span>
                 <h3
-                  className="text-2xl font-bold text-indigo-800"
+                  className="text-2xl font-bold text-[#3632b7]"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   Дигитален Лексикон
                 </h3>
-                <p className="text-slate-500 leading-relaxed max-w-md">
+                <p className="text-[#464555]/80 leading-relaxed max-w-md">
                   Всеки ученик има свой профил с анкети, любими спомени и аудио записи, които съхраняват автентичния им глас през годините.
                 </p>
               </div>
@@ -178,7 +178,7 @@ export default function HomePage() {
                 Всяко дете пише нещо хубаво на своите съученици. Модераторът одобрява преди публикуване.
               </p>
               <div className="pt-2 flex -space-x-3">
-                {['bg-indigo-200', 'bg-indigo-300', 'bg-indigo-400', 'bg-indigo-700'].map((c, i) => (
+                {['bg-[#e2dfff]', 'bg-[#c4c0f0]', 'bg-[#8f8bda]', 'bg-[#3632b7]'].map((c, i) => (
                   <div key={i} className={`w-9 h-9 rounded-full border-2 border-white ${c} flex items-center justify-center text-white text-xs font-bold`}>
                     {i === 3 ? '+' : ''}
                   </div>
@@ -186,8 +186,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Card 3 — indigo */}
-            <div className="md:col-span-5 bg-indigo-700 text-white p-10 rounded-3xl shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 min-h-[280px]">
+            {/* Card 3 — brand indigo */}
+            <div className="md:col-span-5 bg-[#3632b7] text-white p-10 rounded-3xl shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 min-h-[280px]">
               <div className="space-y-4">
                 <span className="material-symbols-outlined text-4xl">admin_panel_settings</span>
                 <h3
@@ -196,7 +196,7 @@ export default function HomePage() {
                 >
                   Пълен Контрол
                 </h3>
-                <p className="text-indigo-200 leading-relaxed">
+                <p className="text-[#c4c0f0] leading-relaxed">
                   Модераторски панел за класния ръководител. Одобряване на всяко съдържание преди публикуване.
                 </p>
               </div>
@@ -212,16 +212,16 @@ export default function HomePage() {
             </div>
 
             {/* Card 4 — wide with photo grid */}
-            <div className="md:col-span-7 bg-white p-10 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8 items-center overflow-hidden hover:-translate-y-1 transition-all duration-300">
+            <div className="md:col-span-7 bg-white p-10 rounded-3xl shadow-sm border border-[#eeeeed] flex flex-col md:flex-row gap-8 items-center overflow-hidden hover:-translate-y-1 transition-all duration-300">
               <div className="flex-1 space-y-4">
-                <span className="material-symbols-outlined text-4xl text-indigo-600">photo_library</span>
+                <span className="material-symbols-outlined text-4xl text-[#3632b7]">photo_library</span>
                 <h3
-                  className="text-2xl font-bold text-indigo-800"
+                  className="text-2xl font-bold text-[#3632b7]"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   AI Супергерой
                 </h3>
-                <p className="text-slate-500">
+                <p className="text-[#464555]/80">
                   Децата описват учителката си като супергерой — AI рисува нейния образ и го вплита в лексикона.
                 </p>
               </div>
@@ -233,7 +233,7 @@ export default function HomePage() {
                     'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200&q=80',
                     'https://images.unsplash.com/photo-1472162072942-cd5147eb3902?w=200&q=80',
                   ].map((src, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-slate-200">
+                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-[#eeeeed]">
                       <img src={src} alt="" className="w-full h-full object-cover" />
                     </div>
                   ))}
@@ -249,24 +249,24 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2
-              className="text-4xl font-bold text-indigo-800 mb-4"
+              className="text-4xl font-bold text-[#3632b7] mb-4"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Как работи
             </h2>
-            <p className="text-slate-500 text-lg">Три прости стъпки — без технически умения.</p>
+            <p className="text-[#464555]/80 text-lg">Три прости стъпки — без технически умения.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-10">
             {steps.map((s) => (
               <div key={s.number} className="relative">
                 <span
-                  className="text-7xl font-black text-indigo-50 leading-none block mb-4 select-none"
+                  className="text-7xl font-black text-[#e2dfff] leading-none block mb-4 select-none"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   {s.number}
                 </span>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{s.desc}</p>
+                <h3 className="text-lg font-bold text-[#1a1c1c] mb-2">{s.title}</h3>
+                <p className="text-[#464555]/80 text-sm leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -278,13 +278,13 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2
-              className="text-4xl font-bold text-indigo-800 mb-4"
+              className="text-4xl font-bold text-[#3632b7] mb-4"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Изберете вашия план
             </h2>
             <p
-              className="text-slate-500 italic"
+              className="text-[#464555]/80 italic"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Инвестиция в спомените, които ще ви топлят след 20 години.
@@ -293,21 +293,21 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-3xl mx-auto pt-4">
             {/* Basic */}
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col hover:scale-[1.01] transition-all">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#eeeeed] flex flex-col hover:scale-[1.01] transition-all">
               <div className="mb-6">
-                <span className="inline-block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Дигитален</span>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Basic</h3>
-                <p className="text-slate-500 text-sm">Пълен дигитален лексикон, достъпен онлайн за целия клас.</p>
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#3632b7]/70 mb-3">Дигитален</span>
+                <h3 className="text-xl font-bold text-[#1a1c1c] mb-2">Basic</h3>
+                <p className="text-[#464555]/80 text-sm">Пълен дигитален лексикон, достъпен онлайн за целия клас.</p>
               </div>
               <div className="mb-8">
                 <span
-                  className="text-4xl font-bold text-indigo-700"
+                  className="text-4xl font-bold text-[#3632b7]"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   29.99
                 </span>
-                <span className="text-slate-400 text-lg font-semibold"> EUR</span>
-                <p className="text-xs text-slate-400 mt-1">еднократно · без абонамент</p>
+                <span className="text-[#464555]/60 text-lg font-semibold"> EUR</span>
+                <p className="text-xs text-[#464555]/60 mt-1">еднократно · без абонамент</p>
               </div>
               <ul className="space-y-3 mb-10 flex-grow">
                 {[
@@ -319,37 +319,37 @@ export default function HomePage() {
                   'Модераторски панел',
                   'Достъп завинаги',
                 ].map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-slate-600">
-                    <span className="material-symbols-outlined text-indigo-400 flex-shrink-0" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  <li key={f} className="flex items-center gap-3 text-sm text-[#464555]">
+                    <span className="material-symbols-outlined text-[#3632b7]/70 flex-shrink-0" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     {f}
                   </li>
                 ))}
-                <li className="flex items-center gap-3 text-sm text-slate-300">
+                <li className="flex items-center gap-3 text-sm text-[#464555]/30">
                   <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18 }}>cancel</span>
                   Видео въпроси
                 </li>
-                <li className="flex items-center gap-3 text-sm text-slate-300">
+                <li className="flex items-center gap-3 text-sm text-[#464555]/30">
                   <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18 }}>cancel</span>
                   PDF за сваляне
                 </li>
               </ul>
               <Link
                 href="/register"
-                className="w-full py-3 rounded-xl border-2 border-indigo-700 text-indigo-700 font-bold text-center hover:bg-indigo-50 transition-colors mt-auto"
+                className="w-full py-3 rounded-xl border-2 border-[#3632b7] text-[#3632b7] font-bold text-center hover:bg-[#e2dfff]/40 transition-colors mt-auto"
               >
                 Започнете с Basic
               </Link>
             </div>
 
             {/* Premium — featured */}
-            <div className="bg-indigo-700 text-white p-8 rounded-3xl shadow-2xl flex flex-col relative lg:scale-105">
+            <div className="bg-[#3632b7] text-white p-8 rounded-3xl shadow-2xl flex flex-col relative lg:scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                 Най-пълен
               </div>
               <div className="mb-6 pt-2">
-                <span className="inline-block text-xs font-bold uppercase tracking-widest text-indigo-300 mb-3">Дигитален + PDF + Видео</span>
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#a9a4ee] mb-3">Дигитален + PDF + Видео</span>
                 <h3 className="text-xl font-bold mb-2">Premium</h3>
-                <p className="text-indigo-200 text-sm">Пълното изживяване — с видео спомени и PDF за печат.</p>
+                <p className="text-[#c4c0f0] text-sm">Пълното изживяване — с видео спомени и PDF за печат.</p>
               </div>
               <div className="mb-8">
                 <span
@@ -358,8 +358,8 @@ export default function HomePage() {
                 >
                   59.99
                 </span>
-                <span className="text-indigo-300 text-lg font-semibold"> EUR</span>
-                <p className="text-xs text-indigo-300 mt-1">еднократно · без абонамент</p>
+                <span className="text-[#a9a4ee] text-lg font-semibold"> EUR</span>
+                <p className="text-xs text-[#a9a4ee] mt-1">еднократно · без абонамент</p>
               </div>
               <ul className="space-y-3 mb-10 flex-grow">
                 {[
@@ -387,7 +387,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <p className="text-center text-xs text-slate-400 mt-8">Регистрацията е безплатна — плащате само при публикуване. Можете да надградите от Basic към Premium по всяко време (доплащате само разликата).</p>
+          <p className="text-center text-xs text-[#464555]/60 mt-8">Регистрацията е безплатна — плащате само при публикуване. Можете да надградите от Basic към Premium по всяко време (доплащате само разликата).</p>
         </div>
       </section>
 
@@ -396,31 +396,31 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2
-              className="text-4xl font-bold text-indigo-800 mb-4"
+              className="text-4xl font-bold text-[#3632b7] mb-4"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Родители и учители говорят
             </h2>
-            <p className="text-slate-500 text-lg">Реални истории от реални класове.</p>
+            <p className="text-[#464555]/80 text-lg">Реални истории от реални класове.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-6">
             {testimonials.map((t) => (
-              <div key={t.author} className="bg-[#faf9f8] border border-slate-100 rounded-2xl p-7">
+              <div key={t.author} className="bg-[#faf9f8] border border-[#eeeeed] rounded-2xl p-7">
                 <p
-                  className="text-slate-600 text-3xl mb-3 leading-none"
+                  className="text-[#464555] text-3xl mb-3 leading-none"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   "
                 </p>
                 <p
-                  className="text-slate-700 leading-relaxed mb-5 italic"
+                  className="text-[#464555] leading-relaxed mb-5 italic"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   {t.text}
                 </p>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{t.author}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{t.role}</p>
+                  <p className="font-semibold text-[#1a1c1c] text-sm">{t.author}</p>
+                  <p className="text-[#464555]/60 text-xs mt-0.5">{t.role}</p>
                 </div>
               </div>
             ))}
@@ -435,24 +435,24 @@ export default function HomePage() {
             <span className="material-symbols-outlined" style={{ fontSize: 160 }}>favorite</span>
           </div>
           <h2
-            className="text-4xl md:text-5xl font-bold text-indigo-800 max-w-2xl mx-auto leading-tight relative z-10"
+            className="text-4xl md:text-5xl font-bold text-[#3632b7] max-w-2xl mx-auto leading-tight relative z-10"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
             Не позволявайте на времето да открадне{' '}
             <span className="italic text-amber-600">вашите моменти.</span>
           </h2>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto relative z-10">
+          <p className="text-lg text-[#464555]/80 max-w-xl mx-auto relative z-10">
             Присъединете се към над 200 класа, които вече започнаха своя жив архив. Регистрацията е напълно безплатна.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2 relative z-10">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-2 bg-indigo-700 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-indigo-800 hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2 bg-[#3632b7] text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-[#2c29a0] hover:scale-105 transition-all duration-300"
             >
               Създай профил на класа
             </Link>
           </div>
-          <p className="text-slate-400 text-sm relative z-10">от 29.99 EUR · еднократно · без абонамент</p>
+          <p className="text-[#464555]/60 text-sm relative z-10">от 29.99 EUR · еднократно · без абонамент</p>
         </div>
       </section>
 

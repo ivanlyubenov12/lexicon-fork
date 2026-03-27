@@ -6,12 +6,13 @@ import { sendParentInviteEmail, sendLexiconPublishedEmail, sendReminderEmail } f
 
 export async function updateClassInfo(
   classId: string,
-  data: { name: string; school_year: string; school_logo_url?: string }
+  data: { name: string; school_year: string; school_logo_url?: string; cover_image_url?: string | null }
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
 
-  const update: Record<string, string> = { name: data.name, school_year: data.school_year }
+  const update: Record<string, string | null> = { name: data.name, school_year: data.school_year }
   if (data.school_logo_url !== undefined) update.school_logo_url = data.school_logo_url
+  if (data.cover_image_url !== undefined) update.cover_image_url = data.cover_image_url
 
   const { error } = await supabase
     .from('classes')

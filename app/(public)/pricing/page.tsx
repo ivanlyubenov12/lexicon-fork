@@ -74,16 +74,16 @@ export default function PricingPage() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="bg-[#faf9f8] pt-20 pb-16 px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <span className="inline-block bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+          <span className="inline-block bg-[#ffddb8] text-[#2a1700] text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
             Цени
           </span>
           <h1
-            className="text-5xl sm:text-6xl font-bold text-indigo-900 leading-tight mb-5"
+            className="text-5xl sm:text-6xl font-bold text-[#3632b7] leading-tight mb-5"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
             Просто и честно
           </h1>
-          <p className="text-gray-500 text-lg leading-relaxed">
+          <p className="text-[#464555]/80 text-lg leading-relaxed">
             Два плана. Едно плащане. Спомен за цял живот.
           </p>
         </div>
@@ -97,8 +97,8 @@ export default function PricingPage() {
               key={tier.name}
               className={`flex flex-col rounded-3xl p-8 shadow-sm relative ${
                 tier.featured
-                  ? 'bg-indigo-700 text-white ring-2 ring-indigo-600 lg:scale-105'
-                  : 'bg-white text-gray-900'
+                  ? 'bg-[#3632b7] text-white ring-2 ring-[#3632b7] lg:scale-105'
+                  : 'bg-white text-[#1a1c1c]'
               }`}
             >
               {tier.featured && (
@@ -109,13 +109,13 @@ export default function PricingPage() {
               <div className="mb-6 pt-2">
                 <p
                   className={`text-xs font-bold uppercase tracking-widest mb-2 ${
-                    tier.featured ? 'text-indigo-300' : 'text-indigo-400'
+                    tier.featured ? 'text-[#a9a4ee]' : 'text-[#3632b7]/70'
                   }`}
                 >
                   {tier.badge}
                 </p>
                 <p
-                  className={`text-2xl font-bold mb-4 ${tier.featured ? 'text-white' : 'text-gray-900'}`}
+                  className={`text-2xl font-bold mb-4 ${tier.featured ? 'text-white' : 'text-[#1a1c1c]'}`}
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   {tier.name}
@@ -127,14 +127,14 @@ export default function PricingPage() {
                   >
                     {tier.price}
                   </span>
-                  <span className={`text-lg font-bold mb-1.5 ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                  <span className={`text-lg font-bold mb-1.5 ${tier.featured ? 'text-[#c4c0f0]' : 'text-[#464555]/60'}`}>
                     EUR
                   </span>
                 </div>
-                <p className={`text-xs ${tier.featured ? 'text-indigo-200' : 'text-gray-400'}`}>
+                <p className={`text-xs ${tier.featured ? 'text-[#c4c0f0]' : 'text-[#464555]/60'}`}>
                   {tier.priceNote}
                 </p>
-                <p className={`text-sm mt-3 leading-relaxed ${tier.featured ? 'text-indigo-100' : 'text-gray-500'}`}>
+                <p className={`text-sm mt-3 leading-relaxed ${tier.featured ? 'text-[#e2dfff]' : 'text-[#464555]/80'}`}>
                   {tier.desc}
                 </p>
               </div>
@@ -144,13 +144,13 @@ export default function PricingPage() {
                   <li key={f} className="flex items-start gap-2.5 text-sm">
                     <span
                       className={`material-symbols-outlined flex-shrink-0 mt-0.5 ${
-                        tier.featured ? 'text-amber-300' : 'text-indigo-400'
+                        tier.featured ? 'text-amber-300' : 'text-[#3632b7]/70'
                       }`}
                       style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}
                     >
                       check_circle
                     </span>
-                    <span className={tier.featured ? 'text-indigo-100' : 'text-gray-700'}>
+                    <span className={tier.featured ? 'text-[#e2dfff]' : 'text-[#464555]'}>
                       {f}
                     </span>
                   </li>
@@ -163,7 +163,7 @@ export default function PricingPage() {
                     >
                       cancel
                     </span>
-                    <span className={tier.featured ? 'text-indigo-200' : 'text-gray-500'}>
+                    <span className={tier.featured ? 'text-[#c4c0f0]' : 'text-[#464555]'}>
                       {f}
                     </span>
                   </li>
@@ -175,7 +175,7 @@ export default function PricingPage() {
                 className={`block text-center font-bold text-sm py-3.5 rounded-xl transition-all ${
                   tier.featured
                     ? 'bg-amber-400 text-gray-900 hover:bg-amber-300'
-                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                    : 'bg-[#e2dfff]/40 text-[#3632b7] hover:bg-[#e2dfff]'
                 }`}
               >
                 {tier.cta}
@@ -183,7 +183,7 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs text-gray-400 mt-8">
+        <p className="text-center text-xs text-[#464555]/60 mt-8">
           Регистрацията е безплатна — плащате само при публикуване · Надграждане от Basic към Premium по всяко време (доплащате само 30 EUR)
         </p>
       </section>
@@ -191,20 +191,20 @@ export default function PricingPage() {
       {/* ── FAQ ───────────────────────────────────────────────────────────── */}
       <section className="bg-[#faf9f8] py-20 px-6">
         <div className="max-w-2xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#3632b7] mb-3 text-center">
             Въпроси и отговори
           </p>
           <h2
-            className="text-3xl sm:text-4xl font-bold text-indigo-900 text-center mb-12"
+            className="text-3xl sm:text-4xl font-bold text-[#3632b7] text-center mb-12"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
             Често задавани въпроси
           </h2>
           <div className="space-y-4">
             {faqs.map((faq) => (
-              <div key={faq.q} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{faq.a}</p>
+              <div key={faq.q} className="bg-white rounded-2xl border border-[#eeeeed] p-6 shadow-sm">
+                <h3 className="font-semibold text-[#1a1c1c] mb-2">{faq.q}</h3>
+                <p className="text-[#464555]/80 text-sm leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -221,17 +221,17 @@ export default function PricingPage() {
               favorite
             </span>
             <h2
-              className="text-3xl font-bold text-indigo-900 mb-4"
+              className="text-3xl font-bold text-[#3632b7] mb-4"
               style={{ fontFamily: 'Noto Serif, serif' }}
             >
               Готови ли сте?
             </h2>
-            <p className="text-gray-500 text-base mb-8 leading-relaxed">
+            <p className="text-[#464555]/80 text-base mb-8 leading-relaxed">
               Регистрацията отнема 2 минути.<br />Плащате само когато лексиконът е готов.
             </p>
             <Link
               href="/register"
-              className="inline-block bg-indigo-700 text-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-indigo-800 transition-colors shadow-md"
+              className="inline-block bg-[#3632b7] text-white font-bold text-sm px-8 py-4 rounded-xl hover:bg-[#2c29a0] transition-colors shadow-md"
             >
               Създай лексикона на класа →
             </Link>

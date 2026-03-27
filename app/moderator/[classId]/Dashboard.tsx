@@ -19,7 +19,7 @@ interface Contribution {
 }
 
 interface Props {
-  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null }
+  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null }
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
   awaitingApproval: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
@@ -77,11 +77,28 @@ export default function Dashboard({
   const [schoolYear, setSchoolYear] = useState(classData.school_year)
   const [logoUrl, setLogoUrl] = useState<string | null>(classData.school_logo_url)
   const [logoUploading, setLogoUploading] = useState(false)
+  const [coverUrl, setCoverUrl] = useState<string | null>(classData.cover_image_url)
+  const [coverUploading, setCoverUploading] = useState(false)
   const [deadlineStr, setDeadlineStr] = useState<string>(
     deadline ? new Date(deadline).toISOString().split('T')[0] : ''
   )
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCoverUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/media/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (data.url) setCoverUrl(data.url)
+    } finally {
+      setCoverUploading(false)
+    }
+  }
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -110,6 +127,7 @@ export default function Dashboard({
           name: `${className.trim()} — ${school.trim()}`,
           school_year: schoolYear.trim(),
           school_logo_url: logoUrl ?? undefined,
+          cover_image_url: coverUrl,
         }),
         setDeadline(classData.id, deadlineStr ? new Date(deadlineStr).toISOString() : null),
       ])
@@ -303,23 +321,53 @@ export default function Dashboard({
                 />
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                {logoUrl && <img src={logoUrl} alt="Лого" className="w-10 h-10 rounded-lg object-contain border border-gray-100 bg-white p-1" />}
-                <label className="cursor-pointer border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
-                  {logoUploading ? 'Качване...' : logoUrl ? 'Смени лого' : 'Качи лого'}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} disabled={logoUploading} />
-                </label>
-                {logoUrl && <button onClick={() => setLogoUrl(null)} className="text-xs text-gray-400 hover:text-red-500">Премахни</button>}
+            <div className="flex items-start gap-6 flex-wrap">
+              {/* Cover image */}
+              <div className="flex-1 min-w-[200px]">
+                <p className="text-xs font-medium text-gray-500 mb-2">Снимка на класа</p>
+                {coverUrl ? (
+                  <div className="relative rounded-xl overflow-hidden aspect-video mb-2 max-w-xs">
+                    <img src={coverUrl} alt="Кавър" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setCoverUrl(null)}
+                      className="absolute top-1.5 right-1.5 bg-black/50 text-white rounded-lg px-2 py-0.5 text-xs hover:bg-black/70"
+                    >
+                      Премахни
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 cursor-pointer border border-dashed border-gray-300 rounded-xl px-4 py-3 text-xs text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors max-w-xs">
+                    <span className="material-symbols-outlined text-base">add_photo_alternate</span>
+                    {coverUploading ? 'Качване...' : 'Качи снимка на класа'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} disabled={coverUploading} />
+                  </label>
+                )}
               </div>
-              <div className="flex gap-2 ml-auto">
-                <button onClick={() => { setEditingSettings(false); setSaveError(null) }}
-                  className="text-sm text-gray-400 hover:text-gray-600 px-4 py-2">Отказ</button>
-                <button onClick={handleSaveSettings} disabled={isPending || logoUploading}
-                  className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-                  {isPending ? 'Запазване...' : 'Запази'}
-                </button>
+
+              {/* Logo + save */}
+              <div className="flex flex-col gap-3 flex-shrink-0">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-2">Лого на училището</p>
+                  <div className="flex items-center gap-3">
+                    {logoUrl && <img src={logoUrl} alt="Лого" className="w-10 h-10 rounded-lg object-contain border border-gray-100 bg-white p-1" />}
+                    <label className="cursor-pointer border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
+                      {logoUploading ? 'Качване...' : logoUrl ? 'Смени лого' : 'Качи лого'}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} disabled={logoUploading} />
+                    </label>
+                    {logoUrl && <button type="button" onClick={() => setLogoUrl(null)} className="text-xs text-gray-400 hover:text-red-500">Премахни</button>}
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-2">
+              <button onClick={() => { setEditingSettings(false); setSaveError(null) }}
+                className="text-sm text-gray-400 hover:text-gray-600 px-4 py-2">Отказ</button>
+              <button onClick={handleSaveSettings} disabled={isPending || logoUploading || coverUploading}
+                className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                {isPending ? 'Запазване...' : 'Запази'}
+              </button>
             </div>
           </div>
         )}

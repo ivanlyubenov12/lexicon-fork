@@ -17,7 +17,8 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
   const [cropSrc, setCropSrc]     = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError]         = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
+  const cameraRef  = useRef<HTMLInputElement>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -80,6 +81,15 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
         className="hidden"
         onChange={handleFileChange}
       />
+      {/* Hidden camera input */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       {wizardMode ? (
         /* ── Wizard: large prominent UI ── */
@@ -108,18 +118,15 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
 
           {/* Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <label className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                disabled={uploading}
-                onChange={handleFileChange}
-              />
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              disabled={uploading}
+              className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+            >
               <span className="material-symbols-outlined text-indigo-500 text-3xl">photo_camera</span>
               <span className="text-xs font-semibold text-indigo-700">Снимай сега</span>
-            </label>
+            </button>
             <button
               onClick={() => inputRef.current?.click()}
               disabled={uploading}
