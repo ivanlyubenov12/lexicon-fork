@@ -124,13 +124,13 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
           Изтегли PDF
         </a>
         <LogoutButton />
-        <Link
-          href={base}
+        <a
+          href="mailto:support@lexicon.bg"
           className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
         >
           <span className="material-symbols-outlined text-xl">help</span>
           Помощен център
-        </Link>
+        </a>
         <Link
           href={`${base}/finalize`}
           className={`w-full block py-3 px-4 rounded-xl font-bold text-sm text-center shadow transition-opacity ${

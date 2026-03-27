@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { seedDefaultClass } from '@/lib/templates/defaultSeed'
 
-export async function reseedDefaultQuestions(classId: string, _preset = 'primary'): Promise<{ error: string | null }> {
+export async function reseedDefaultQuestions(classId: string, preset = 'primary'): Promise<{ error: string | null }> {
   const admin = createServiceRoleClient()
 
   // Only seed if no custom questions exist yet
@@ -16,7 +16,7 @@ export async function reseedDefaultQuestions(classId: string, _preset = 'primary
 
   if (count && count > 0) return { error: null } // already seeded
 
-  const { blocks, error } = await seedDefaultClass(classId, admin)
+  const { blocks, error } = await seedDefaultClass(classId, admin, preset)
   if (error) return { error }
 
   // Save the wired-up layout so the lexicon editor shows the default template

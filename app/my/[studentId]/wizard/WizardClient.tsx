@@ -399,7 +399,7 @@ export default function WizardClient({
                 <p className="text-sm text-gray-500 leading-relaxed mb-3">
                   Можете да прекъснете по всяко време и да се върнете да довършите, когато е удобно
                   за Вас и <strong className="text-gray-700">{firstName}</strong>.
-                  За да влезете отново, използвайте потребителско Ime и парола.
+                  За да влезете отново, използвайте потребителско ime и парола.
                 </p>
                 {deadline && (
                   <p className="text-sm text-gray-500 leading-relaxed">

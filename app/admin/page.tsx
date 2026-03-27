@@ -127,7 +127,7 @@ export default async function AdminDashboard() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link href={`/admin/classes`}
+                    <Link href={`/admin/classes/${cls.id}/preview`}
                       className="text-xs text-indigo-400 hover:text-indigo-600 font-semibold">
                       Детайли
                     </Link>

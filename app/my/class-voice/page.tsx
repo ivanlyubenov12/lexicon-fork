@@ -21,7 +21,8 @@ export default async function ClassVoicePage() {
     .from('students')
     .select('id, first_name, class_id')
     .eq('parent_user_id', user.id)
-    .single()
+    .limit(1)
+    .maybeSingle()
 
   if (!student) redirect('/login')
 

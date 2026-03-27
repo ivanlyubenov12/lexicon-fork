@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { unstable_noStore as noStore } from 'next/cache'
-import { notFound } from 'next/navigation'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { notFound, redirect } from 'next/navigation'
+import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import StudentLexiconView from '@/app/lexicon/[classId]/student/[studentId]/StudentLexiconView'
 import Link from 'next/link'
 
@@ -13,12 +13,19 @@ export default async function ModeratorStudentPreview({
 }) {
   noStore()
   const { classId, studentId } = await params
+
+  const supabase = createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
   const admin = createServiceRoleClient()
 
+  // Verify the current user is the moderator of this class
   const { data: classData } = await admin
     .from('classes')
     .select('id, name')
     .eq('id', classId)
+    .eq('moderator_id', user.id)
     .single()
 
   if (!classData) notFound()

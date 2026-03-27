@@ -13,7 +13,6 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('[ModeratorDashboard] user:', user?.id ?? 'null')
 
   if (!user) {
     redirect('/login')
@@ -28,7 +27,6 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
     .eq('moderator_id', user.id)
     .single()
 
-  console.log('[ModeratorDashboard] classData:', classData?.id ?? 'null', 'error:', classError?.message ?? 'none')
 
   if (!classData) {
     redirect('/moderator')

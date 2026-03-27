@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { unstable_noStore as noStore } from 'next/cache'
-import { notFound } from 'next/navigation'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { notFound, redirect } from 'next/navigation'
+import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import QuestionnaireTabView from './QuestionnaireTabView'
 
@@ -13,7 +13,21 @@ export default async function ModeratorQuestionnairePage({
 }) {
   noStore()
   const { classId, studentId } = await params
+
+  const supabase = createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
   const admin = createServiceRoleClient()
+
+  // Verify the current user is the moderator of this class
+  const { data: classOwner } = await admin
+    .from('classes')
+    .select('id')
+    .eq('id', classId)
+    .eq('moderator_id', user.id)
+    .single()
+  if (!classOwner) redirect('/moderator')
 
   const { data: student } = await admin
     .from('students')

@@ -29,7 +29,7 @@ export default async function MyChildPage({ params }: Props) {
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, status, moderator_name, teacher_name')
+    .select('id, status, teacher_name')
     .eq('id', student.class_id)
     .single()
 
@@ -121,7 +121,7 @@ export default async function MyChildPage({ params }: Props) {
       polls={polls ?? []}
       existingVotes={existingVotes}
       events={events}
-      moderatorName={classData?.moderator_name ?? classData?.teacher_name ?? null}
+      moderatorName={classData?.teacher_name ?? null}
     />
   )
 }
