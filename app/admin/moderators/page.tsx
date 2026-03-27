@@ -35,15 +35,13 @@ export default async function AdminModeratorsPage() {
   }
 
   const STATUS_COLOR: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-500',
-    active: 'bg-blue-100 text-blue-700',
-    ready_for_payment: 'bg-amber-100 text-amber-700',
-    pending_payment: 'bg-orange-100 text-orange-700',
-    published: 'bg-green-100 text-green-700',
+    draft:       'bg-gray-100 text-gray-500',
+    filling:     'bg-blue-100 text-blue-700',
+    unpublished: 'bg-amber-100 text-amber-700',
+    published:   'bg-green-100 text-green-700',
   }
   const STATUS_LABEL: Record<string, string> = {
-    draft: 'Чернова', active: 'Активен', ready_for_payment: 'За плащане',
-    pending_payment: 'Плащане…', published: 'Публикуван',
+    draft: 'Чернова', filling: 'Непопълнен', unpublished: 'Непубликуван', published: 'Публикуван',
   }
 
   return (

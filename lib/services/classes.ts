@@ -14,7 +14,7 @@ export async function updateClass(classId: string, updates: Record<string, unkno
 }
 
 export async function finalizeClass(classId: string) {
-  // TODO: lock content, trigger AI image generation, set status: ready_for_payment
+  // TODO: lock content, trigger AI image generation, set status: unpublished
 }
 
 export async function publishClass(classId: string) {

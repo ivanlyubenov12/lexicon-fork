@@ -11,6 +11,7 @@ interface Props {
   question: {
     id: string
     text: string
+    description?: string | null
     type: string
     order_index: number
     max_length: number | null
@@ -166,6 +167,9 @@ export default function AnswerForm({
           >
             {question.text}
           </h1>
+          {question.description && (
+            <p className="text-sm text-gray-500 mt-2 leading-relaxed">{question.description}</p>
+          )}
         </div>
 
         {/* Status banners */}

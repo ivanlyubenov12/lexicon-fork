@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
+import React from 'react'
 import { unstable_noStore as noStore } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
-import LexiconShell from '@/app/lexicon/[classId]/LexiconShell'
 
 export default async function PreviewMemoriesPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
@@ -15,7 +15,7 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
   const admin = createServiceRoleClient()
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_logo_url, template_id')
+    .select('id')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -57,11 +57,8 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
     commentsByEvent[ev.event_id].push(ev)
   }
 
-  const basePath = `/moderator/${classId}/preview`
-
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={basePath}>
-      <section className="mb-16">
+    <section className="mb-16">
         <h3 className="text-2xl text-[#3632b7] mb-8" style={{ fontFamily: 'Noto Serif, serif' }}>
           Нашите спомени
         </h3>
@@ -80,7 +77,7 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
 
               if (hasPhoto) {
                 return (
-                  <>
+                  <React.Fragment key={event.id}>
                     {event.photos.map((photoUrl: string, pi: number) => {
                       const photoRotation = ['rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'][(i + pi) % 4]
                       const isLast = pi === event.photos.length - 1
@@ -119,7 +116,7 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
                         </div>
                       )
                     })}
-                  </>
+                  </React.Fragment>
                 )
               }
 
@@ -156,7 +153,6 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
             })}
           </div>
         )}
-      </section>
-    </LexiconShell>
+    </section>
   )
 }

@@ -254,33 +254,33 @@ export default function HarryPortrait({
               <div style={{ position: 'relative', textAlign: 'center', zIndex: 1 }}>
                 {/* Opening quote */}
                 <div style={{
-                  fontSize: isCircle ? '2rem' : '3.2rem',
+                  fontSize: isCircle ? '2rem' : '4.5rem',
                   lineHeight: 0.7,
                   color: 'rgba(200,169,110,0.65)',
                   fontFamily: 'Georgia, serif',
-                  marginBottom: '0.4rem',
+                  marginBottom: '0.6rem',
                   userSelect: 'none',
                 }}>&#8220;</div>
 
                 {/* Message text */}
                 <p style={{
-                  color: 'rgba(240,235,255,0.93)',
-                  fontSize: isCircle ? '0.58rem' : '0.80rem',
+                  color: 'rgba(240,235,255,0.95)',
+                  fontSize: isCircle ? '0.65rem' : '1.15rem',
                   fontFamily: 'Noto Serif, serif',
                   fontStyle: 'italic',
-                  lineHeight: 1.6,
-                  marginBottom: '0.85rem',
+                  lineHeight: 1.65,
+                  marginBottom: '1.1rem',
                 }}>
                   {shownMessage.content}
                 </p>
 
                 {/* Author */}
                 <p style={{
-                  color: 'rgba(200,169,110,0.80)',
-                  fontSize: isCircle ? '0.52rem' : '0.68rem',
+                  color: 'rgba(200,169,110,0.90)',
+                  fontSize: isCircle ? '0.55rem' : '0.9rem',
                   fontFamily: 'Manrope, sans-serif',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
                 }}>
                   — {shownMessage.authorName}
                 </p>

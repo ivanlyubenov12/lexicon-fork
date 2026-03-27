@@ -1,18 +1,22 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions } from './actions'
+import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions, toggleFeaturedQuestion, reseedDefaultQuestions } from './actions'
+import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 
 type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
 
 interface Question {
   id: string
   text: string
+  description: string | null
   type: QuestionType
   allows_text: boolean
   allows_media: boolean
   max_length: number | null
   order_index: number
+  voice_display: 'wordcloud' | 'barchart' | null
+  is_featured: boolean
 }
 
 interface Props {
@@ -38,8 +42,10 @@ function mediaFlagsForType(type: QuestionType) {
 
 const EMPTY_FORM = {
   text: '',
+  description: '',
   type: 'personal' as QuestionType,
   max_length: '',
+  voice_display: 'wordcloud' as 'wordcloud' | 'barchart',
 }
 
 // ─── Form ─────────────────────────────────────────────────────────────────────
@@ -73,6 +79,19 @@ function QuestionForm({
           rows={2}
           placeholder="Напишете въпроса..."
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+          Описание <span className="text-gray-400 font-normal normal-case">(видимо само при попълване)</span>
+        </label>
+        <textarea
+          value={form.description}
+          onChange={(e) => set('description', e.target.value)}
+          rows={2}
+          placeholder="Допълнително обяснение за родителя..."
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none text-gray-500"
         />
       </div>
 
@@ -120,6 +139,41 @@ function QuestionForm({
         </span>
       </div>
 
+      {/* Voice display toggle — only for class_voice */}
+      {form.type === 'class_voice' && (
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            Визуализация на отговорите
+          </label>
+          <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => set('voice_display', 'wordcloud')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+                form.voice_display === 'wordcloud'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">cloud</span>
+              Облак от думи
+            </button>
+            <button
+              type="button"
+              onClick={() => set('voice_display', 'barchart')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium border-l border-gray-200 transition-colors ${
+                form.voice_display === 'barchart'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">bar_chart</span>
+              Бар диаграма
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-1">
         <button
           onClick={() => onSave(form)}
@@ -149,6 +203,9 @@ function QuestionCard({
   onMoveDown,
   isFirst,
   isLast,
+  featuredCount,
+  onFeaturedChange,
+  onUpdate,
 }: {
   question: Question
   classId: string
@@ -156,22 +213,48 @@ function QuestionCard({
   onMoveDown: () => void
   isFirst: boolean
   isLast: boolean
+  featuredCount: number
+  onFeaturedChange: (id: string, val: boolean) => void
+  onUpdate: (id: string, partial: Partial<Question>) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  function handleToggleFeatured() {
+    const next = !question.is_featured
+    if (next && featuredCount >= 3) return // max 3
+    onFeaturedChange(question.id, next)
+    startTransition(async () => {
+      await toggleFeaturedQuestion(classId, question.id, next)
+    })
+  }
+
   function handleSave(form: typeof EMPTY_FORM) {
     startTransition(async () => {
       const result = await updateQuestion(classId, question.id, {
         text: form.text,
+        description: form.description || null,
         type: form.type,
         ...mediaFlagsForType(form.type),
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: question.order_index,
+        voice_display: form.voice_display,
       })
-      if (result.error) setError(result.error)
-      else { setEditing(false); setError(null) }
+      if (result.error) {
+        setError(result.error)
+      } else {
+        onUpdate(question.id, {
+          text: form.text,
+          description: form.description || null,
+          type: form.type,
+          ...mediaFlagsForType(form.type),
+          max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
+          voice_display: form.voice_display,
+        })
+        setEditing(false)
+        setError(null)
+      }
     })
   }
 
@@ -190,8 +273,10 @@ function QuestionCard({
         <QuestionForm
           initial={{
             text: question.text,
+            description: question.description ?? '',
             type: question.type,
             max_length: question.max_length?.toString() ?? '',
+            voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
           }}
           onSave={handleSave}
           onCancel={() => setEditing(false)}
@@ -238,15 +323,40 @@ function QuestionCard({
                 Само текст
               </span>
             )}
+            {question.type === 'class_voice' && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200">
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                  {(question.voice_display ?? 'wordcloud') === 'barchart' ? 'bar_chart' : 'cloud'}
+                </span>
+                {(question.voice_display ?? 'wordcloud') === 'barchart' ? 'Бар диаграма' : 'Облак от думи'}
+              </span>
+            )}
           </div>
 
-          {/* Question text */}
-          <p
-            className="text-xl text-indigo-700 leading-snug"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
-            {question.text}
-          </p>
+          {/* Question text + star */}
+          <div className="flex items-start gap-2">
+            <p
+              className="text-xl text-indigo-700 leading-snug flex-1"
+              style={{ fontFamily: 'Noto Serif, serif' }}
+            >
+              {question.text}
+            </p>
+            <button
+              onClick={handleToggleFeatured}
+              disabled={isPending || (!question.is_featured && featuredCount >= 3)}
+              title={question.is_featured ? 'Премахни от профилните въпроси' : featuredCount >= 3 ? 'Максимум 3 профилни въпроса' : 'Добави като профилен въпрос'}
+              className={`flex-shrink-0 mt-1 transition-colors disabled:opacity-30 ${
+                question.is_featured ? 'text-amber-400 hover:text-amber-500' : 'text-gray-200 hover:text-amber-300'
+              }`}
+            >
+              <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: question.is_featured ? "'FILL' 1" : "'FILL' 0" }}>
+                star
+              </span>
+            </button>
+          </div>
+          {question.description && (
+            <p className="text-sm text-gray-400 mt-1.5 italic">{question.description}</p>
+          )}
 
         </div>
 
@@ -273,12 +383,36 @@ function QuestionCard({
 
 // ─── Main editor ───────────────────────────────────────────────────────────────
 
+function sortQuestions(qs: Question[]): Question[] {
+  return [...qs].sort((a, b) => {
+    if (a.is_featured === b.is_featured) return a.order_index - b.order_index
+    return a.is_featured ? -1 : 1
+  })
+}
+
 export default function QuestionsEditor({ classId, systemQuestions, customQuestions: initialCustom }: Props) {
-  const [customQuestions, setCustomQuestions] = useState(initialCustom)
+  const [customQuestions, setCustomQuestions] = useState(() => sortQuestions(initialCustom))
+  const featuredCount = customQuestions.filter(q => q.is_featured).length
   const [adding, setAdding] = useState(false)
   const [addTab, setAddTab] = useState<'write' | 'archive'>('write')
   const [isPending, startTransition] = useTransition()
   const [addError, setAddError] = useState<string | null>(null)
+  const [reseeding, setReseeding] = useState(false)
+  const [reseedError, setReseedError] = useState<string | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<string>(QUESTION_PRESETS[0].id)
+
+  function handleReseed(preset = selectedPreset) {
+    setReseeding(true)
+    setReseedError(null)
+    startTransition(async () => {
+      const result = await reseedDefaultQuestions(classId, preset)
+      if (result.error) {
+        setReseedError(result.error)
+        setReseeding(false)
+      }
+      // page will revalidate and reload with questions
+    })
+  }
 
   function handleAdd(form: typeof EMPTY_FORM) {
     startTransition(async () => {
@@ -289,10 +423,12 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
 
       const result = await createQuestion(classId, {
         text: form.text,
+        description: form.description || null,
         type: form.type,
         ...mediaFlagsForType(form.type),
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: nextIndex,
+        voice_display: form.voice_display,
       })
 
       if (result.error) {
@@ -305,10 +441,13 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
           {
             id: 'pending-' + Date.now(),
             text: form.text,
+            description: form.description || null,
             type: form.type,
             ...mediaFlagsForType(form.type),
             max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
             order_index: nextIndex,
+            voice_display: form.voice_display,
+            is_featured: false,
           },
         ])
       }
@@ -401,6 +540,14 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             </span>
           </div>
         )}
+        <div className={`flex items-center gap-2.5 border rounded-2xl px-5 py-3 ${
+          featuredCount === 3 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'
+        }`}>
+          <span className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: featuredCount > 0 ? "'FILL' 1" : "'FILL' 0" }}>star</span>
+          <span className="text-sm text-gray-600">
+            Профилни въпроси: <strong className="font-bold">{featuredCount} / 3</strong>
+          </span>
+        </div>
       </div>
 
       {/* ── Add / Archive panel ────────────────────────────────────── */}
@@ -482,12 +629,52 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
 
       {/* ── Questions list ─────────────────────────────────────────── */}
       {customQuestions.length === 0 && !adding ? (
-        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-10 text-center mb-8">
-          <span className="material-symbols-outlined text-4xl text-gray-300 block mb-3">quiz</span>
-          <p className="text-gray-500 text-sm font-medium">Нямате добавени въпроси</p>
-          <p className="text-gray-400 text-xs mt-1">
-            Натиснете „Нов въпрос" или изберете от архива по-долу.
-          </p>
+        <div className="mb-8">
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="material-symbols-outlined text-indigo-400 text-xl">auto_awesome</span>
+                <p className="text-sm font-semibold text-gray-800">Изберете готов въпросник</p>
+              </div>
+              <p className="text-xs text-gray-400 pl-8">Изберете шаблон според възрастовата група</p>
+            </div>
+
+            {/* Preset tabs */}
+            <div className="flex gap-1 px-4 pt-3">
+              {QUESTION_PRESETS.map(preset => (
+                <button
+                  key={preset.id}
+                  onClick={() => setSelectedPreset(preset.id)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                    selectedPreset === preset.id
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Selected preset info */}
+            {QUESTION_PRESETS.filter(p => p.id === selectedPreset).map(preset => (
+              <div key={preset.id} className="px-6 py-4">
+                <p className="text-xs text-gray-500 mb-4">{preset.description}</p>
+                {reseedError && <p className="text-red-500 text-xs mb-3">{reseedError}</p>}
+                <button
+                  onClick={() => handleReseed(preset.id)}
+                  disabled={reseeding || isPending}
+                  className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base">download</span>
+                  {reseeding ? 'Зареждане...' : `Зареди въпросника за ${preset.label}`}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-400 text-center mt-3">или натиснете „Нов въпрос" за ръчно добавяне</p>
         </div>
       ) : (
         <div className="space-y-3 mb-8">
@@ -500,6 +687,13 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
               onMoveDown={() => handleMove(i, 'down')}
               isFirst={i === 0}
               isLast={i === customQuestions.length - 1}
+              featuredCount={featuredCount}
+              onFeaturedChange={(id, val) =>
+                setCustomQuestions(prev => sortQuestions(prev.map(q => q.id === id ? { ...q, is_featured: val } : q)))
+              }
+              onUpdate={(id, partial) =>
+                setCustomQuestions(prev => prev.map(q => q.id === id ? { ...q, ...partial } : q))
+              }
             />
           ))}
         </div>

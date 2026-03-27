@@ -1,6 +1,6 @@
 // Shared TypeScript types — mirrors the database schema
 
-export type ClassStatus = 'draft' | 'active' | 'ready_for_payment' | 'pending_payment' | 'published'
+export type ClassStatus = 'draft' | 'filling' | 'unpublished' | 'published'
 export type UserRole = 'admin' | 'moderator' | 'parent'
 export type AnswerStatus = 'draft' | 'submitted' | 'approved'
 export type MessageStatus = 'pending' | 'approved' | 'rejected'

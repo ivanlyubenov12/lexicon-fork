@@ -102,7 +102,7 @@ export default function AddStudentForm({ classId }: AddStudentFormProps) {
       <div className="flex flex-col gap-5">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-            Ime <span className="text-red-400">*</span>
+            Име на детето <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -116,7 +116,7 @@ export default function AddStudentForm({ classId }: AddStudentFormProps) {
 
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-            Фамилия <span className="text-red-400">*</span>
+            Фамилия на детето <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -140,6 +140,9 @@ export default function AddStudentForm({ classId }: AddStudentFormProps) {
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
             placeholder="roditel@example.com"
           />
+          <p className="text-xs text-gray-400 mt-1.5">
+            Родителят ще получи линк с въпросник за попълване.
+          </p>
         </div>
 
         {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}

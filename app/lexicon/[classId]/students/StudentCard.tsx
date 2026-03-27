@@ -34,7 +34,7 @@ export default function StudentCard({ student, classId, basePath }: Props) {
             <img
               src={student.photo_url}
               alt={student.first_name}
-              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+              className="w-full h-full object-cover grayscale-0 group-hover:grayscale transition-all duration-700"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-surface-container-high">

@@ -17,19 +17,53 @@ export default async function QuestionsPage({ params }: { params: Promise<{ clas
 
   if (!classData) notFound()
 
-  const { data: systemQuestions } = await admin
-    .from('questions')
-    .select('id, text, type, allows_text, allows_media, max_length, order_index')
-    .is('class_id', null)
-    .eq('is_system', true)
-    .order('order_index')
+  const [sysRes, cusRes] = await Promise.all([
+    admin
+      .from('questions')
+      .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured')
+      .is('class_id', null)
+      .eq('is_system', true)
+      .order('order_index'),
+    admin
+      .from('questions')
+      .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured')
+      .eq('class_id', classId)
+      .eq('is_system', false)
+      .order('order_index'),
+  ])
 
-  const { data: customQuestions } = await admin
-    .from('questions')
-    .select('id, text, type, allows_text, allows_media, max_length, order_index')
-    .eq('class_id', classId)
-    .eq('is_system', false)
-    .order('order_index')
+  // If extended columns are missing (migrations not yet applied), fall back to base columns
+  const needsFallback = !!sysRes.error || !!cusRes.error
+  const [sysFallback, cusFallback] = needsFallback
+    ? await Promise.all([
+        admin
+          .from('questions')
+          .select('id, text, type, allows_text, allows_media, max_length, order_index')
+          .is('class_id', null)
+          .eq('is_system', true)
+          .order('order_index'),
+        admin
+          .from('questions')
+          .select('id, text, type, allows_text, allows_media, max_length, order_index')
+          .eq('class_id', classId)
+          .eq('is_system', false)
+          .order('order_index'),
+      ])
+    : [{ data: null }, { data: null }]
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function normalise(rows: any[] | null) {
+    return (rows ?? []).map(q => ({
+      ...q,
+      description:   q.description   ?? null,
+      voice_display: q.voice_display  ?? null,
+      is_featured:   q.is_featured    ?? false,
+      max_length:    q.max_length     ?? null,
+    }))
+  }
+
+  const systemQuestions = normalise(sysRes.data ?? sysFallback.data)
+  const customQuestions = normalise(cusRes.data ?? cusFallback.data)
 
   const [namePart] = classData.name?.includes(' — ')
     ? classData.name.split(' — ')

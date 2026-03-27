@@ -21,7 +21,7 @@ export async function adminUnpublishClass(classId: string): Promise<{ error: str
   const admin = createServiceRoleClient()
   const { error } = await admin
     .from('classes')
-    .update({ status: 'active', finalized_at: null })
+    .update({ status: 'filling', finalized_at: null })
     .eq('id', classId)
   if (error) return { error: 'Грешка при запазване.' }
   revalidatePath('/admin/classes')
@@ -129,6 +129,8 @@ export async function adminDeleteModerator(userId: string): Promise<{ error: str
 
 // ── System questions ──────────────────────────────────────────────────────────
 
+// ── Archive system questions ───────────────────────────────────────────────────
+
 export async function updateSystemQuestion(
   id: string,
   text: string
@@ -180,6 +182,107 @@ export async function deleteSystemQuestion(id: string): Promise<{ error: string 
     .from('questions')
     .delete()
     .eq('id', id)
+    .is('class_id', null)
+
+  if (error) return { error: 'Грешка при изтриване.' }
+
+  revalidatePath('/admin/questions')
+  return { error: null }
+}
+
+// ── Preset questionnaire questions ─────────────────────────────────────────────
+
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
+
+export async function updatePresetQuestion(
+  id: string,
+  data: {
+    text: string
+    description: string | null
+    type: QuestionType
+    voice_display: 'wordcloud' | 'barchart' | null
+    is_featured: boolean
+  }
+): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+
+  const { error } = await admin
+    .from('questions')
+    .update({
+      text: data.text,
+      description: data.description,
+      type: data.type,
+      allows_text: data.type !== 'video',
+      allows_media: data.type === 'video',
+      voice_display: data.voice_display,
+      is_featured: data.is_featured,
+    })
+    .eq('id', id)
+    .eq('is_system', true)
+    .is('class_id', null)
+
+  if (error) return { error: 'Грешка при редакция.' }
+
+  revalidatePath('/admin/questions')
+  return { error: null }
+}
+
+export async function addPresetQuestion(data: {
+  preset: string
+  text: string
+  description: string | null
+  type: QuestionType
+  voice_display: 'wordcloud' | 'barchart' | null
+  is_featured: boolean
+  order_index: number
+}): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+
+  const { error } = await admin.from('questions').insert({
+    text: data.text,
+    description: data.description,
+    type: data.type,
+    is_system: true,
+    preset: data.preset,
+    allows_text: data.type !== 'video',
+    allows_media: data.type === 'video',
+    voice_display: data.voice_display,
+    is_featured: data.is_featured,
+    order_index: data.order_index,
+    class_id: null,
+  })
+
+  if (error) return { error: 'Грешка при добавяне.' }
+
+  revalidatePath('/admin/questions')
+  return { error: null }
+}
+
+export async function reorderPresetQuestions(
+  updates: Array<{ id: string; order_index: number }>
+): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+
+  for (const { id, order_index } of updates) {
+    await admin.from('questions').update({ order_index }).eq('id', id).eq('is_system', true)
+  }
+
+  revalidatePath('/admin/questions')
+  return { error: null }
+}
+
+export async function deletePresetQuestion(id: string): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+
+  const { error } = await admin
+    .from('questions')
+    .delete()
+    .eq('id', id)
+    .eq('is_system', true)
     .is('class_id', null)
 
   if (error) return { error: 'Грешка при изтриване.' }

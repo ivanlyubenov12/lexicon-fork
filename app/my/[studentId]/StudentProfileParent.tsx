@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { submitAllDrafts } from './actions'
 import MessagesSection from './MessagesSection'
 import PhotoUpload from './PhotoUpload'
 import ClassVoiceSection from './ClassVoiceSection'
@@ -27,7 +28,6 @@ interface Props {
   personalQuestions: Question[]
   classQuestions: Question[]
   answers: Array<{ question_id: string; status: string }>
-  classStatus: string
   classVoiceQuestions: Array<{ id: string; text: string; order_index: number }>
   classId: string
   classmates: Array<{ id: string; first_name: string; last_name: string; photo_url: string | null }>
@@ -168,7 +168,6 @@ export default function StudentProfileParent({
   classQuestions,
   classVoiceQuestions,
   answers,
-  classStatus,
   classId,
   classmates,
   sentMessages,
@@ -255,6 +254,8 @@ export default function StudentProfileParent({
   const STORAGE_KEY = `lexicon_open_section_${student.id}`
 
   const [openSection, setOpenSection] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
@@ -276,7 +277,7 @@ export default function StudentProfileParent({
     }
   }
 
-  const isClassActive = classStatus === 'active' || classStatus === 'ready_for_payment'
+  const hasDrafts = answers.some(a => a.status === 'draft')
 
   return (
     <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -329,16 +330,6 @@ export default function StudentProfileParent({
                 Отлична работа! Профилът на {student.first_name} е напълно попълнен. Учителят ще прегледа отговорите и ще ги одобри.
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Class inactive banner */}
-        {!isClassActive && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
-            <span className="material-symbols-outlined text-amber-500 text-base mt-0.5">schedule</span>
-            <p className="text-sm text-amber-800">
-              Класът все още не е активен. Можете да попълните въпросника предварително.
-            </p>
           </div>
         )}
 
@@ -489,7 +480,7 @@ export default function StudentProfileParent({
             id="messages"
             icon="favorite"
             title="Послания до съучениците"
-            description={`Напишете лично пожелание от ${student.first_name} до всеки съученик. Посланията ще се появят на личните им страници след одобрение от учителя.`}
+            description={`Напишете лично пожелание от ${student.first_name} до всеки съученик. Посланията ще се появят на личните им страници след одобрение от модератора.`}
             status={messagesStatus}
             statusLabel={messagesLabel}
             open={openSection === 'messages'}
@@ -536,7 +527,7 @@ export default function StudentProfileParent({
             id="memories"
             icon="photo_album"
             title="Нашите спомени"
-            description="Учителят е добавил снимки от специални моменти на класа. Оставете кратък коментар към всяка снимка — той ще се покаже в лексикона."
+            description="Модераторът е добавил снимки от специални моменти на класа. Оставете кратък коментар към всяка снимка — той ще се покаже в лексикона."
             status={events.every(e => e.myComment) ? 'done' : events.some(e => e.myComment) ? 'partial' : 'todo'}
             statusLabel={
               events.every(e => e.myComment) ? 'Всички коментирани' :
@@ -566,6 +557,30 @@ export default function StudentProfileParent({
                 Благодарим ви, че помогнахте да направим лексикона на {student.first_name} незабравим.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Submit all drafts for moderation */}
+        {hasDrafts && !submitted && (
+          <button
+            onClick={async () => {
+              setSubmitting(true)
+              const res = await submitAllDrafts(student.id)
+              setSubmitting(false)
+              if (!res.error) setSubmitted(true)
+            }}
+            disabled={submitting}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+            {submitting ? 'Изпращане...' : 'Готово! Изпрати за преглед →'}
+          </button>
+        )}
+
+        {submitted && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+            <span className="material-symbols-outlined text-green-500 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <p className="text-sm font-semibold text-green-800">Отговорите са изпратени за преглед!</p>
           </div>
         )}
 

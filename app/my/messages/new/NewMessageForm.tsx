@@ -49,7 +49,7 @@ export default function NewMessageForm({ authorStudentId, recipient, existingMes
           Посланието е изпратено
         </h2>
         <p className="text-sm text-gray-500 mb-8">
-          Ще се покаже на {recipient.first_name} след одобрение от учителя.
+          Ще се покаже на {recipient.first_name} след одобрение от модератора.
         </p>
         <button
           onClick={() => router.push(backHref)}
@@ -141,7 +141,7 @@ export default function NewMessageForm({ authorStudentId, recipient, existingMes
           </button>
 
           <p className="text-xs text-center text-gray-400">
-            Посланието ще бъде видимо след одобрение от учителя.
+            Посланието ще бъде видимо след одобрение от модератора.
           </p>
         </div>
       )}

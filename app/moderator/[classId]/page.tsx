@@ -23,7 +23,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
   const adminClient = createServiceRoleClient()
   const { data: classData, error: classError } = await adminClient
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, deadline')
+    .select('id, name, school_year, status, school_logo_url, deadline, layout')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -87,6 +87,39 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
         .limit(4)
     : { data: [] }
 
+  // 10b. Compute students awaiting approval (fully completed + has submitted answers)
+  const { count: personalQCount } = await adminClient
+    .from('questions')
+    .select('id', { count: 'exact', head: true })
+    .eq('class_id', classId)
+    .eq('type', 'personal')
+
+  const requiredCount = personalQCount ?? 0
+
+  const { data: allStudentAnswers } = studentIds.length > 0
+    ? await adminClient
+        .from('answers')
+        .select('student_id, status')
+        .in('student_id', studentIds)
+        .in('status', ['submitted', 'approved'])
+    : { data: [] }
+
+  // Count total answered and submitted-pending per student
+  const totalMap = new Map<string, number>()
+  const submittedMap = new Map<string, number>()
+  for (const a of allStudentAnswers ?? []) {
+    totalMap.set(a.student_id, (totalMap.get(a.student_id) ?? 0) + 1)
+    if (a.status === 'submitted') {
+      submittedMap.set(a.student_id, (submittedMap.get(a.student_id) ?? 0) + 1)
+    }
+  }
+
+  const awaitingApproval = (students ?? []).filter(s =>
+    requiredCount > 0 &&
+    (totalMap.get(s.id) ?? 0) >= requiredCount &&
+    (submittedMap.get(s.id) ?? 0) > 0
+  )
+
   // 10. Fetch events
   const { data: events } = await adminClient
     .from('events')
@@ -94,15 +127,20 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
     .eq('class_id', classId)
     .order('order_index')
 
+  const layout = (classData as { layout?: unknown }).layout
+  const hasLayout = Array.isArray(layout) && layout.length > 0
+
   return (
     <Dashboard
       classData={classData}
       deadline={classData.deadline ?? null}
       students={students ?? []}
+      awaitingApproval={awaitingApproval}
       pendingAnswers={pendingAnswers ?? 0}
       pendingMessages={pendingMessages ?? 0}
       approvedAnswers={approvedAnswers ?? 0}
       hasQuestionnaire={(questionCount ?? 0) > 0}
+      hasLayout={hasLayout}
       events={events ?? []}
       recentContributions={(recentContributions ?? []) as any[]}
     />

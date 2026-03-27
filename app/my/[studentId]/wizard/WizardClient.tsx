@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import PhotoUpload from '../PhotoUpload'
 import RecordMedia from '../question/[questionId]/RecordMedia'
 import { saveDraft, submitAnswer } from '../actions'
@@ -9,6 +10,7 @@ import { saveDraft, submitAnswer } from '../actions'
 interface WizardQuestion {
   id: string
   text: string
+  description: string | null
   type: 'video' | 'personal' | 'superhero'
   maxLength: number | null
   existingAnswer: string
@@ -22,6 +24,8 @@ interface Props {
   lastName: string
   photoUrl: string | null
   questions: WizardQuestion[]
+  className: string | null
+  deadline: string | null
 }
 
 // ── Step definitions ──────────────────────────────────────────────────────────
@@ -132,6 +136,9 @@ function QuestionStep({
         >
           {question.text}
         </h2>
+        {question.description && (
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed">{question.description}</p>
+        )}
       </div>
 
       <div className="relative">
@@ -307,15 +314,41 @@ function VideoStep({
 
 // ── Main wizard ───────────────────────────────────────────────────────────────
 
+function findResumeStep(steps: Step[], photoUrl: string | null): number {
+  const hasStarted = !!photoUrl || steps.some(
+    s => s.kind === 'question' && (s.question.existingAnswer || s.question.existingMediaUrl)
+  )
+  if (!hasStarted) return 0  // first visit → show intro
+
+  // Skip intro, find first incomplete step
+  for (let i = 1; i < steps.length; i++) {
+    const s = steps[i]
+    if (s.kind === 'photo' && !photoUrl) return i
+    if (s.kind === 'question' && !s.question.existingAnswer && !s.question.existingMediaUrl) return i
+    if (s.kind === 'done') return i
+  }
+  return 0
+}
+
 export default function WizardClient({
   studentId,
   firstName,
   lastName,
   photoUrl,
   questions,
+  className,
+  deadline,
 }: Props) {
+  const router = useRouter()
   const steps = buildSteps(questions)
-  const [stepIndex, setStepIndex] = useState(0)
+  const [stepIndex, setStepIndex] = useState(() => findResumeStep(steps, photoUrl))
+
+  // Redirect to the student's main page when wizard is complete
+  useEffect(() => {
+    if (steps[stepIndex]?.kind === 'done') {
+      router.push(`/my/${studentId}`)
+    }
+  }, [stepIndex, studentId, router, steps])
 
   const step        = steps[stepIndex]
   const totalVisible = steps.length - 2  // exclude intro and done from count display
@@ -353,16 +386,29 @@ export default function WizardClient({
               </div>
               <div>
                 <h1
-                  className="text-2xl font-bold text-indigo-900 mb-2"
+                  className="text-2xl font-bold text-indigo-900 mb-3"
                   style={{ fontFamily: 'Noto Serif, serif' }}
                 >
                   Здравейте!
                 </h1>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  Ще попълним страницата на{' '}
-                  <strong className="text-gray-800">{firstName} {lastName}</strong>{' '}
-                  в лексикона на класа. Ще ви отнеме само няколко минути.
+                <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                  Тук ще попълните страницата на{' '}
+                  <strong className="text-gray-900">{firstName} {lastName}</strong>{' '}
+                  в лексикона на класа. Попълването отнема само няколко минути.
                 </p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-3">
+                  Можете да прекъснете по всяко време и да се върнете да довършите, когато е удобно
+                  за Вас и <strong className="text-gray-700">{firstName}</strong>.
+                  За да влезете отново, използвайте потребителско Ime и парола.
+                </p>
+                {deadline && (
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Срокът за попълване на въпросника е{' '}
+                    <strong className="text-gray-700">
+                      {new Date(deadline).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </strong>.
+                  </p>
+                )}
               </div>
               {questions.length > 0 && (
                 <p className="text-xs text-gray-400">
@@ -373,7 +419,7 @@ export default function WizardClient({
                 onClick={next}
                 className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
               >
-                Нека започнем →
+                Да започваме! →
               </button>
             </div>
           )}
@@ -391,6 +437,11 @@ export default function WizardClient({
                 >
                   Добавете снимка на {firstName}
                 </h2>
+                {className && (
+                  <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mt-1">
+                    {className}
+                  </p>
+                )}
                 <p className="text-sm text-gray-400 mt-1">
                   Тя ще се появи на страницата на детето в лексикона.
                 </p>

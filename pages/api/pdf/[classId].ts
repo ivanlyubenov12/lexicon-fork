@@ -23,10 +23,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return
   }
 
-  if (cls.plan !== 'premium') {
-    res.status(403).send('PDF export requires Premium plan')
-    return
-  }
+  // TODO: re-enable plan check for production
+  // if (cls.plan !== 'premium') {
+  //   res.status(403).send('PDF export requires Premium plan')
+  //   return
+  // }
 
   const [namePart, schoolPart] = cls.name.includes(' — ')
     ? cls.name.split(' — ')

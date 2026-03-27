@@ -1,9 +1,12 @@
 'use client'
 
-import type { Block, BlockType, LayoutAssets } from '@/lib/templates/types'
+import { useState, useTransition, useEffect } from 'react'
+import type { Block, BlockType, LayoutAssets, VoiceQuestionAsset } from '@/lib/templates/types'
+import { createPoll } from '../polls/actions'
+import { updateQuestion } from '../questions/actions'
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
-  hero:          { label: 'Герой',            icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
+  hero:          { label: 'Корица',           icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
   students_grid: { label: 'Ученици',          icon: 'people',            color: 'bg-blue-50 text-blue-700'    },
   question:      { label: 'Въпрос',           icon: 'quiz',              color: 'bg-amber-50 text-amber-700'  },
   photo_gallery: { label: 'Галерия',          icon: 'photo_library',     color: 'bg-pink-50 text-pink-700'    },
@@ -18,6 +21,7 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
 interface Props {
   block: Block
   assets: LayoutAssets
+  classId: string
   blockIndex: number
   blocksTotal: number
   onUpdate: (config: Record<string, unknown>) => void
@@ -26,7 +30,7 @@ interface Props {
   onClose: () => void
 }
 
-export default function BlockConfigDrawer({ block, assets, blockIndex, blocksTotal, onUpdate, onRemove, onMove, onClose }: Props) {
+export default function BlockConfigDrawer({ block, assets, classId, blockIndex, blocksTotal, onUpdate, onRemove, onMove, onClose }: Props) {
   const meta = BLOCK_META[block.type]
   const cfg = block.config as Record<string, unknown>
 
@@ -37,7 +41,7 @@ export default function BlockConfigDrawer({ block, assets, blockIndex, blocksTot
   return (
     <>
       <div className="fixed inset-0 bg-black/10 z-40" onClick={onClose} />
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[75vh] overflow-y-auto">
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[75vh] overflow-y-auto max-w-screen-sm mx-auto">
 
         {/* Handle + header */}
         <div className="sticky top-0 bg-white px-5 pt-4 pb-3 border-b border-gray-50">
@@ -78,7 +82,7 @@ export default function BlockConfigDrawer({ block, assets, blockIndex, blocksTot
 
         {/* Config body */}
         <div className="px-5 py-5 space-y-5 pb-safe-area-inset-bottom pb-8">
-          <ConfigBody type={block.type} cfg={cfg} assets={assets} set={set} />
+          <ConfigBody type={block.type} cfg={cfg} assets={assets} classId={classId} set={set} />
         </div>
       </div>
     </>
@@ -87,10 +91,11 @@ export default function BlockConfigDrawer({ block, assets, blockIndex, blocksTot
 
 // ── Config body ────────────────────────────────────────────────────────────
 
-function ConfigBody({ type, cfg, assets, set }: {
+function ConfigBody({ type, cfg, assets, classId, set }: {
   type: BlockType
   cfg: Record<string, unknown>
   assets: LayoutAssets
+  classId: string
   set: (key: string, value: unknown) => void
 }) {
   switch (type) {
@@ -131,23 +136,21 @@ function ConfigBody({ type, cfg, assets, set }: {
 
     case 'class_voice':
       return (
-        <AssetPicker
-          label="Въпрос за гласа на класа"
-          value={(cfg.questionId as string) ?? ''}
-          options={assets.voiceQuestions}
-          emptyLabel="Избери въпрос..."
-          onChange={v => set('questionId', v || null)}
+        <ClassVoiceConfig
+          cfg={cfg}
+          assets={assets}
+          classId={classId}
+          set={set}
         />
       )
 
     case 'subjects_bar':
       return (
-        <AssetPicker
-          label="Въпрос (class voice)"
-          value={(cfg.questionId as string) ?? ''}
-          options={assets.voiceQuestions}
-          emptyLabel="Избери въпрос..."
-          onChange={v => set('questionId', v || null)}
+        <ClassVoiceConfig
+          cfg={cfg}
+          assets={assets}
+          classId={classId}
+          set={set}
         />
       )
 
@@ -217,9 +220,225 @@ function ConfigBody({ type, cfg, assets, set }: {
         </div>
       )
 
+    case 'polls_grid':
+      return <PollsGridConfig classId={classId} existingPolls={assets.polls} />
+
     default:
       return <p className="text-sm text-gray-400">Няма допълнителни настройки за този блок.</p>
   }
+}
+
+// ── Class voice: full question editor ─────────────────────────────────────
+
+function ClassVoiceConfig({ cfg, assets, classId, set }: {
+  cfg: Record<string, unknown>
+  assets: LayoutAssets
+  classId: string
+  set: (key: string, value: unknown) => void
+}) {
+  const selectedId = (cfg.questionId as string) ?? ''
+  const selected = assets.voiceQuestions.find(q => q.id === selectedId) as VoiceQuestionAsset | undefined
+
+  const [text,         setText]        = useState(selected?.label ?? '')
+  const [description,  setDescription] = useState(selected?.description ?? '')
+  const [maxLength,    setMaxLength]   = useState(selected?.max_length != null ? String(selected.max_length) : '')
+  const [qType,        setQType]       = useState(selected?.type ?? 'class_voice')
+  const [voiceDisplay, setVoiceDisplay] = useState<'wordcloud' | 'barchart'>(selected?.voice_display ?? 'wordcloud')
+  const [isPending,    startTransition] = useTransition()
+  const [saved,        setSaved]        = useState(false)
+
+  useEffect(() => {
+    if (selected) {
+      setText(selected.label ?? '')
+      setDescription(selected.description ?? '')
+      setMaxLength(selected.max_length != null ? String(selected.max_length) : '')
+      setQType(selected.type ?? 'class_voice')
+      setVoiceDisplay(selected.voice_display ?? 'wordcloud')
+      setSaved(false)
+    }
+  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleSave() {
+    if (!selectedId || !selected) return
+    startTransition(async () => {
+      const { error } = await updateQuestion(classId, selectedId, {
+        text,
+        description: description || null,
+        type: qType as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video',
+        allows_text: true,
+        allows_media: false,
+        max_length: maxLength ? Number(maxLength) : null,
+        order_index: selected.order_index ?? 0,
+        voice_display: voiceDisplay,
+      })
+      if (!error) setSaved(true)
+    })
+  }
+
+  const TYPE_OPTIONS = [
+    { value: 'personal',        label: 'Лично' },
+    { value: 'class_voice',     label: 'Гласът на класа' },
+    { value: 'better_together', label: 'Заедно сме по-добри' },
+    { value: 'superhero',       label: 'Супергерой' },
+    { value: 'video',           label: 'Видео' },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <AssetPicker
+        label="Въпрос за гласа на класа"
+        value={selectedId}
+        options={assets.voiceQuestions}
+        emptyLabel="Избери въпрос..."
+        onChange={v => { set('questionId', v || null); setSaved(false) }}
+      />
+
+      {selectedId && (
+        <>
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Въпрос</span>
+            <input
+              type="text"
+              value={text}
+              onChange={e => { setText(e.target.value); setSaved(false) }}
+              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Описание</span>
+            <textarea
+              value={description}
+              onChange={e => { setDescription(e.target.value); setSaved(false) }}
+              rows={2}
+              placeholder="Незадължително"
+              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Ограничение (знаци)</span>
+            <input
+              type="number"
+              min={10} max={2000}
+              value={maxLength}
+              onChange={e => { setMaxLength(e.target.value); setSaved(false) }}
+              placeholder="Без ограничение"
+              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+          </label>
+
+          <SelectField
+            label="Раздел"
+            value={qType}
+            options={TYPE_OPTIONS}
+            onChange={v => { setQType(v); setSaved(false) }}
+          />
+
+          <div>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Визуализация</span>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ['wordcloud', 'Облак думи', 'cloud'] as const,
+                ['barchart',  'Стълбова',   'bar_chart'] as const,
+              ]).map(([val, label, icon]) => (
+                <button
+                  key={val}
+                  onClick={() => { setVoiceDisplay(val); setSaved(false) }}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    voiceDisplay === val
+                      ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">{icon}</span>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={isPending || saved}
+            className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 ${
+              saved
+                ? 'bg-green-50 text-green-600 border border-green-200'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+          >
+            {isPending ? 'Запазване...' : saved ? 'Запазено ✓' : 'Запази въпроса'}
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Polls grid: predefined suggestions ────────────────────────────────────
+
+const POLL_SUGGESTIONS = [
+  'Кой ще стане президент?',
+  'Кой е бъдеща поп-звезда?',
+  'Кой е винаги готов да помогне?',
+  'Най-голям шегаджия в класа',
+  'Бъдещ президент',
+  'Най-добър спортист',
+  'Душата на класа',
+  'Най-усмихнат',
+  'Най-мил/мила',
+  'Бъдещ учен',
+  'Най-голям мечтател',
+  'Бъдеща поп звезда',
+  'Най-добър приятел',
+]
+
+function PollsGridConfig({ classId, existingPolls }: {
+  classId: string
+  existingPolls: { id: string; label: string }[]
+}) {
+  const [added, setAdded] = useState<Set<string>>(
+    new Set(existingPolls.map(p => p.label))
+  )
+  const [isPending, startTransition] = useTransition()
+  const [orderIndex, setOrderIndex] = useState(existingPolls.length + 1)
+
+  function handleAdd(question: string) {
+    if (added.has(question)) return
+    startTransition(async () => {
+      const result = await createPoll(classId, question, orderIndex)
+      if (!result.error) {
+        setAdded(prev => new Set([...prev, question]))
+        setOrderIndex(i => i + 1)
+      }
+    })
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Идеи за анкети</p>
+      {POLL_SUGGESTIONS.map(q => {
+        const isAdded = added.has(q)
+        return (
+          <button
+            key={q}
+            onClick={() => handleAdd(q)}
+            disabled={isAdded || isPending}
+            className={`w-full flex items-center gap-3 text-left text-sm px-4 py-3 rounded-xl border transition-all ${
+              isAdded
+                ? 'border-green-200 bg-green-50 text-green-700 cursor-default'
+                : 'border-gray-100 bg-white hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600'
+            }`}
+          >
+            <span className={`material-symbols-outlined text-base flex-none ${isAdded ? 'text-green-500' : 'text-gray-300'}`}>
+              {isAdded ? 'check_circle' : 'add_circle'}
+            </span>
+            {q}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── Field helpers ──────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
+import sharp from 'sharp'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,7 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-// POST /api/media/upload — receives file from browser, uploads to Cloudinary, returns secure URL
+const MAX_DIMENSION = 1920
+const JPEG_QUALITY  = 85
+
+// POST /api/media/upload — receives file, resizes if image, uploads to Cloudinary
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -18,7 +22,26 @@ export async function POST(request: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    let buffer = Buffer.from(arrayBuffer)
+
+    // Resize images — skip video/audio
+    const mime = (file as File).type ?? ''
+    if (mime.startsWith('image/')) {
+      try {
+        const img = sharp(buffer)
+        const meta = await img.metadata()
+        const { width = 0, height = 0 } = meta
+
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          buffer = await img
+            .resize(MAX_DIMENSION, MAX_DIMENSION, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: JPEG_QUALITY })
+            .toBuffer()
+        }
+      } catch {
+        // If sharp fails for any reason, upload the original
+      }
+    }
 
     const url = await new Promise<string>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(

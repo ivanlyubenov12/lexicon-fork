@@ -10,6 +10,7 @@ interface Question {
   text: string
   order_index: number
   type: string
+  is_featured?: boolean
 }
 
 interface Answer {
@@ -25,6 +26,14 @@ interface Message {
   authorName: string
 }
 
+interface StudentEvent {
+  id: string
+  title: string
+  event_date: string | null
+  firstPhoto: string | null
+  comment: string
+}
+
 interface Props {
   classId: string
   className: string
@@ -38,6 +47,7 @@ interface Props {
   questions: Question[]
   answers: Answer[]
   messages: Message[]
+  studentEvents?: StudentEvent[]
   prevStudentId: string | null
   nextStudentId: string | null
   /** Override nav links (e.g. for moderator preview) */
@@ -49,6 +59,10 @@ interface Props {
   basePath?: string
   /** Whether premium features (video) are visible */
   isPremium?: boolean
+  /** Show all questions including unanswered (moderator preview mode) */
+  showAllQuestions?: boolean
+  /** When true, skip the outer shell/nav/footer (a layout.tsx provides them) */
+  embedded?: boolean
 }
 
 function AudioPlayer({ src }: { src: string }) {
@@ -88,31 +102,29 @@ function VideoCard({ answer, question }: { answer: Answer; question: Question })
   }
 
   return (
-    <div className="bg-primary-container text-on-primary p-8 relative overflow-hidden">
-      <div className="relative z-10 mb-4">
-        <span className="material-symbols-outlined text-4xl mb-3 block text-on-primary/60" style={{ fontVariationSettings: "'FILL' 1" }}>
-          videocam
-        </span>
-        <h3 className="font-headline font-bold text-lg mb-1 text-white">{question.text}</h3>
-      </div>
-      <div className="relative group cursor-pointer" onClick={handlePlay}>
-        <video
-          ref={videoRef}
-          src={answer.media_url!}
-          className="w-full h-44 object-cover opacity-70 group-hover:opacity-90 transition-opacity"
-          preload="metadata"
-          controls={playing}
-        />
-        {!playing && (
-          <div className="absolute inset-0 flex items-center justify-center">
+    <div className="bg-primary-container relative overflow-hidden aspect-video group cursor-pointer" onClick={handlePlay}>
+      <video
+        ref={videoRef}
+        src={answer.media_url!}
+        className="w-full h-full object-cover"
+        preload="metadata"
+        controls={playing}
+      />
+      {!playing && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+          <p className="absolute bottom-4 left-4 right-4 text-white text-sm font-semibold leading-snug pointer-events-none z-10">
+            {question.text}
+          </p>
+          <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-primary-container text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                 play_arrow
               </span>
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   )
 }
@@ -125,6 +137,7 @@ export default function StudentLexiconView({
   questions,
   answers,
   messages,
+  studentEvents = [],
   prevStudentId,
   nextStudentId,
   prevHref,
@@ -132,12 +145,20 @@ export default function StudentLexiconView({
   backHref,
   basePath,
   isPremium = false,
+  showAllQuestions = false,
+  embedded = false,
 }: Props) {
   const resolvedPrevHref = prevHref !== undefined ? prevHref : (prevStudentId ? `/lexicon/${classId}/student/${prevStudentId}` : null)
   const resolvedNextHref = nextHref !== undefined ? nextHref : (nextStudentId ? `/lexicon/${classId}/student/${nextStudentId}` : null)
   const resolvedBackHref = backHref ?? `/lexicon/${classId}/students`
   const answerMap = new Map(answers.map((a) => [a.question_id, a]))
   const answeredQuestions = questions.filter((q) => answerMap.has(q.id))
+  const unansweredQuestions = showAllQuestions ? questions.filter((q) => !answerMap.has(q.id)) : []
+
+  const featuredQA = answeredQuestions
+    .filter((q) => q.is_featured && answerMap.get(q.id)?.text_content)
+    .map((q) => ({ question: q, answer: answerMap.get(q.id)! }))
+    .slice(0, 3)
 
   const textQA = answeredQuestions
     .filter((q) => { const a = answerMap.get(q.id)!; return a.text_content && !a.media_url })
@@ -163,154 +184,187 @@ export default function StudentLexiconView({
   const extraAnswers  = [...videoQA.slice(1), ...audioQA.slice(1), ...imageQA, ...extraText]
   const initials      = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
 
-  return (
-    <div className="bg-surface min-h-screen pb-32" style={{ fontFamily: 'Manrope, sans-serif' }}>
+  const prevNextNav = (
+    <div className="flex items-center gap-4">
+      {resolvedPrevHref && (
+        <Link
+          href={resolvedPrevHref}
+          className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Предишно
+        </Link>
+      )}
+      {resolvedNextHref && (
+        <Link
+          href={resolvedNextHref}
+          className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
+        >
+          Следващо
+          <span className="material-symbols-outlined text-base">arrow_forward</span>
+        </Link>
+      )}
+    </div>
+  )
 
-      {/* ── Nav — glassmorphism ───────────────────────────────────────── */}
-      <nav
-        className="w-full top-0 sticky z-50"
-        style={{
-          backgroundColor: 'rgba(252, 248, 255, 0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
-      >
-        {/* Separator via bg-surface-container-high bottom strip, no border */}
-        <div className="flex justify-between items-center px-6 md:px-8 py-4 max-w-screen-xl mx-auto">
-          <Link
-            href={resolvedBackHref}
-            className="font-headline text-xl italic text-on-surface"
-          >
-            Един неразделен клас
-          </Link>
-          <div className="flex items-center gap-4">
-            {resolvedPrevHref && (
-              <Link
-                href={resolvedPrevHref}
-                className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
-              >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
-                Предишно
-              </Link>
-            )}
-            {resolvedNextHref && (
-              <Link
-                href={resolvedNextHref}
-                className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
-              >
-                Следващо
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
-              </Link>
-            )}
+  return (
+    <div className={embedded ? undefined : 'bg-surface min-h-screen pb-32'} style={{ fontFamily: 'Manrope, sans-serif' }}>
+
+      {/* ── Nav — only when not embedded in a layout shell ───────────── */}
+      {!embedded ? (
+        <nav
+          className="w-full top-0 sticky z-50"
+          style={{
+            backgroundColor: 'rgba(252, 248, 255, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          }}
+        >
+          <div className="flex justify-between items-center px-6 md:px-8 py-4 max-w-screen-xl mx-auto">
+            <Link
+              href={resolvedBackHref}
+              className="font-headline text-xl italic text-on-surface"
+            >
+              Един неразделен клас
+            </Link>
+            <div className="flex items-center gap-4">{prevNextNav}</div>
           </div>
-        </div>
-        <div className="h-px bg-surface-container-high" />
-      </nav>
+          <div className="h-px bg-surface-container-high" />
+        </nav>
+      ) : (
+        /* Inline prev/next when embedded — layout shell provides the main nav */
+        <div className="flex justify-end gap-4 mb-4">{prevNextNav}</div>
+      )}
 
       <main className="max-w-screen-xl mx-auto px-6 py-12">
 
-        {/* ── Hero — Magazine Layout ────────────────────────────────── */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-28">
+        {/* ── Hero ─────────────────────────────────────────────────── */}
+        <section className="mb-16">
 
-          {/* Left: Portrait + overlapping name block */}
-          <div className="md:col-span-5 relative mb-20 md:mb-0">
-            {/* Washi tape at top */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 tape-overlay z-30" />
+          {/* Row 1: Portrait + Featured Q&A (full width) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 mb-0 items-stretch">
 
-            {/* Sharp-frame portrait */}
-            <div className="relative z-10 overflow-hidden sharp-frame">
-              <HarryPortrait
-                src={student.photo_url}
-                alt={`${student.first_name} ${student.last_name}`}
-                initials={initials}
-                variant="portrait"
-                messages={messages}
-              />
-            </div>
-
-            {/* School logo — overlapping bottom-center */}
-            {schoolLogoUrl && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 -bottom-5 z-20 w-11 h-11 rounded-full bg-white flex items-center justify-center"
-                style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-              >
-                <img src={schoolLogoUrl} alt="Лого" className="w-full h-full object-contain rounded-full p-1" />
+            {/* Portrait */}
+            <div className="md:col-span-5 relative mb-20 md:mb-0">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 tape-overlay z-30" />
+              <div className="relative z-10 overflow-hidden sharp-frame h-full">
+                <HarryPortrait
+                  src={student.photo_url}
+                  alt={`${student.first_name} ${student.last_name}`}
+                  initials={initials}
+                  variant="portrait"
+                  messages={messages}
+                />
               </div>
-            )}
-
-            {/* Overlapping name block */}
-            <div
-              className="absolute -bottom-10 -right-2 md:-right-6 z-20 p-6 md:p-8 max-w-[260px] md:max-w-xs bg-primary shadow-2xl"
-              style={{ transform: 'rotate(1deg)' }}
-            >
-              <h1 className="font-headline text-4xl md:text-5xl font-bold text-white leading-tight">
-                {student.first_name}<br />{student.last_name}
-              </h1>
-              <p className="text-white/70 mt-2 font-label font-bold tracking-widest uppercase text-[10px]">
-                {className.split(' — ')[0]}
-              </p>
+              <div
+                className="absolute bottom-0 left-0 right-0 z-20 px-6 pt-5 pb-6 bg-primary shadow-2xl"
+                style={{ transform: 'rotate(0.5deg)' }}
+              >
+                {schoolLogoUrl && (
+                  <div
+                    className="absolute -top-10 left-6 z-30 w-20 h-20 rounded-full bg-white flex items-center justify-center"
+                    style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
+                  >
+                    <img src={schoolLogoUrl} alt="Лого" className="w-full h-full object-contain rounded-full p-1.5" />
+                  </div>
+                )}
+                <h1 className={`font-headline text-4xl md:text-5xl font-bold text-white leading-tight ${schoolLogoUrl ? 'pl-24' : ''}`}>
+                  {student.first_name} {student.last_name}
+                </h1>
+              </div>
             </div>
+
+            {/* Featured Q&A sticky note OR fallback content */}
+            <div className="md:col-span-7 flex flex-col">
+              {featuredQA.length > 0 ? (
+                <div className="relative bg-surface-container-low h-full flex flex-col justify-center px-10 py-12 md:px-14 md:py-14">
+                  <div className="absolute -top-4 left-12 w-28 h-7 tape-overlay pointer-events-none" />
+                  <div className="space-y-0 divide-y divide-on-surface/6">
+                    {featuredQA.map(({ question, answer }, i) => (
+                      <div key={question.id} className={`${i === 0 ? 'pb-8' : i === featuredQA.length - 1 ? 'pt-8' : 'py-8'}`}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">
+                          {question.text}
+                        </p>
+                        <p
+                          className="text-2xl md:text-3xl text-on-surface leading-snug"
+                          style={{ fontFamily: 'Noto Serif, serif' }}
+                        >
+                          {answer.text_content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-8 pt-4">
+                  {quoteText && (
+                    <section className="bg-surface-container-low p-8 md:p-10 relative">
+                      <div className="absolute -top-4 left-10 w-24 h-6 tape-overlay pointer-events-none" />
+                      <h3 className="font-label text-xs font-bold uppercase tracking-widest text-primary mb-4">
+                        {quoteText.question.text}
+                      </h3>
+                      <blockquote
+                        className="text-2xl md:text-3xl text-on-surface-variant leading-relaxed"
+                        style={{ fontFamily: 'Noto Serif, serif', fontStyle: 'italic' }}
+                      >
+                        "{quoteText.answer.text_content}"
+                      </blockquote>
+                    </section>
+                  )}
+                  {extraText.slice(0, 3).map(({ question, answer }) => (
+                    <div key={question.id} className="flex items-start gap-4">
+                      <div className="p-3 bg-primary-fixed flex-shrink-0">
+                        <span className="material-symbols-outlined text-primary">format_quote</span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-primary mb-1">{question.text}</p>
+                        <p className="font-headline text-lg text-on-surface">{answer.text_content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {/* Right: Content */}
-          <div className="md:col-span-7 flex flex-col gap-8">
-
-            {/* Featured quote */}
-            {quoteText && (
-              <section className="bg-surface-container-low p-8 md:p-10 relative">
-                <div className="absolute -top-4 left-10 w-24 h-6 tape-overlay pointer-events-none" />
-                <h3 className="font-label text-xs font-bold uppercase tracking-widest text-primary mb-4">
-                  {quoteText.question.text}
-                </h3>
-                <blockquote
-                  className="text-2xl md:text-3xl text-on-surface-variant leading-relaxed"
-                  style={{ fontFamily: 'Noto Serif, serif', fontStyle: 'italic' }}
-                >
-                  "{quoteText.answer.text_content}"
-                </blockquote>
-              </section>
-            )}
-
-            {/* Personal facts */}
-            {extraText.slice(0, 3).map(({ question, answer }) => (
-              <div key={question.id} className="flex items-start gap-4">
-                <div className="p-3 bg-primary-fixed flex-shrink-0">
-                  <span className="material-symbols-outlined text-primary">format_quote</span>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest font-bold text-primary mb-1">
-                    {question.text}
-                  </p>
-                  <p className="font-headline text-lg text-on-surface">{answer.text_content}</p>
-                </div>
-              </div>
-            ))}
-
-            {/* Video if exists */}
-            {firstVideo && (
+          {/* Row 2: Video — constrained width, centered */}
+          <div className="mt-8 max-w-2xl mx-auto">
+            {firstVideo ? (
               <VideoCard answer={firstVideo.answer} question={firstVideo.question} />
+            ) : (
+              <div className="bg-primary-container relative overflow-hidden aspect-video flex items-center justify-center">
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #3632b7 0%, transparent 60%), radial-gradient(circle at 80% 20%, #674000 0%, transparent 60%)' }}
+                />
+                {schoolLogoUrl ? (
+                  <img src={schoolLogoUrl} alt="Лого" className="relative z-10 w-24 h-24 object-contain opacity-60" />
+                ) : (
+                  <span className="material-symbols-outlined text-white/30 relative z-10" style={{ fontSize: 80, fontVariationSettings: "'FILL' 1" }}>
+                    videocam
+                  </span>
+                )}
+              </div>
             )}
-
-            {/* Audio if exists */}
             {firstAudio && (
-              <div className="bg-tertiary-container text-white p-8 flex flex-col justify-between">
+              <div className="bg-tertiary-container text-white p-8 flex flex-col justify-between mt-6">
                 <div>
                   <h3 className="font-headline text-xl font-bold mb-3 flex items-center gap-2 text-on-tertiary-fixed">
                     <span className="material-symbols-outlined">mic</span>
                     Гласова бележка
                   </h3>
-                  <p className="text-sm italic opacity-80 mb-6 text-on-tertiary-fixed-variant">
-                    „{firstAudio.question.text}"
-                  </p>
+                  <p className="text-sm italic opacity-80 mb-6 text-on-tertiary-fixed-variant">„{firstAudio.question.text}"</p>
                 </div>
                 <AudioPlayer src={firstAudio.answer.media_url!} />
               </div>
             )}
           </div>
+
         </section>
 
         {/* ── Answers grid ─────────────────────────────────────────── */}
-        {(featuredText || extraAnswers.length > 0) && (
+        {(featuredText || extraAnswers.length > 0 || unansweredQuestions.length > 0 || (featuredQA.length > 0 && quoteText)) && (
           <section className="mb-24">
             <h2
               className="font-headline text-3xl font-bold text-on-surface mb-12 flex items-center gap-4"
@@ -320,6 +374,22 @@ export default function StudentLexiconView({
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+              {/* quoteText goes here when the right column is taken by featuredQA */}
+              {featuredQA.length > 0 && quoteText && (
+                <div className="md:col-span-3 bg-surface-container-low p-8 md:p-10 relative">
+                  <div className="absolute -top-4 left-10 w-24 h-6 tape-overlay pointer-events-none" />
+                  <h3 className="font-label text-xs font-bold uppercase tracking-widest text-primary mb-4">
+                    {quoteText.question.text}
+                  </h3>
+                  <blockquote
+                    className="text-2xl md:text-3xl text-on-surface-variant leading-relaxed"
+                    style={{ fontFamily: 'Noto Serif, serif', fontStyle: 'italic' }}
+                  >
+                    "{quoteText.answer.text_content}"
+                  </blockquote>
+                </div>
+              )}
 
               {/* Featured answer — wide */}
               {featuredText && (
@@ -335,33 +405,6 @@ export default function StudentLexiconView({
                   </p>
                 </div>
               )}
-
-              {/* Video question placeholder — shown when no video submitted */}
-              {!firstVideo && !firstAudio && featuredText && (() => {
-                const videoQ = questions.find(q => q.type === 'video')
-                return (
-                  <div className="bg-on-background flex flex-col justify-between overflow-hidden relative" style={{ minHeight: 220 }}>
-                    {/* Dark noise texture feel */}
-                    <div className="absolute inset-0 opacity-10"
-                      style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #3632b7 0%, transparent 60%), radial-gradient(circle at 80% 20%, #674000 0%, transparent 60%)' }}
-                    />
-                    <div className="relative z-10 p-6 flex flex-col justify-between h-full gap-6">
-                      <div className="flex items-center justify-center flex-1">
-                        <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-white/50 text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                            videocam
-                          </span>
-                        </div>
-                      </div>
-                      {videoQ && (
-                        <p className="text-white/50 text-sm italic leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
-                          „{videoQ.text}"
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })()}
 
               {/* Image answers */}
               {imageQA.map(({ question, answer }) => (
@@ -388,6 +431,16 @@ export default function StudentLexiconView({
                   {answer.media_url && answer.media_type === 'audio' && (
                     <audio src={answer.media_url} controls className="w-full mt-2" preload="metadata" />
                   )}
+                </div>
+              ))}
+
+              {/* Unanswered question placeholders (moderator preview) */}
+              {unansweredQuestions.map((question) => (
+                <div key={question.id} className="bg-surface-container-lowest p-7 polaroid-frame opacity-40 border-2 border-dashed border-on-surface/10">
+                  <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">
+                    {question.text}
+                  </p>
+                  <p className="text-on-surface-variant/50 text-sm italic">Не е отговорено</p>
                 </div>
               ))}
             </div>
@@ -424,6 +477,43 @@ export default function StudentLexiconView({
           </section>
         )}
 
+        {/* ── Event comments ───────────────────────────────────────── */}
+        {studentEvents.length > 0 && (
+          <section className="mb-24">
+            <h2 className="font-headline text-3xl font-bold text-on-surface mb-12 flex items-center gap-4">
+              <span className="w-8 h-px bg-primary block" />
+              Моите спомени с класа
+            </h2>
+            <div className="columns-1 md:columns-2 gap-6 space-y-6">
+              {studentEvents.map((ev, i) => {
+                const rotation = ['rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'][i % 4]
+                return (
+                  <div key={ev.id} className="break-inside-avoid">
+                    <div className={`bg-white p-4 shadow-lg ${rotation} transition-transform hover:rotate-0`}>
+                      {ev.firstPhoto && (
+                        <img src={ev.firstPhoto} alt={ev.title} className="w-full h-auto mb-4" />
+                      )}
+                      <p className="italic text-sm text-on-surface-variant" style={{ fontFamily: 'Noto Serif, serif' }}>
+                        „{ev.title}"
+                      </p>
+                      {ev.event_date && (
+                        <p className="text-xs text-on-surface-variant opacity-60 mt-1">
+                          {new Date(ev.event_date).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}
+                        </p>
+                      )}
+                      {ev.comment && (
+                        <p className="text-xs text-primary font-medium mt-2 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+                          {ev.comment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ── Prev / Next ───────────────────────────────────────────── */}
         <div className="flex justify-between items-center pt-8 max-w-3xl mx-auto bg-surface-container-low px-6 py-4">
           {resolvedPrevHref ? (
@@ -445,18 +535,20 @@ export default function StudentLexiconView({
 
       </main>
 
-      {/* ── Fixed bottom navigation ──────────────────────────────────── */}
-      <footer
-        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 rounded-t-[2rem]"
-        style={{
-          backgroundColor: 'rgba(252, 248, 255, 0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 -4px 40px rgba(27,13,162,0.06)',
-        }}
-      >
-        <LexiconBottomNav classId={classId} basePath={basePath} />
-      </footer>
+      {/* ── Fixed bottom navigation — only when not embedded ─────────── */}
+      {!embedded && (
+        <footer
+          className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 rounded-t-[2rem]"
+          style={{
+            backgroundColor: 'rgba(252, 248, 255, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: '0 -4px 40px rgba(27,13,162,0.06)',
+          }}
+        >
+          <LexiconBottomNav classId={classId} basePath={basePath} />
+        </footer>
+      )}
 
     </div>
   )

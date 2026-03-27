@@ -34,11 +34,12 @@ export default async function LexiconStudentPage({
 
   if (!student) notFound()
 
-  // Only questions the moderator explicitly added to this class
+  // Only personal/video/etc questions — class_voice are class-wide, not per-student
   const { data: allQuestions } = await admin
     .from('questions')
-    .select('id, text, order_index, type')
+    .select('id, text, order_index, type, is_featured')
     .eq('class_id', classId)
+    .neq('type', 'class_voice')
     .order('order_index')
 
   // Approved answers for this student
@@ -75,6 +76,31 @@ export default async function LexiconStudentPage({
     }
   })
 
+  // Events where this student left a comment
+  const { data: eventComments } = await admin
+    .from('event_comments')
+    .select('event_id, comment_text')
+    .eq('student_id', studentId)
+
+  const commentedEventIds = [...new Set((eventComments ?? []).map(c => c.event_id))]
+
+  const { data: commentedEvents } = commentedEventIds.length > 0
+    ? await admin
+        .from('events')
+        .select('id, title, event_date, photos')
+        .in('id', commentedEventIds)
+        .eq('class_id', classId)
+        .order('order_index')
+    : { data: [] }
+
+  const studentEvents = (commentedEvents ?? []).map(ev => ({
+    id: ev.id,
+    title: ev.title,
+    event_date: ev.event_date ?? null,
+    firstPhoto: (ev.photos as string[] | null)?.[0] ?? null,
+    comment: (eventComments ?? []).find(c => c.event_id === ev.id)?.comment_text ?? '',
+  }))
+
   // Build prev/next student navigation
   const { data: allStudents } = await admin
     .from('students')
@@ -96,9 +122,11 @@ export default async function LexiconStudentPage({
       questions={allQuestions ?? []}
       answers={answers ?? []}
       messages={messagesWithAuthors}
+      studentEvents={studentEvents}
       prevStudentId={prevStudentId}
       nextStudentId={nextStudentId}
       isPremium={classData.plan === 'premium'}
+      embedded
     />
   )
 }

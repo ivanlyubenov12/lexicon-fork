@@ -3,7 +3,28 @@ export const dynamic = 'force-dynamic'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import LexiconShell from '../LexiconShell'
+import Anthropic from '@anthropic-ai/sdk'
+
+async function summarizeComments(eventTitle: string, comments: string[]): Promise<string> {
+  if (comments.length === 0) return ''
+  try {
+    const client = new Anthropic()
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 120,
+      messages: [{
+        role: 'user',
+        content: `Обобщи следните коментари на деца за събитието „${eventTitle}" в едно-две забавни и топли изречения на български. Пиши в детски, жизнерадостен стил. Не повече от 280 знака. Без кавички в началото и края. Може да включиш 1-2 подходящи емоджи:\n\n${comments.slice(0, 20).join('\n')}`,
+      }],
+    })
+    const text = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+    return text.slice(0, 300)
+  } catch {
+    // Fallback: pick 2 random comments
+    const picks = comments.sort(() => Math.random() - 0.5).slice(0, 2)
+    return picks.map(c => `„${c}"`).join(' · ').slice(0, 300)
+  }
+}
 
 export default async function LexiconMemoriesPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
@@ -55,9 +76,19 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
     commentsByEvent[ev.event_id].push(ev)
   }
 
+  // Generate summaries for all events that have comments
+  const summaries: Record<string, string> = {}
+  await Promise.all(
+    eventList.map(async (event) => {
+      const ec = commentsByEvent[event.id] ?? []
+      if (ec.length > 0) {
+        summaries[event.id] = await summarizeComments(event.title, ec.map(c => c.comment_text))
+      }
+    })
+  )
+
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url}>
-      <section className="mb-16">
+    <section className="mb-16">
         <h3 className="text-2xl text-[#3632b7] mb-8" style={{ fontFamily: 'Noto Serif, serif' }}>
           Нашите спомени
         </h3>
@@ -92,31 +123,12 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
                                 {new Date(event.event_date).toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })}
                               </p>
                             )}
-                            {isLast && eventComments.length > 0 && (
-                              <div className="mt-4 pt-3 border-t border-gray-100 space-y-3">
-                                {eventComments.map(c => (
-                                  <div key={c.id} className="flex items-start gap-2.5">
-                                    {c.students?.photo_url ? (
-                                      <img
-                                        src={c.students.photo_url}
-                                        alt=""
-                                        className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 border border-gray-100"
-                                      />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-indigo-600">
-                                        {c.students?.first_name?.[0] ?? '?'}
-                                      </div>
-                                    )}
-                                    <div>
-                                      <p className="text-xs font-semibold text-gray-600">
-                                        {c.students?.first_name} {c.students?.last_name}
-                                      </p>
-                                      <p className="text-xs text-gray-500 leading-snug mt-0.5" style={{ fontFamily: 'Noto Serif, serif' }}>
-                                        {c.comment_text}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
+                            {isLast && summaries[event.id] && (
+                              <div className="mt-4 pt-3 border-t border-gray-100">
+                                <p className="text-xs text-gray-500 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+                                  {summaries[event.id]}
+                                </p>
+                                <p className="text-[10px] text-gray-300 mt-1">{eventComments.length} коментара от класа</p>
                               </div>
                             )}
                           </div>
@@ -143,27 +155,12 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
                           {new Date(event.event_date).toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                       )}
-                      {eventComments.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-[#3632b7]/20 space-y-3">
-                          {eventComments.map(c => (
-                            <div key={c.id} className="flex items-start gap-2.5">
-                              {c.students?.photo_url ? (
-                                <img src={c.students.photo_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-[#3632b7]/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[#3632b7]">
-                                  {c.students?.first_name?.[0] ?? '?'}
-                                </div>
-                              )}
-                              <div>
-                                <p className="text-xs font-semibold text-[#3632b7]/80">
-                                  {c.students?.first_name} {c.students?.last_name}
-                                </p>
-                                <p className="text-xs text-[#3632b7]/70 leading-snug mt-0.5" style={{ fontFamily: 'Noto Serif, serif' }}>
-                                  {c.comment_text}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
+                      {summaries[event.id] && (
+                        <div className="mt-4 pt-3 border-t border-[#3632b7]/20">
+                          <p className="text-xs text-[#3632b7]/70 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+                            {summaries[event.id]}
+                          </p>
+                          <p className="text-[10px] text-[#3632b7]/30 mt-1">{eventComments.length} коментара от класа</p>
                         </div>
                       )}
                     </div>
@@ -183,27 +180,12 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
                         {new Date(event.event_date).toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                     )}
-                    {eventComments.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-[#855300]/20 space-y-3">
-                        {eventComments.map(c => (
-                          <div key={c.id} className="flex items-start gap-2.5">
-                            {c.students?.photo_url ? (
-                              <img src={c.students.photo_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-[#855300]/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[#855300]">
-                                {c.students?.first_name?.[0] ?? '?'}
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-xs font-semibold text-[#2a1700]/70">
-                                {c.students?.first_name} {c.students?.last_name}
-                              </p>
-                              <p className="text-xs text-[#2a1700]/60 leading-snug mt-0.5" style={{ fontFamily: 'Noto Serif, serif' }}>
-                                {c.comment_text}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                    {summaries[event.id] && (
+                      <div className="mt-4 pt-3 border-t border-[#855300]/20">
+                        <p className="text-xs text-[#2a1700]/60 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+                          {summaries[event.id]}
+                        </p>
+                        <p className="text-[10px] text-[#855300]/30 mt-1">{eventComments.length} коментара от класа</p>
                       </div>
                     )}
                   </div>
@@ -213,6 +195,5 @@ export default async function LexiconMemoriesPage({ params }: { params: Promise<
           </div>
         )}
       </section>
-    </LexiconShell>
   )
 }

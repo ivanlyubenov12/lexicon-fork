@@ -31,7 +31,7 @@ export default function AddBlockDrawer({ onAdd, onClose, existingTypes }: Props)
       />
 
       {/* Drawer */}
-      <div className="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto">
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto max-w-screen-sm mx-auto">
         <div className="sticky top-0 bg-white px-4 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900">Добави блок</h3>

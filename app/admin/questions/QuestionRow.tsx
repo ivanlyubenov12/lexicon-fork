@@ -8,6 +8,8 @@ interface Props {
   text: string
   type: string
   orderIndex: number
+  voiceDisplay: string | null
+  allowsMedia: boolean
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -15,7 +17,7 @@ const TYPE_LABEL: Record<string, string> = {
   better_together: 'По-добри заедно',
   superhero: 'Супергерой',
   class_voice: 'Глас на класа',
-  video: 'Видео',
+  video: 'Видео въпрос',
 }
 const TYPE_COLOR: Record<string, string> = {
   personal: 'bg-blue-50 text-blue-600',
@@ -25,7 +27,7 @@ const TYPE_COLOR: Record<string, string> = {
   video: 'bg-rose-50 text-rose-600',
 }
 
-export default function QuestionRow({ id, text, type, orderIndex }: Props) {
+export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, allowsMedia }: Props) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(text)
   const [isPending, startTransition] = useTransition()
@@ -50,12 +52,39 @@ export default function QuestionRow({ id, text, type, orderIndex }: Props) {
 
   return (
     <tr className="border-b border-gray-50 hover:bg-gray-50/50 group">
-      <td className="px-4 py-3 text-xs text-gray-400 font-mono w-8">{orderIndex}</td>
-      <td className="px-4 py-3">
-        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${TYPE_COLOR[type] ?? 'bg-gray-50 text-gray-500'}`}>
-          {TYPE_LABEL[type] ?? type}
-        </span>
+      {/* Order index */}
+      <td className="px-4 py-3 text-xs text-gray-400 font-mono w-8 align-top pt-4">{orderIndex}</td>
+
+      {/* Badges: type + format */}
+      <td className="px-4 py-3 align-top pt-3.5 w-52">
+        <div className="flex flex-col gap-1.5">
+          <span className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${TYPE_COLOR[type] ?? 'bg-gray-50 text-gray-500'}`}>
+            {TYPE_LABEL[type] ?? type}
+          </span>
+          {type === 'class_voice' && (
+            <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 w-fit">
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
+                {voiceDisplay === 'barchart' ? 'bar_chart' : 'cloud'}
+              </span>
+              {voiceDisplay === 'barchart' ? 'Бар диаграма' : 'Облак от думи'}
+            </span>
+          )}
+          {allowsMedia && (
+            <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 w-fit">
+              <span className="material-symbols-outlined" style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>videocam</span>
+              Само видео
+            </span>
+          )}
+          {!allowsMedia && type !== 'class_voice' && (
+            <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-400 w-fit">
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>article</span>
+              Само текст
+            </span>
+          )}
+        </div>
       </td>
+
+      {/* Question text */}
       <td className="px-4 py-3 w-full">
         {editing ? (
           <div className="flex flex-col gap-1.5">
@@ -84,10 +113,12 @@ export default function QuestionRow({ id, text, type, orderIndex }: Props) {
             </div>
           </div>
         ) : (
-          <span className="text-sm text-gray-800">{value}</span>
+          <span className="text-sm text-gray-800 leading-relaxed">{value}</span>
         )}
       </td>
-      <td className="px-4 py-3 text-right">
+
+      {/* Actions */}
+      <td className="px-4 py-3 text-right align-top pt-3.5">
         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {!editing && (
             <button

@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { defaultTemplate } from '@/lib/templates/presets'
 import type { Block } from '@/lib/templates/types'
-import LexiconShell from './LexiconShell'
 import LexiconBlocks from './LexiconBlocks'
 import type { LexiconData, QuestionAnswer, VoiceItem } from './LexiconBlocks'
 
@@ -100,7 +99,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
   if (linkedVoiceIds.size > 0) {
     const ids = [...linkedVoiceIds]
     const [qTexts, voiceAnswers] = await Promise.all([
-      admin.from('questions').select('id, text').in('id', ids),
+      admin.from('questions').select('id, text, voice_display').in('id', ids),
       admin.from('class_voice_answers').select('question_id, content').eq('class_id', classId).in('question_id', ids),
     ])
 
@@ -121,7 +120,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
           size: n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm',
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
         }))
-      voiceData[q.id] = { text: q.text, items }
+      voiceData[q.id] = { text: q.text, items, display: (q.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud' }
     }
   }
 
@@ -144,6 +143,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
         .sort((a, b) => b[1] - a[1])
         .slice(0, 4)
         .map(([sid, count]) => ({
+          studentId: sid,
           name: studentMap.get(sid)?.first_name ?? 'Ученик',
           pct: total > 0 ? Math.round((count / total) * 100) : 0,
           photoUrl: studentMap.get(sid)?.photo_url ?? null,
@@ -196,9 +196,5 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
     eventList: events ?? [],
   }
 
-  return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id}>
-      <LexiconBlocks blocks={blocks} data={lexiconData} />
-    </LexiconShell>
-  )
+  return <LexiconBlocks blocks={blocks} data={lexiconData} basePath={`/lexicon/${classId}`} />
 }

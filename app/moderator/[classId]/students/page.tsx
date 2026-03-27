@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { sendAllInvites } from '../actions'
 import ModeratorSidebar from '../ModeratorSidebar'
-import StudentActions from './StudentActions'
 import BulkReminderButton from './BulkReminderButton'
+import StudentsBulkList from './StudentsBulkList'
+import type { StudentRowData } from './StudentsBulkList'
 
 interface StudentRow {
   id: string
@@ -25,7 +26,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
 
   const { data: classData } = await supabase
     .from('classes')
-    .select('id, name, school_year, school_logo_url, deadline')
+    .select('id, name, school_year, school_logo_url, deadline, expected_student_count')
     .eq('id', classId)
     .single()
 
@@ -69,6 +70,8 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
   const invitedCount = studentList.filter((s) => s.parent_email && !s.invite_accepted_at).length
   const noInviteCount = studentList.filter((s) => !s.parent_email).length
 
+  const expectedCount = classData?.expected_student_count ?? null
+  const missingCount = expectedCount !== null ? Math.max(0, expectedCount - studentList.length) : null
   const deadline = classData?.deadline ?? null
   const deadlineDays = deadline
     ? Math.ceil((new Date(deadline).getTime() - Date.now()) / 86_400_000)
@@ -120,12 +123,14 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
           </div>
 
           {/* Stats row */}
-          <div className="flex gap-4 mt-6">
+          <div className="flex gap-4 mt-6 flex-wrap">
             <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 flex items-center gap-3 shadow-sm">
               <span className="material-symbols-outlined text-slate-400 text-xl">group</span>
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Общо</p>
-                <p className="text-lg font-bold text-gray-800">{studentList.length}</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Добавени</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {studentList.length}{expectedCount !== null ? ` / ${expectedCount}` : ''}
+                </p>
               </div>
             </div>
             <div className="bg-white border border-green-100 rounded-xl px-5 py-3 flex items-center gap-3 shadow-sm">
@@ -152,6 +157,14 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
               </div>
             )}
           </div>
+
+          {/* Missing students warning */}
+          {missingCount !== null && missingCount > 0 && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="material-symbols-outlined text-base">person_add</span>
+              Липсват още {missingCount} {missingCount === 1 ? 'дете' : 'деца'} за добавяне
+            </div>
+          )}
 
           {/* Deadline countdown */}
           {deadlineDays !== null && (
@@ -200,132 +213,36 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
           <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-16 text-center">
             <span className="material-symbols-outlined text-5xl text-gray-200 block mb-3">group</span>
             <p className="text-gray-500 text-sm font-medium">Няма добавени деца</p>
-            <p className="text-gray-400 text-xs mt-1">Натиснете „Добави дете", за да започнете.</p>
+            <p className="text-gray-400 text-xs mt-1">
+              {expectedCount ? `Очаквани ${expectedCount} деца. ` : ''}Натиснете „Добави дете", за да започнете.
+            </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {studentList.map((student) => {
+          <StudentsBulkList
+            classId={classId}
+            students={studentList.map((student): StudentRowData => {
               const approved = approvedCountsMap[student.id] ?? 0
               const messages = approvedMessagesMap[student.id] ?? 0
-              const progress = total > 0 ? Math.round((approved / total) * 100) : 0
-              const initials = `${student.first_name.charAt(0)}${student.last_name.charAt(0)}`.toUpperCase()
-
-              const checks = [
-                { icon: 'photo_camera', ok: !!student.photo_url,  label: 'Снимка' },
-                { icon: 'edit_note',    ok: approved >= 2,         label: approved >= 2 ? `${approved} отговора` : `${approved}/2 отговора` },
-                { icon: 'chat',         ok: messages >= 1,         label: messages >= 1 ? `${messages} послания` : 'Без послания' },
-              ]
-              const allDone = checks.every(c => c.ok)
-
-              let statusBadge: React.ReactNode
-              if (student.invite_accepted_at) {
-                statusBadge = (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-green-100 text-green-700">
-                    <span className="material-symbols-outlined" style={{ fontSize: 12 }}>how_to_reg</span>
-                    Регистриран
-                  </span>
-                )
-              } else if (student.parent_email) {
-                statusBadge = (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-100 text-amber-700">
-                    <span className="material-symbols-outlined" style={{ fontSize: 12 }}>mail</span>
-                    Поканен
-                  </span>
-                )
-              } else {
-                statusBadge = (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-gray-100 text-gray-500">
-                    Без покана
-                  </span>
-                )
+              const allDone  = !!student.photo_url && approved >= 2 && messages >= 1
+              return {
+                id:               student.id,
+                first_name:       student.first_name,
+                last_name:        student.last_name,
+                parent_email:     student.parent_email,
+                photo_url:        student.photo_url,
+                invite_accepted_at: student.invite_accepted_at,
+                invite_token:     student.invite_token,
+                approved,
+                messages,
+                total,
+                initials: `${student.first_name.charAt(0)}${student.last_name.charAt(0)}`.toUpperCase(),
+                allDone,
+                statusBadge: student.invite_accepted_at ? 'registered'
+                           : student.parent_email       ? 'invited'
+                           : 'none',
               }
-
-              return (
-                <div
-                  key={student.id}
-                  className="bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center gap-5">
-                    {/* Avatar */}
-                    {student.photo_url ? (
-                      <img
-                        src={student.photo_url}
-                        alt={`${student.first_name} ${student.last_name}`}
-                        className="w-11 h-11 rounded-full object-cover flex-shrink-0 border border-gray-100"
-                      />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
-                        {initials}
-                      </div>
-                    )}
-
-                    {/* Name + email */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">
-                        {student.first_name} {student.last_name}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">
-                        {student.parent_email ?? 'Без имейл на родителя'}
-                      </p>
-                    </div>
-
-                    {/* Status badge */}
-                    <div className="flex-shrink-0">
-                      {statusBadge}
-                    </div>
-
-                    {/* Progress */}
-                    <div className="flex-shrink-0 w-32 hidden lg:block">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-400">Отговори</span>
-                        <span className="text-xs font-semibold text-gray-600">{approved}/{total}</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-500 rounded-full transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Completeness indicators */}
-                    <div className="flex-shrink-0 flex items-center gap-1.5">
-                      {checks.map(c => (
-                        <span
-                          key={c.icon}
-                          title={c.label}
-                          className={`flex items-center justify-center w-7 h-7 rounded-full ${
-                            c.ok
-                              ? 'bg-green-100 text-green-600'
-                              : 'bg-red-50 text-red-400'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-                            {c.ok ? 'check' : c.icon}
-                          </span>
-                        </span>
-                      ))}
-                      {allDone && (
-                        <span className="ml-1 text-xs font-bold text-green-600 uppercase tracking-wider">Готов</span>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex-shrink-0">
-                      <StudentActions
-                        studentId={student.id}
-                        parentEmail={student.parent_email}
-                        inviteAccepted={!!student.invite_accepted_at}
-                        allDone={allDone}
-                        classId={classId}
-                        inviteToken={student.invite_token}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )
             })}
-          </div>
+          />
         )}
       </main>
     </div>

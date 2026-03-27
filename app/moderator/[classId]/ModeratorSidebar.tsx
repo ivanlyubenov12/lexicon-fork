@@ -10,6 +10,7 @@ type ActiveNav =
   | 'polls'
   | 'events'
   | 'superhero'
+  | 'layout'
   | 'finalize'
   | 'seed'
   | 'preview'
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { key: 'answers', icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
   { key: 'messages', icon: 'forum', label: 'Послания', sub: '/messages' },
   { key: 'questions', icon: 'quiz', label: 'Въпросник', sub: '/questions' },
+  { key: 'layout', icon: 'view_quilt', label: 'Лексикон', sub: '/layout' },
   { key: 'polls', icon: 'poll', label: 'Анкети', sub: '/polls' },
   { key: 'events', icon: 'photo_album', label: 'Спомени', sub: '/events' },
   { key: 'preview', icon: 'visibility', label: 'Превю', sub: '/preview' },
@@ -103,6 +105,14 @@ export default function ModeratorSidebar({ classId, namePart, schoolYear, logoUr
           <span className="material-symbols-outlined text-xl">science</span>
           Тест данни
         </Link>
+        <a
+          href={`/api/pdf/${classId}`}
+          download
+          className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+        >
+          <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
+          Изтегли PDF
+        </a>
         <LogoutButton />
         <Link
           href={base}

@@ -115,7 +115,6 @@ export default async function MyChildPage({ params }: Props) {
       classQuestions={classQuestions}
       classVoiceQuestions={classVoiceQuestions ?? []}
       answers={answers ?? []}
-      classStatus={classData?.status ?? 'draft'}
       classId={student.class_id}
       classmates={classmates ?? []}
       sentMessages={sentMessages ?? []}

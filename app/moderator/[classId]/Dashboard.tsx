@@ -3,6 +3,9 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { updateClassInfo, setDeadline } from './actions'
+import ModeratorWizard from './ModeratorWizard'
+import DateInput from '@/components/DateInput'
+import LogoutButton from './LogoutButton'
 
 interface Contribution {
   id: string
@@ -19,10 +22,12 @@ interface Props {
   classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null }
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
+  awaitingApproval: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
   pendingAnswers: number
   pendingMessages: number
   approvedAnswers: number
   hasQuestionnaire: boolean
+  hasLayout: boolean
   events: Array<{ id: string; title: string; event_date: string | null }>
   recentContributions: Contribution[]
 }
@@ -52,8 +57,8 @@ function Icon({ name, className = '' }: { name: string; className?: string }) {
 }
 
 export default function Dashboard({
-  classData, deadline, students, pendingAnswers, pendingMessages,
-  approvedAnswers, hasQuestionnaire, events, recentContributions,
+  classData, deadline, students, awaitingApproval, pendingAnswers, pendingMessages,
+  approvedAnswers, hasQuestionnaire, hasLayout, events, recentContributions,
 }: Props) {
   const totalStudents = students.length
   const acceptedStudents = students.filter((s) => s.invite_accepted_at !== null).length
@@ -184,6 +189,29 @@ export default function Dashboard({
         {/* Bottom */}
         <div className="pt-4 space-y-2">
           <Link
+            href={`${base}/seed`}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+          >
+            <Icon name="science" className="text-xl" />
+            Тест данни
+          </Link>
+          <a
+            href={`/api/pdf/${classData.id}`}
+            download
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+          >
+            <Icon name="picture_as_pdf" className="text-xl" />
+            Изтегли PDF
+          </a>
+          <LogoutButton />
+          <Link
+            href={base}
+            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
+          >
+            <Icon name="help" className="text-xl" />
+            Помощен център
+          </Link>
+          <Link
             href={`${base}/preview`}
             className="w-full flex items-center justify-center gap-2 border border-indigo-200 text-indigo-600 py-2.5 px-4 rounded-xl font-semibold text-sm text-center hover:bg-indigo-50 transition-colors"
           >
@@ -269,8 +297,11 @@ export default function Dashboard({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Краен срок</label>
-                <input type="date" value={deadlineStr} onChange={(e) => setDeadlineStr(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                <DateInput
+                  value={deadlineStr}
+                  onChange={setDeadlineStr}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -294,13 +325,23 @@ export default function Dashboard({
           </div>
         )}
 
+        {/* Wizard */}
+        <ModeratorWizard
+          classId={classData.id}
+          hasEvents={events.length > 0}
+          hasLayout={hasLayout}
+          hasQuestionnaire={hasQuestionnaire}
+          hasStudents={students.length > 0}
+          classStatus={classData.status}
+        />
+
         {/* Stats row */}
         <section className="grid grid-cols-12 gap-5 mb-10">
           {/* Progress */}
           <div className="col-span-12 lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm relative overflow-hidden group border border-gray-100">
             <div className="relative z-10">
               <h3 className="text-xl font-bold text-gray-800 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
-                Прогрес на випуска
+                Прогрес на попълване
               </h3>
               <div className="flex items-end justify-between mb-3">
                 <span className="text-6xl font-bold text-indigo-600">{progressPercent}%</span>
@@ -339,54 +380,44 @@ export default function Dashboard({
 
         {/* Bento grid */}
         <div className="grid grid-cols-12 gap-8">
-          {/* Student list */}
+          {/* Awaiting approval list */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-                Деца в класа
+                Очакващи одобрение
               </h3>
-              <Link href={`${base}/students`}
+              <Link href={`${base}/finalize`}
                 className="text-sm font-bold text-indigo-600 flex items-center gap-1 hover:underline">
-                Виж всички <Icon name="arrow_forward" className="text-sm" />
+                Одобри всички <Icon name="arrow_forward" className="text-sm" />
               </Link>
             </div>
 
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-              {students.length === 0 ? (
-                <div className="p-10 text-center text-slate-400 text-sm">
-                  Все още няма добавени деца.
+              {awaitingApproval.length === 0 ? (
+                <div className="p-10 text-center">
+                  <Icon name="check_circle" className="text-4xl text-gray-200 block mb-3" />
+                  <p className="text-slate-400 text-sm font-medium">Няма попълнени лексикони за одобрение</p>
                 </div>
               ) : (
-                students.slice(0, 6).map((student, i) => (
-                  <div key={student.id}
-                    className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}>
+                awaitingApproval.slice(0, 6).map((student, i) => (
+                  <Link
+                    key={student.id}
+                    href={`${base}/students/${student.id}/preview`}
+                    className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}
+                  >
                     <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0">
                         {student.first_name[0]}{student.last_name[0]}
                       </div>
                       <div>
                         <p className="font-bold text-gray-800 text-sm">{student.first_name} {student.last_name}</p>
-                        <p className="text-xs text-slate-400">
-                          {student.invite_accepted_at ? 'Прие поканата' : 'Покана изпратена'}
-                        </p>
+                        <p className="text-xs text-slate-400">Попълнен лексикон</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${
-                        student.invite_accepted_at
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {student.invite_accepted_at ? 'Активен' : 'Pending'}
-                      </span>
-                      <div className="flex gap-1">
-                        <Link href={`${base}/answers`}
-                          className="p-2 text-indigo-400 hover:bg-indigo-50 rounded-lg transition-colors">
-                          <Icon name="visibility" className="text-base" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                    <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-700">
+                      Чака одобрение
+                    </span>
+                  </Link>
                 ))
               )}
             </div>

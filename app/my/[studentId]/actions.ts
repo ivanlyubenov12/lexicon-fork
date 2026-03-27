@@ -123,6 +123,21 @@ export async function saveDraft(
   return { error: null }
 }
 
+export async function submitAllDrafts(studentId: string): Promise<ActionResult> {
+  const admin = createServiceRoleClient()
+
+  const { error } = await admin
+    .from('answers')
+    .update({ status: 'submitted', updated_at: new Date().toISOString() })
+    .eq('student_id', studentId)
+    .eq('status', 'draft')
+
+  if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+
+  revalidatePath(`/my/${studentId}`)
+  return { error: null }
+}
+
 export async function submitAnswer(
   studentId: string,
   questionId: string,

@@ -34,8 +34,9 @@ export default async function ModeratorStudentPreview({
 
   const { data: allQuestions } = await admin
     .from('questions')
-    .select('id, text, order_index, type')
+    .select('id, text, order_index, type, is_featured')
     .eq('class_id', classId)
+    .neq('type', 'class_voice')
     .order('order_index')
 
   const { data: answers } = await admin
@@ -59,6 +60,29 @@ export default async function ModeratorStudentPreview({
     id: m.id,
     content: m.content,
     authorName: (() => { const a = authorMap.get(m.author_student_id); return a ? `${a.first_name} ${a.last_name}` : 'Съученик' })(),
+  }))
+
+  const { data: eventComments } = await admin
+    .from('event_comments')
+    .select('event_id, comment_text')
+    .eq('student_id', studentId)
+
+  const commentedEventIds = [...new Set((eventComments ?? []).map(c => c.event_id))]
+  const { data: commentedEvents } = commentedEventIds.length > 0
+    ? await admin
+        .from('events')
+        .select('id, title, event_date, photos')
+        .in('id', commentedEventIds)
+        .eq('class_id', classId)
+        .order('order_index')
+    : { data: [] }
+
+  const studentEvents = (commentedEvents ?? []).map(ev => ({
+    id: ev.id,
+    title: ev.title,
+    event_date: ev.event_date ?? null,
+    firstPhoto: (ev.photos as string[] | null)?.[0] ?? null,
+    comment: (eventComments ?? []).find(c => c.event_id === ev.id)?.comment_text ?? '',
   }))
 
   const { data: allStudents } = await admin
@@ -101,11 +125,14 @@ export default async function ModeratorStudentPreview({
         questions={allQuestions ?? []}
         answers={answers ?? []}
         messages={messagesWithAuthors}
+        studentEvents={studentEvents}
         prevStudentId={null}
         nextStudentId={null}
         prevHref={prevStudentId ? `/moderator/${classId}/students/${prevStudentId}/preview` : null}
         nextHref={nextStudentId ? `/moderator/${classId}/students/${nextStudentId}/preview` : null}
         backHref={`/moderator/${classId}/students`}
+        isPremium={true /* moderator preview always shows all content */}
+        showAllQuestions={true}
       />
     </div>
   )

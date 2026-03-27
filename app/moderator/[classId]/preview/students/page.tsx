@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { unstable_noStore as noStore } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
-import LexiconShell from '@/app/lexicon/[classId]/LexiconShell'
 import StudentCard from '@/app/lexicon/[classId]/students/StudentCard'
 
 export default async function PreviewStudentsPage({ params }: { params: Promise<{ classId: string }> }) {
@@ -16,7 +15,7 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
   const admin = createServiceRoleClient()
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_logo_url, template_id')
+    .select('id')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -33,8 +32,7 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
   const basePath = `/moderator/${classId}/preview`
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={basePath}>
-      <section className="mb-16">
+    <section className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-2xl text-[#3632b7]" style={{ fontFamily: 'Noto Serif, serif' }}>
             Всички ученици
@@ -55,7 +53,6 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
             ))}
           </div>
         )}
-      </section>
-    </LexiconShell>
+    </section>
   )
 }

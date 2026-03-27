@@ -27,7 +27,7 @@ export default async function AnswerQuestionPage({ params }: Props) {
 
   const { data: question, error: questionError } = await admin
     .from('questions')
-    .select('id, text, type, order_index, max_length')
+    .select('id, text, description, type, order_index, max_length')
     .eq('id', questionId)
     .single()
 

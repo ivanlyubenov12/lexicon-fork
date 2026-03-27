@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { createServiceRoleClient } from '@/lib/supabase/server'
-import LexiconShell from '../LexiconShell'
 import StudentCard from './StudentCard'
 
 export default async function LexiconStudentsPage({ params }: { params: Promise<{ classId: string }> }) {
@@ -28,8 +27,7 @@ export default async function LexiconStudentsPage({ params }: { params: Promise<
   const studentList = students ?? []
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url}>
-      <section className="mb-16">
+    <section className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-2xl text-[#3632b7]" style={{ fontFamily: 'Noto Serif, serif' }}>
             Всички ученици
@@ -51,6 +49,5 @@ export default async function LexiconStudentsPage({ params }: { params: Promise<
           </div>
         )}
       </section>
-    </LexiconShell>
   )
 }

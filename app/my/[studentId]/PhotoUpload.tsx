@@ -17,8 +17,7 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
   const [cropSrc, setCropSrc]     = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError]         = useState<string | null>(null)
-  const inputRef       = useRef<HTMLInputElement>(null)
-  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -73,19 +72,11 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
         />
       )}
 
-      {/* Hidden inputs — always present */}
+      {/* Hidden gallery input */}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="user"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -117,14 +108,18 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
 
           {/* Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={uploading}
-              className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors disabled:opacity-50"
-            >
+            <label className={`flex flex-col items-center justify-center gap-2 py-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                disabled={uploading}
+                onChange={handleFileChange}
+              />
               <span className="material-symbols-outlined text-indigo-500 text-3xl">photo_camera</span>
               <span className="text-xs font-semibold text-indigo-700">Снимай сега</span>
-            </button>
+            </label>
             <button
               onClick={() => inputRef.current?.click()}
               disabled={uploading}

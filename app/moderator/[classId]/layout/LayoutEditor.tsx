@@ -12,10 +12,10 @@ import { templatePresets } from '@/lib/templates/presets'
 import type { LayoutAssets as LA } from '@/lib/templates/types'
 
 const TEMPLATE_UI = [
-  { id: 'classic',   name: 'Класика',    icon: 'menu_book', color: 'bg-[#e2dfff]', accent: 'text-[#3632b7]', border: 'border-[#3632b7]' },
-  { id: 'magazine',  name: 'Списание',   icon: 'article',   color: 'bg-[#ffedd5]', accent: 'text-[#c2410c]', border: 'border-[#c2410c]' },
-  { id: 'adventure', name: 'Приключение',icon: 'bolt',      color: 'bg-[#d1fae5]', accent: 'text-[#065f46]', border: 'border-[#065f46]' },
-  { id: 'custom',    name: 'Собствен',   icon: 'tune',      color: 'bg-gray-100',  accent: 'text-gray-600',  border: 'border-gray-400'  },
+  { id: 'primary',       name: 'Начално училище', subtitle: '1–4 клас',   icon: 'school',      color: 'bg-[#e2dfff]', accent: 'text-[#3632b7]', border: 'border-[#3632b7]' },
+  { id: 'kindergarten',  name: 'Детска градина',  subtitle: 'ПУК',        icon: 'child_care',  color: 'bg-[#ffedd5]', accent: 'text-[#c2410c]', border: 'border-[#c2410c]' },
+  { id: 'teens',         name: 'Тийновете',       subtitle: '5–9 клас',   icon: 'groups',      color: 'bg-[#d1fae5]', accent: 'text-[#065f46]', border: 'border-[#065f46]' },
+  { id: 'custom',        name: 'Собствен',        subtitle: '',           icon: 'tune',        color: 'bg-gray-100',  accent: 'text-gray-600',  border: 'border-gray-400'  },
 ]
 
 interface Props {
@@ -28,7 +28,10 @@ interface Props {
 
 export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets }: Props) {
   const [blocks, setBlocks]           = useState<Block[]>(initialBlocks)
-  const [activeTemplate, setActiveTemplate] = useState(initialTemplateId || 'classic')
+  // Map legacy 'classic' to 'primary' so the template picker highlights correctly
+  const [activeTemplate, setActiveTemplate] = useState(
+    initialTemplateId === 'classic' || !initialTemplateId ? 'primary' : initialTemplateId
+  )
   const [activeBlockId, setActiveBlockId]   = useState<string | null>(null)
   const [addDrawerOpen, setAddDrawerOpen]   = useState(false)
   const [confirmTemplate, setConfirmTemplate] = useState<string | null>(null)
@@ -63,13 +66,26 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
     setSaved(false)
   }
 
+  const FULL_WIDTH_TYPES: Set<BlockType> = new Set(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
+
   function addBlock(type: BlockType) {
     const b: Block = { id: nanoid(8), type, config: {} }
-    setBlocks(prev => [...prev, b])
-    setActiveBlockId(b.id)
+    if (FULL_WIDTH_TYPES.has(type)) {
+      setBlocks(prev => [...prev, b])
+      setActiveBlockId(b.id)
+    } else {
+      // Add a pair of empty blocks in a row
+      const b2: Block = { id: nanoid(8), type, config: {} }
+      setBlocks(prev => [...prev, b, b2])
+      setActiveBlockId(null)
+    }
     setActiveTemplate('custom')
     setAddDrawerOpen(false)
     setSaved(false)
+  }
+
+  function assignBlock(blockId: string, config: Record<string, unknown>) {
+    updateBlock(blockId, config)
   }
 
   function applyTemplate(id: string) {
@@ -84,8 +100,9 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   }
 
   function handleTemplateClick(id: string) {
-    if (id === activeTemplate) return
     if (id === 'custom') { setActiveTemplate('custom'); return }
+    // Re-apply even if same template when canvas is empty
+    if (id === activeTemplate && blocks.length > 0) return
     if (!saved || activeTemplate === 'custom') { setConfirmTemplate(id) } else { applyTemplate(id) }
   }
 
@@ -152,6 +169,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
                 {isActive && <span className="absolute top-1.5 right-1.5 material-symbols-outlined text-xs text-green-500">check_circle</span>}
                 <span className={`material-symbols-outlined text-xl ${isActive ? t.accent : 'text-gray-300'}`}>{t.icon}</span>
                 <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? t.accent : 'text-gray-400'}`}>{t.name}</span>
+                {t.subtitle && <span className={`text-[9px] text-center leading-tight ${isActive ? t.accent : 'text-gray-300'} opacity-80`}>{t.subtitle}</span>}
               </button>
             )
           })}
@@ -169,8 +187,10 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           <LayoutCanvas
             blocks={blocks}
             assets={assets}
+            classId={classId}
             activeId={activeBlockId}
             onSelect={id => setActiveBlockId(prev => prev === id ? null : id)}
+            onAssign={assignBlock}
           />
         )}
       </main>
@@ -190,6 +210,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
         <BlockConfigDrawer
           block={activeBlock}
           assets={assets}
+          classId={classId}
           blockIndex={blocks.findIndex(b => b.id === activeBlock.id)}
           blocksTotal={blocks.length}
           onUpdate={config => updateBlock(activeBlock.id, config)}
@@ -212,7 +233,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
       {confirmTemplate && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50 backdrop-blur-sm" onClick={() => setConfirmTemplate(null)} />
-          <div className="fixed inset-x-4 bottom-8 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-96 z-50 bg-white rounded-3xl shadow-2xl p-6">
+          <div className="fixed inset-x-0 bottom-0 z-[51] bg-white rounded-t-3xl shadow-2xl p-6 max-w-screen-sm mx-auto">
             <h3 className="font-bold text-gray-900 text-center mb-1">Смяна на шаблон?</h3>
             <p className="text-sm text-gray-500 text-center mb-6">Блоковете ще се заменят с тези на шаблон „{TEMPLATE_UI.find(t => t.id === confirmTemplate)?.name}". Незапазените промени ще се изгубят.</p>
             <div className="grid grid-cols-2 gap-3">

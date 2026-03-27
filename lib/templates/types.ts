@@ -102,9 +102,18 @@ export interface LayoutAsset {
   label: string
 }
 
+export interface VoiceQuestionAsset extends LayoutAsset {
+  description?: string | null
+  type: string
+  max_length?: number | null
+  voice_display?: 'wordcloud' | 'barchart'
+  order_index?: number
+}
+
 export interface LayoutAssets {
   questions: (LayoutAsset & { type: string })[]   // personal questions
-  voiceQuestions: LayoutAsset[]                    // class_voice questions
+  voiceQuestions: VoiceQuestionAsset[]             // class_voice questions
   polls: LayoutAsset[]
   events: LayoutAsset[]
+  coverImageUrl: string | null
 }

@@ -22,9 +22,11 @@ interface Props {
   studentId: string
   studentName: string
   parentEmail: string
+  /** Allow editing the email (when no pre-set email on the invite) */
+  emailEditable?: boolean
 }
 
-export default function JoinRegisterForm({ studentId, studentName, parentEmail }: Props) {
+export default function JoinRegisterForm({ studentId, studentName, parentEmail, emailEditable = false }: Props) {
   const router = useRouter()
   const [state, action] = useActionState(registerParent, { error: null, redirectTo: null })
 
@@ -54,9 +56,12 @@ export default function JoinRegisterForm({ studentId, studentName, parentEmail }
           <input
             type="email"
             name="email"
-            readOnly
-            value={parentEmail}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+            readOnly={!emailEditable}
+            defaultValue={parentEmail}
+            required
+            autoFocus={emailEditable}
+            placeholder={emailEditable ? 'email@example.com' : undefined}
+            className={`w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 ${emailEditable ? '' : 'bg-gray-50 text-gray-500 cursor-not-allowed'}`}
           />
         </div>
 

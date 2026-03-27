@@ -66,8 +66,8 @@ export async function sendInvites(classId: string): Promise<{ error: string | nu
   }
 
   if (!students || students.length === 0) {
-    // No pending invites — still mark class as active
-    await supabase.from('classes').update({ status: 'active' }).eq('id', classId)
+    // No pending invites — still mark class as filling
+    await supabase.from('classes').update({ status: 'filling' }).eq('id', classId)
     return { error: null, sent: 0 }
   }
 
@@ -88,8 +88,8 @@ export async function sendInvites(classId: string): Promise<{ error: string | nu
     }
   }
 
-  // Mark class as active now that invites have been sent
-  await supabase.from('classes').update({ status: 'active' }).eq('id', classId)
+  // Mark class as filling now that invites have been sent
+  await supabase.from('classes').update({ status: 'filling' }).eq('id', classId)
 
   revalidatePath(`/moderator/${classId}/students`)
   revalidatePath(`/moderator/${classId}`)
@@ -122,7 +122,7 @@ export async function completeSetup(classId: string): Promise<{ error: string | 
 
   const { error } = await supabase
     .from('classes')
-    .update({ status: 'active' })
+    .update({ status: 'filling' })
     .eq('id', classId)
 
   if (error) {
@@ -136,7 +136,7 @@ export async function unpublishClass(classId: string): Promise<{ error: string |
   const supabase = createServiceRoleClient()
   const { error } = await supabase
     .from('classes')
-    .update({ status: 'active', finalized_at: null })
+    .update({ status: 'filling', finalized_at: null })
     .eq('id', classId)
   if (error) return { error: 'Неуспешно.' }
   revalidatePath(`/moderator/${classId}`)

@@ -8,6 +8,8 @@ export default async function NewClassPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const existingName = (user.user_metadata?.full_name || user.user_metadata?.name || '') as string
+
   return (
     <div
       className="min-h-screen bg-[#faf9f8] px-6 py-12"
@@ -40,7 +42,7 @@ export default async function NewClassPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <CreateClassForm />
+          <CreateClassForm defaultModeratorName={existingName} />
         </div>
       </div>
     </div>

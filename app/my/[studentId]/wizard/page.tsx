@@ -25,9 +25,15 @@ export default async function WizardPage({
 
   if (!student || student.parent_user_id !== user.id) redirect('/login')
 
+  const { data: classData } = await admin
+    .from('classes')
+    .select('name, deadline')
+    .eq('id', student.class_id)
+    .single()
+
   const { data: questions } = await admin
     .from('questions')
-    .select('id, text, type, max_length, order_index')
+    .select('id, text, description, type, max_length, order_index')
     .eq('class_id', student.class_id)
     .in('type', ['video', 'personal', 'superhero'])
     .order('order_index')
@@ -49,6 +55,7 @@ export default async function WizardPage({
   const wizardQuestions = (questions ?? []).map(q => ({
     id: q.id,
     text: q.text,
+    description: q.description ?? null,
     type: q.type as 'video' | 'personal' | 'superhero',
     maxLength: q.max_length ?? null,
     existingAnswer: answerMap.get(q.id)?.text ?? '',
@@ -63,6 +70,8 @@ export default async function WizardPage({
       lastName={student.last_name}
       photoUrl={student.photo_url ?? null}
       questions={wizardQuestions}
+      className={classData?.name ?? null}
+      deadline={classData?.deadline ?? null}
     />
   )
 }

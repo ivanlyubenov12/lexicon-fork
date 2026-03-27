@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
   const [
     { count: totalClasses },
     { count: draftClasses },
-    { count: activeClasses },
+    { count: fillingClasses },
     { count: publishedClasses },
     { count: totalStudents },
     { count: totalAnswers },
@@ -36,7 +36,7 @@ export default async function AdminDashboard() {
   ] = await Promise.all([
     admin.from('classes').select('id', { count: 'exact', head: true }),
     admin.from('classes').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
-    admin.from('classes').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    admin.from('classes').select('id', { count: 'exact', head: true }).eq('status', 'filling'),
     admin.from('classes').select('id', { count: 'exact', head: true }).eq('status', 'published'),
     admin.from('students').select('id', { count: 'exact', head: true }),
     admin.from('answers').select('id', { count: 'exact', head: true }),
@@ -55,11 +55,10 @@ export default async function AdminDashboard() {
     .limit(5)
 
   const statusLabel: Record<string, { label: string; color: string }> = {
-    draft:            { label: 'Чернова',     color: 'bg-gray-100 text-gray-500' },
-    active:           { label: 'Активен',     color: 'bg-blue-100 text-blue-700' },
-    ready_for_payment:{ label: 'За плащане',  color: 'bg-amber-100 text-amber-700' },
-    pending_payment:  { label: 'Плащане...',  color: 'bg-orange-100 text-orange-700' },
-    published:        { label: 'Публикуван',  color: 'bg-green-100 text-green-700' },
+    draft:       { label: 'Чернова',       color: 'bg-gray-100 text-gray-500' },
+    filling:     { label: 'Непопълнен',    color: 'bg-blue-100 text-blue-700' },
+    unpublished: { label: 'Непубликуван',  color: 'bg-amber-100 text-amber-700' },
+    published:   { label: 'Публикуван',    color: 'bg-green-100 text-green-700' },
   }
 
   return (
@@ -74,7 +73,7 @@ export default async function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         <StatCard icon="school" label="Общо класа" value={totalClasses ?? 0}
-          sub={`${draftClasses ?? 0} чернови · ${activeClasses ?? 0} активни`}
+          sub={`${draftClasses ?? 0} чернови · ${fillingClasses ?? 0} непопълнени`}
           color="bg-indigo-50 text-indigo-500" />
         <StatCard icon="check_circle" label="Публикувани" value={publishedClasses ?? 0}
           sub="готови лексикони"

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type { Block } from '@/lib/templates/types'
 
@@ -37,10 +38,10 @@ export interface LexiconData {
   teaserMap: Record<string, string>
   /** questionId → { text, answers[] } */
   questionData: Record<string, { text: string; answers: QuestionAnswer[] }>
-  /** questionId → { text, items[] } */
-  voiceData: Record<string, { text: string; items: VoiceItem[] }>
+  /** questionId → { text, items[], display } */
+  voiceData: Record<string, { text: string; items: VoiceItem[]; display: 'wordcloud' | 'barchart' }>
   /** pollId → { question, nominees[], totalVotes } */
-  pollData: Record<string, { question: string; nominees: { name: string; pct: number; photoUrl: string | null }[]; totalVotes: number }>
+  pollData: Record<string, { question: string; nominees: { studentId: string; name: string; pct: number; photoUrl: string | null }[]; totalVotes: number }>
   eventList: { id: string; title: string; event_date?: string | null; note?: string | null; photos?: string[] | null }[]
 }
 
@@ -176,14 +177,14 @@ function QuestionBlock({ data, config }: { data: LexiconData; config: Record<str
   if (!q) return <PlaceholderBlock icon="quiz" text="Въпросът не е намерен или няма одобрени отговори" color="primary" />
   if (q.answers.length === 0) return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-4" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
+      <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
       <PlaceholderBlock icon="quiz" text="Все още няма одобрени отговори" color="primary" />
     </section>
   )
 
   return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
+      <h3 className="text-2xl font-bold mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
 
       {layout === 'list' && (
         <div className="space-y-4">
@@ -259,7 +260,7 @@ function PhotoGalleryBlock({ data, config }: { data: LexiconData; config: Record
 
   return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
+      <h3 className="text-2xl font-bold mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{q.text}</h3>
       <div className={`grid ${colClass} gap-3`}>
         {mediaAnswers.map(a => (
           <div key={a.id} className="overflow-hidden" style={{ borderRadius: 'var(--lex-radius)' }}>
@@ -271,28 +272,35 @@ function PhotoGalleryBlock({ data, config }: { data: LexiconData; config: Record
   )
 }
 
-function ClassVoiceBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
-  const qid = config.questionId as string | null
+const CLOUD_COLORS = [
+  'var(--lex-primary)',
+  'var(--lex-secondary)',
+  '#e11d48',  // rose
+  '#d97706',  // amber
+  '#059669',  // emerald
+  '#7c3aed',  // violet
+  '#0891b2',  // cyan
+  '#be185d',  // pink
+  '#15803d',  // green
+  '#b45309',  // yellow-brown
+]
 
-  if (!qid) return <PlaceholderBlock icon="record_voice_over" text="Избери въпрос за гласа на класа от редактора" color="primary" />
-
-  const v = data.voiceData[qid]
-  if (!v || v.items.length === 0) return <PlaceholderBlock icon="record_voice_over" text="Все още няма отговори за гласа на класа" color="primary" />
-
+function WordCloudView({ items, title }: { items: VoiceItem[]; title: string }) {
   return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{v.text}</h3>
-      <div className="p-8 flex flex-col items-center justify-center min-h-[200px]" style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}>
-        <div className="flex flex-wrap items-center justify-center gap-3 text-center">
-          {v.items.map((item, i) => (
-            <span key={i} className={item.size === 'sm' ? 'italic' : ''} style={{
+      <h3 className="text-2xl font-bold mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{title}</h3>
+      <div className="px-8 py-10 flex flex-col items-center justify-center min-h-[200px]" style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}>
+        <div className="flex flex-wrap items-baseline justify-center gap-x-5 gap-y-3 text-center">
+          {items.map((item, i) => (
+            <span key={i} style={{
               fontFamily: 'Noto Serif, serif',
-              fontSize: item.size === 'lg' ? '1rem' : '0.875rem',
+              fontSize: item.size === 'lg' ? '2rem' : item.size === 'md' ? '1.35rem' : '0.95rem',
+              fontWeight: item.size === 'lg' ? 700 : item.size === 'md' ? 600 : 400,
+              fontStyle: item.size === 'sm' ? 'italic' : 'normal',
+              lineHeight: 1.2,
               color: item.size === 'sm'
-                ? 'color-mix(in srgb, var(--lex-secondary) 70%, transparent)'
-                : item.size === 'md'
-                ? 'color-mix(in srgb, var(--lex-primary) 70%, transparent)'
-                : 'var(--lex-primary)',
+                ? `color-mix(in srgb, ${CLOUD_COLORS[i % CLOUD_COLORS.length]} 55%, transparent)`
+                : CLOUD_COLORS[i % CLOUD_COLORS.length],
             }}>
               {item.text}
             </span>
@@ -303,77 +311,128 @@ function ClassVoiceBlock({ data, config }: { data: LexiconData; config: Record<s
   )
 }
 
-function SubjectsBarBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
-  const qid = config.questionId as string | null
-
-  if (!qid) return <PlaceholderBlock icon="bar_chart" text="Избери въпрос за бар диаграмата от редактора" color="primary" />
-
-  const v = data.voiceData[qid]
-  if (!v || v.items.length === 0) return <PlaceholderBlock icon="bar_chart" text="Все още няма отговори за тази диаграма" color="primary" />
-
-  const top3 = v.items.slice(0, 3)
+function BarChartView({ items, title }: { items: VoiceItem[]; title: string }) {
+  const top3 = items.slice(0, 3)
+  const maxPct = top3[0]?.pct ?? 1
+  const BAR_COLORS = ['var(--lex-primary)', 'var(--lex-secondary)', '#d97706']
 
   return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{v.text}</h3>
-      <div className="p-8 space-y-5" style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}>
-        {top3.map((item, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <span className="text-sm font-semibold min-w-[120px] text-right" style={{ color: 'var(--lex-text)' }}>
-              {item.text}
-            </span>
-            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'color-mix(in srgb, var(--lex-primary) 15%, transparent)' }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${item.pct}%`, backgroundColor: 'var(--lex-primary)' }}
-              />
+      <h3 className="text-2xl font-bold mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{title}</h3>
+      <div className="p-8 space-y-6" style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}>
+        {top3.map((item, i) => {
+          const relativeWidth = maxPct > 0 ? Math.round((item.pct / maxPct) * 100) : 0
+          return (
+            <div key={i} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold w-5 text-center" style={{ color: 'var(--lex-muted)' }}>{i + 1}</span>
+                <span className="text-sm font-semibold" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-text)' }}>
+                  {item.text}
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full overflow-hidden ml-7" style={{ backgroundColor: 'color-mix(in srgb, var(--lex-primary) 10%, transparent)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${relativeWidth}%`, backgroundColor: BAR_COLORS[i] }}
+                />
+              </div>
             </div>
-            <span className="text-xs font-bold w-10 text-left" style={{ color: 'var(--lex-muted)' }}>
-              {item.pct}%
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
 }
 
-function PollsGridBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
+function ClassVoiceBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
+  const qid = config.questionId as string | null
+  if (!qid) return <PlaceholderBlock icon="record_voice_over" text="Избери въпрос за гласа на класа от редактора" color="primary" />
+  const v = data.voiceData[qid]
+  if (!v || v.items.length === 0) return <PlaceholderBlock icon="record_voice_over" text="Все още няма отговори за гласа на класа" color="primary" />
+  if (v.display === 'barchart') return <BarChartView items={v.items} title={v.text} />
+  return <WordCloudView items={v.items} title={v.text} />
+}
+
+function SubjectsBarBlock({ data, config }: { data: LexiconData; config: Record<string, unknown> }) {
+  const qid = config.questionId as string | null
+  if (!qid) return <PlaceholderBlock icon="bar_chart" text="Избери въпрос за диаграмата от редактора" color="primary" />
+  const v = data.voiceData[qid]
+  if (!v || v.items.length === 0) return <PlaceholderBlock icon="bar_chart" text="Все още няма отговори за тази диаграма" color="primary" />
+  if (v.display === 'wordcloud') return <WordCloudView items={v.items} title={v.text} />
+  return <BarChartView items={v.items} title={v.text} />
+}
+
+function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
   const pollIds = (config.pollIds as string[] | undefined) ?? Object.keys(data.pollData)
   const polls = pollIds
     .map(id => ({ id, ...(data.pollData[id] ?? {}) }))
-    .filter(p => p.nominees && p.nominees.length > 0) as Array<{ id: string; question: string; nominees: { name: string; pct: number; photoUrl: string | null }[] }>
+    .filter(p => p.nominees && p.nominees.length > 0) as Array<{ id: string; question: string; nominees: { studentId: string; name: string; pct: number; photoUrl: string | null }[] }>
 
   if (polls.length === 0) return <PlaceholderBlock icon="emoji_events" text="Все още няма гласове за анкетите" color="secondary" />
 
   return (
     <section className="mb-16">
-      <h3 className="text-2xl mb-8" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Победители</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {polls.map(poll => {
+      {/* Section header */}
+      <div className="flex items-center gap-3 mb-8">
+        <span className="text-3xl">⭐</span>
+        <h3 className="text-2xl font-bold" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>
+          Звездите на класа
+        </h3>
+        <span className="text-3xl">⭐</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {polls.map((poll) => {
           const winner = poll.nominees[0]
-          const initials = winner.name.slice(0, 2).toUpperCase()
-          return (
+          const initials = winner.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+          const studentHref = basePath && winner.studentId
+            ? `${basePath}/student/${winner.studentId}`
+            : null
+          const card = (
             <div
-              key={poll.id}
-              className="p-6 flex flex-col items-center gap-3 text-center"
-              style={{ backgroundColor: 'var(--lex-card)', borderRadius: 'var(--lex-radius)' }}
+              className="relative flex flex-col items-center gap-4 text-center pt-8 pb-6 px-6 cursor-pointer group transition-transform hover:-translate-y-1"
+              style={{
+                backgroundColor: 'var(--lex-card)',
+                borderRadius: 'var(--lex-radius)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+              }}
             >
-              <p className="text-xs font-bold uppercase tracking-[0.15em] self-stretch" style={{ color: 'var(--lex-secondary)' }}>
-                {poll.question}
-              </p>
-              {/* Winner avatar */}
-              <div className="w-[60px] h-[60px] rounded-full overflow-hidden flex-none flex items-center justify-center" style={{ backgroundColor: 'var(--lex-primary-light)' }}>
-                {winner.photoUrl ? (
-                  <img src={winner.photoUrl} alt={winner.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-base font-bold" style={{ color: 'var(--lex-primary)' }}>{initials}</span>
-                )}
+              {/* Crown + avatar */}
+              <div className="relative">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl leading-none select-none">👑</div>
+                <div
+                  className="w-20 h-20 rounded-full overflow-hidden flex-none flex items-center justify-center ring-4 transition-all group-hover:ring-[color:var(--lex-primary)]"
+                  style={{ backgroundColor: 'var(--lex-primary-light)', ringColor: 'var(--lex-primary-light)' }}
+                >
+                  {winner.photoUrl ? (
+                    <img src={winner.photoUrl} alt={winner.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl font-bold" style={{ color: 'var(--lex-primary)' }}>{initials}</span>
+                  )}
+                </div>
               </div>
+
+              {/* Name */}
               <p className="text-xl font-bold leading-tight" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>
                 {winner.name}
               </p>
+
+              {/* Award label */}
+              <div
+                className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
+                style={{ backgroundColor: 'var(--lex-primary-light)', color: 'var(--lex-primary)' }}
+              >
+                {poll.question}
+              </div>
             </div>
+          )
+
+          return studentHref ? (
+            <a key={poll.id} href={studentHref} className="block no-underline">
+              {card}
+            </a>
+          ) : (
+            <div key={poll.id}>{card}</div>
           )
         })}
       </div>
@@ -510,25 +569,40 @@ function PlaceholderBlock({ icon, text, color }: { icon: string; text: string; c
 
 // ── Main renderer ──────────────────────────────────────────────────────────
 
+// Block types that always span the full width
+const FULL_WIDTH_TYPES = new Set<string>(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
+
 export default function LexiconBlocks({ blocks, data, basePath }: { blocks: Block[]; data: LexiconData; basePath?: string }) {
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
       {blocks.map(block => {
         const cfg = block.config as Record<string, unknown>
+        const fullWidth = FULL_WIDTH_TYPES.has(block.type)
+
+        let content: ReactNode = null
         switch (block.type) {
-          case 'hero':          return <HeroBlock          key={block.id} data={data} />
-          case 'superhero':     return <SuperheroBlock     key={block.id} data={data} />
-          case 'students_grid': return <StudentsGridBlock  key={block.id} data={data} config={cfg} basePath={basePath} />
-          case 'question':      return <QuestionBlock      key={block.id} data={data} config={cfg} />
-          case 'photo_gallery': return <PhotoGalleryBlock  key={block.id} data={data} config={cfg} />
-          case 'class_voice':   return <ClassVoiceBlock    key={block.id} data={data} config={cfg} />
-          case 'subjects_bar':  return <SubjectsBarBlock   key={block.id} data={data} config={cfg} />
-          case 'poll':          return <PollBlock          key={block.id} data={data} config={cfg} />
-          case 'polls_grid':    return <PollsGridBlock     key={block.id} data={data} config={cfg} />
-          case 'events':        return <EventsBlock        key={block.id} data={data} config={cfg} basePath={basePath} />
+          case 'hero':          content = <HeroBlock          data={data} />;                          break
+          case 'superhero':     content = <SuperheroBlock     data={data} />;                          break
+          case 'students_grid': return null  // shown on dedicated /students page
+          case 'question':      content = <QuestionBlock      data={data} config={cfg} />;             break
+          case 'photo_gallery': content = <PhotoGalleryBlock  data={data} config={cfg} />;             break
+          case 'class_voice':   content = <ClassVoiceBlock    data={data} config={cfg} />;             break
+          case 'subjects_bar':  content = <SubjectsBarBlock   data={data} config={cfg} />;             break
+          case 'poll':          content = <PollBlock          data={data} config={cfg} />;             break
+          case 'polls_grid':    content = <PollsGridBlock     data={data} config={cfg} basePath={basePath} />; break
+          case 'events':        content = <EventsBlock        data={data} config={cfg} basePath={basePath} />; break
           default:              return null
         }
+
+        return (
+          <div
+            key={block.id}
+            className={`[&>section]:mb-0 ${fullWidth ? 'col-span-1 md:col-span-2' : ''}`}
+          >
+            {content}
+          </div>
+        )
       })}
-    </>
+    </div>
   )
 }

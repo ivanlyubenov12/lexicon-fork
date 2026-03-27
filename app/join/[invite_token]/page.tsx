@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
-import JoinEmailForm from './JoinEmailForm'
+import JoinAuthForms from './JoinAuthForms'
 
 interface Props {
   params: Promise<{ invite_token: string }>
@@ -30,7 +30,7 @@ export default async function JoinPage({ params }: Props) {
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, moderator_id')
+    .select('id, name, school_year, school_logo_url, moderator_id, teacher_name')
     .eq('id', student.class_id)
     .single()
 
@@ -38,7 +38,7 @@ export default async function JoinPage({ params }: Props) {
   let moderatorName = 'Вашата учителка'
   if (classData?.moderator_id) {
     const { data: { user: mod } } = await admin.auth.admin.getUserById(classData.moderator_id)
-    const name = mod?.user_metadata?.full_name || mod?.user_metadata?.name
+    const name = mod?.user_metadata?.full_name || mod?.user_metadata?.name || classData?.teacher_name
     if (name) moderatorName = name
   }
 
@@ -56,12 +56,17 @@ export default async function JoinPage({ params }: Props) {
     redirect(`/my/${student.id}/wizard`)
   }
 
+  const studentName = `${student.first_name} ${student.last_name}`
+  // Already accepted → returning user who has a password; fresh invite → register
+  const defaultMode = student.invite_accepted_at ? 'login' : 'register'
+
   return (
     <JoinShell student={student} classData={classData} moderatorName={moderatorName}>
-      <JoinEmailForm
-        inviteToken={invite_token}
+      <JoinAuthForms
+        studentId={student.id}
+        studentName={studentName}
         parentEmail={student.parent_email ?? ''}
-        studentFirstName={student.first_name}
+        defaultMode={defaultMode}
       />
     </JoinShell>
   )

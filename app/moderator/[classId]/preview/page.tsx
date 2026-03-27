@@ -2,11 +2,9 @@ export const dynamic = 'force-dynamic'
 
 import { unstable_noStore as noStore } from 'next/cache'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { defaultTemplate } from '@/lib/templates/presets'
 import type { Block } from '@/lib/templates/types'
-import LexiconShell from '@/app/lexicon/[classId]/LexiconShell'
 import LexiconBlocks from '@/app/lexicon/[classId]/LexiconBlocks'
 import type { LexiconData, QuestionAnswer, VoiceItem } from '@/app/lexicon/[classId]/LexiconBlocks'
 
@@ -67,18 +65,6 @@ export default async function ModeratorPreviewPage({
   const studentList = students ?? []
   const studentMap = new Map(studentList.map(s => [s.id, s]))
 
-  // ── Progress: how many students have at least one submitted/approved answer
-  const studentIds = studentList.map(s => s.id)
-  const { data: submittedAnswers } = studentIds.length > 0
-    ? await admin
-        .from('answers')
-        .select('student_id')
-        .in('student_id', studentIds)
-        .in('status', ['submitted', 'approved'])
-    : { data: [] }
-  const studentsWithAnswers = new Set((submittedAnswers ?? []).map((a: any) => a.student_id)).size
-  const totalStudents = studentList.length
-
   // ── Question answers ──────────────────────────────────────────────────────
   const questionData: LexiconData['questionData'] = {}
 
@@ -115,7 +101,7 @@ export default async function ModeratorPreviewPage({
   if (linkedVoiceIds.size > 0) {
     const ids = [...linkedVoiceIds]
     const [qTexts, voiceAnswers] = await Promise.all([
-      admin.from('questions').select('id, text').in('id', ids),
+      admin.from('questions').select('id, text, voice_display').in('id', ids),
       admin.from('class_voice_answers').select('question_id, content').eq('class_id', classId).in('question_id', ids),
     ])
     for (const q of qTexts.data ?? []) {
@@ -132,7 +118,7 @@ export default async function ModeratorPreviewPage({
           size: n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm',
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
         }))
-      voiceData[q.id] = { text: q.text, items }
+      voiceData[q.id] = { text: q.text, items, display: (q.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud' }
     }
   }
 
@@ -154,6 +140,7 @@ export default async function ModeratorPreviewPage({
         .sort((a, b) => b[1] - a[1])
         .slice(0, 4)
         .map(([sid, count]) => ({
+          studentId: sid,
           name: studentMap.get(sid)?.first_name ?? 'Ученик',
           pct: total > 0 ? Math.round((count / total) * 100) : 0,
           photoUrl: studentMap.get(sid)?.photo_url ?? null,
@@ -205,43 +192,7 @@ export default async function ModeratorPreviewPage({
     eventList: events ?? [],
   }
 
-  const pct = totalStudents > 0 ? Math.round((studentsWithAnswers / totalStudents) * 100) : 0
-
   return (
-    <>
-      {/* Preview banner */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-indigo-900 text-white flex items-center justify-between px-5 py-2.5 text-sm shadow-lg">
-        <Link
-          href={`/moderator/${classId}`}
-          className="flex items-center gap-1.5 text-indigo-200 hover:text-white transition-colors"
-        >
-          <span className="material-symbols-outlined text-base">arrow_back</span>
-          Назад към панела
-        </Link>
-
-        <span className="font-semibold tracking-wide text-xs uppercase text-indigo-300">
-          Превю — само ти виждаш това
-        </span>
-
-        <div className="flex items-center gap-2 text-indigo-200">
-          <div className="w-24 h-1.5 rounded-full bg-indigo-700 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-emerald-400 transition-all"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <span className="text-xs tabular-nums">
-            {studentsWithAnswers}/{totalStudents} деца
-          </span>
-        </div>
-      </div>
-
-      {/* Lexicon content pushed below banner */}
-      <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={`/moderator/${classId}/preview`}>
-          <LexiconBlocks blocks={blocks} data={lexiconData} basePath={`/moderator/${classId}/preview`} />
-        </LexiconShell>
-      </div>
-    </>
+    <LexiconBlocks blocks={blocks} data={lexiconData} basePath={`/moderator/${classId}/preview`} />
   )
 }

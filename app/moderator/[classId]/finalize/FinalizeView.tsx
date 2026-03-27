@@ -115,7 +115,8 @@ export default function FinalizeView({
               <span className="material-symbols-outlined text-base">open_in_new</span>
               Виж публикувания
             </Link>
-            {classPlan === 'premium' && (
+            {/* TODO: re-enable plan check — temporarily unlocked for testing */}
+            {(true || classPlan === 'premium') && (
               <a
                 href={`/api/pdf/${classId}`}
                 download

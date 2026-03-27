@@ -18,7 +18,7 @@ export default async function AdminPaymentsPage() {
   const { data: pendingClasses } = await admin
     .from('classes')
     .select('id, name, school_year, moderator_id')
-    .in('status', ['ready_for_payment', 'pending_payment'])
+    .eq('status', 'unpublished')
     .order('created_at', { ascending: false })
 
   // Moderator emails

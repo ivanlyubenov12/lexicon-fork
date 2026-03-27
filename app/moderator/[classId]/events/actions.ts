@@ -6,25 +6,25 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 export async function createEvent(
   classId: string,
   data: { title: string; event_date: string | null; note: string | null; order_index: number }
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; id: string | null }> {
   const supabase = createServiceRoleClient()
 
-  const { error } = await supabase.from('events').insert({
+  const { data: inserted, error } = await supabase.from('events').insert({
     class_id: classId,
     title: data.title,
     event_date: data.event_date || null,
     note: data.note || null,
     order_index: data.order_index,
     photos: [],
-  })
+  }).select('id').single()
 
   if (error) {
     console.error('[createEvent]', error.message)
-    return { error: 'Грешка при създаване на събитието.' }
+    return { error: 'Грешка при създаване на събитието.', id: null }
   }
 
   revalidatePath(`/moderator/${classId}/events`)
-  return { error: null }
+  return { error: null, id: inserted.id }
 }
 
 export async function updateEvent(

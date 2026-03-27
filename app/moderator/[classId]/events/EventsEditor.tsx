@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createEvent, updateEvent, deleteEvent } from './actions'
+import DateInput from '@/components/DateInput'
 
 const MAX_PHOTOS = 5
 
@@ -73,10 +74,9 @@ function EventForm({
           <label className="block text-xs font-medium text-gray-600 mb-1">
             Дата <span className="text-gray-400 font-normal">(по желание)</span>
           </label>
-          <input
-            type="date"
+          <DateInput
             value={form.event_date}
-            onChange={(e) => setForm((f) => ({ ...f, event_date: e.target.value }))}
+            onChange={v => setForm(f => ({ ...f, event_date: v }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -155,14 +155,17 @@ function EventRow({
     const toUpload = files.slice(0, slots)
     setUploading(true)
     try {
-      const uploaded: string[] = []
-      for (const file of toUpload) {
-        const formData = new FormData()
-        formData.append('file', file)
-        const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
-        const data = await res.json()
-        if (data.url) uploaded.push(data.url)
-      }
+      // Upload all files in parallel
+      const results = await Promise.all(
+        toUpload.map(async (file) => {
+          const formData = new FormData()
+          formData.append('file', file)
+          const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
+          const data = await res.json()
+          return data.url as string | undefined
+        })
+      )
+      const uploaded = results.filter(Boolean) as string[]
       if (uploaded.length > 0) {
         const newPhotos = [...photos, ...uploaded]
         setPhotos(newPhotos)
@@ -310,7 +313,7 @@ export default function EventsEditor({
       })
       if (result.error) {
         setAddError(result.error)
-      } else {
+      } else if (result.id) {
         setAdding(false)
         setEvents((prev) => [
           ...prev,
@@ -336,7 +339,7 @@ export default function EventsEditor({
         note: null,
         order_index: events.length + 1,
       })
-      if (!result.error) {
+      if (!result.error && result.id) {
         setEvents((prev) => [
           ...prev,
           {

@@ -8,11 +8,10 @@ import PublishToggle from './PublishToggle'
 import DeleteClassButton from './DeleteClassButton'
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  draft:             { label: 'Чернова',    color: 'bg-gray-100 text-gray-500' },
-  active:            { label: 'Активен',    color: 'bg-blue-100 text-blue-700' },
-  ready_for_payment: { label: 'За плащане', color: 'bg-amber-100 text-amber-700' },
-  pending_payment:   { label: 'Плащане…',   color: 'bg-orange-100 text-orange-700' },
-  published:         { label: 'Публикуван', color: 'bg-green-100 text-green-700' },
+  draft:       { label: 'Чернова',      color: 'bg-gray-100 text-gray-500' },
+  filling:     { label: 'Непопълнен',   color: 'bg-blue-100 text-blue-700' },
+  unpublished: { label: 'Непубликуван', color: 'bg-amber-100 text-amber-700' },
+  published:   { label: 'Публикуван',   color: 'bg-green-100 text-green-700' },
 }
 
 export default async function AdminClassesPage() {

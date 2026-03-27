@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 // Route: /my/class-voice — P5: Anonymous class voice answers
 // 3–5 questions · text only · one answer per question · cannot edit after submit
 // Results only visible in the final published product
-// Only accessible while class status is: active
+// Only accessible while class status is not: draft
 
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -31,7 +31,7 @@ export default async function ClassVoicePage() {
     .eq('id', student.class_id)
     .single()
 
-  if (!classData || classData.status !== 'active') notFound()
+  if (!classData || classData.status === 'draft') notFound()
 
   const { data: questions } = await admin
     .from('questions')
