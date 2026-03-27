@@ -278,22 +278,26 @@ const VOICE_POOLS: Record<string, string[]> = {
   'Какъв е нашият клас? Опиши го с две или три думи': [
     'весел и приятелски', 'шумен и забавен', 'сплотен', 'креативен', 'приятелски',
     'любопитен', 'енергичен', 'мили и дружни', 'спортен', 'интелигентен',
-    'весел и приятелски', 'шумен и забавен', 'сплотен', 'приятелски', 'енергичен',
+    'приключенски', 'задружен', 'вдъхновяващ', 'весел и смешен', 'отговорен',
+    'уникален', 'добродушен', 'хумористичен', 'активен', 'топъл',
   ],
   'Кой предмет харесваш най-много:': [
     'математика', 'биология', 'литература', 'история', 'физика',
     'химия', 'изобразително', 'музика', 'физическо', 'информатика',
-    'математика', 'биология', 'история', 'литература', 'физическо',
+    'география', 'английски', 'немски', 'философия', 'психология',
+    'астрономия', 'технологии', 'гражданско образование', 'природни науки', 'театрално изкуство',
   ],
   'А по кой предмет ти е най-трудно?': [
     'химия', 'физика', 'математика', 'граматика', 'история',
-    'биология', 'немски', 'физика', 'математика', 'химия',
-    'граматика', 'история', 'биология', 'физика', 'немски',
+    'биология', 'немски', 'тригонометрия', 'алгебра', 'стереометрия',
+    'органична химия', 'руски', 'география', 'философия', 'статистика',
+    'латински', 'интеграли', 'физическо', 'теоретична физика', 'морфология',
   ],
   'Каква е за теб класната/класния? Опиши го с три думи': [
     'добра', 'справедлива', 'умна', 'търпелива', 'строга',
     'весела', 'грижовна', 'мъдра', 'отдадена', 'разбираща',
-    'подкрепяща', 'креативна', 'вдъхновяваща', 'честна', 'добра',
+    'подкрепяща', 'креативна', 'вдъхновяваща', 'честна', 'всеотдайна',
+    'организирана', 'ентусиазирана', 'закачлива', 'принципна', 'иновативна',
   ],
 }
 
@@ -489,23 +493,26 @@ export async function seedDummyData(
       'https://res.cloudinary.com/demo/video/upload/sea_turtle.mp4',
     ]
 
-    const textAnswerRows = allStudents.flatMap((student, si) =>
-      textQs.map(q => ({
+    // Shuffle each question's pool independently so answers differ per question
+    const textAnswerRows = textQs.flatMap(q => {
+      const pool = shuffled(getAnswerPool(q))
+      return allStudents.map((student, si) => ({
         student_id: student.id,
         question_id: q.id,
-        text_content: pickRoundRobin(getAnswerPool(q), si),
+        text_content: pool[si % pool.length],
         status: 'approved',
       }))
-    )
-    const videoAnswerRows = allStudents.flatMap((student, si) =>
-      videoQs.map(q => ({
+    })
+    const videoAnswerRows = videoQs.flatMap(q => {
+      const pool = shuffled(SAMPLE_VIDEOS)
+      return allStudents.map((student, si) => ({
         student_id: student.id,
         question_id: q.id,
-        media_url: pickRoundRobin(SAMPLE_VIDEOS, si),
+        media_url: pool[si % pool.length],
         media_type: 'video',
         status: 'approved',
       }))
-    )
+    })
     const answerRows = [...textAnswerRows, ...videoAnswerRows]
     if (answerRows.length > 0) {
       const { error: aErr } = await admin.from('answers').insert(answerRows)
@@ -515,12 +522,11 @@ export async function seedDummyData(
     // 4. Class voice answers
     const voiceQs = questions.filter(q => q.type === 'class_voice')
     const voiceRows = voiceQs.flatMap(q => {
-      const pool = VOICE_POOLS[q.text] ?? ['Дъми отговор.']
-      // Each student gives one answer → use round-robin from pool
+      const pool = shuffled(VOICE_POOLS[q.text] ?? ['Дъми отговор.'])
       return allStudents.map((_, si) => ({
         class_id: classId,
         question_id: q.id,
-        content: pickRoundRobin(pool, si),
+        content: pool[si % pool.length],
       }))
     })
     if (voiceRows.length > 0) {
@@ -534,13 +540,15 @@ export async function seedDummyData(
       .eq('class_id', classId)
 
     if ((allEvents ?? []).length > 0 && allStudents.length > 0) {
-      const commentRows = allStudents.flatMap((student, si) =>
-        (allEvents ?? []).map((event, ei) => ({
+      // Shuffle comment pool per event so students get different comments per event
+      const commentRows = (allEvents ?? []).flatMap(event => {
+        const pool = shuffled(EVENT_COMMENT_POOL)
+        return allStudents.map((student, si) => ({
           event_id: event.id,
           student_id: student.id,
-          comment_text: pickRoundRobin(EVENT_COMMENT_POOL, si + ei * 3),
+          comment_text: pool[si % pool.length],
         }))
-      )
+      })
       const { error: ecErr } = await admin.from('event_comments').insert(commentRows)
       if (ecErr) return { error: `event_comments: ${ecErr.message}` }
     }
