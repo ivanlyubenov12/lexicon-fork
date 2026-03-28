@@ -62,7 +62,8 @@ export default async function PreviewLayout({
           <span className="sm:hidden">Назад</span>
         </Link>
         <span className="font-semibold tracking-wide text-xs uppercase text-indigo-300">
-          Превю — само ти виждаш това
+          <span className="hidden sm:inline">Превю — само ти виждаш това</span>
+          <span className="sm:hidden">Преглед</span>
         </span>
         <div className="hidden sm:flex items-center gap-2 text-indigo-200">
           <div className="w-24 h-1.5 rounded-full bg-indigo-700 overflow-hidden">
@@ -70,12 +71,7 @@ export default async function PreviewLayout({
           </div>
           <span className="text-xs tabular-nums">{studentsWithAnswers}/{totalStudents} деца</span>
         </div>
-        {/* Mobile: just the progress bar, no count */}
-        <div className="sm:hidden flex items-center">
-          <div className="w-16 h-1.5 rounded-full bg-indigo-700 overflow-hidden">
-            <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
+        <div className="sm:hidden w-10" />
       </div>
 
       {/* Content pushed below banner */}
