@@ -287,6 +287,11 @@ export default function StudentProfileParent({
   const [submitted, setSubmitted] = useState(questionnaireSubmitted)
 
   useEffect(() => {
+    // Keep all sections collapsed when questionnaire is submitted or fully approved
+    if (questionnaireSubmitted || allApproved) {
+      setOpenSection(null)
+      return
+    }
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved && SECTION_IDS.includes(saved)) {
       setOpenSection(saved)
@@ -398,7 +403,7 @@ export default function StudentProfileParent({
         ) : null}
 
         {/* All done banner */}
-        {progressPercent === 100 && (
+        {progressPercent === 100 && !submitted && !allApproved && (
           <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-start gap-3">
             <span className="material-symbols-outlined text-green-500 text-xl mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
               celebration
