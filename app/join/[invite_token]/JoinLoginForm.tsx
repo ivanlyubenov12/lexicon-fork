@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { loginFromJoin } from './actions'
 
 function SubmitBtn() {
@@ -27,7 +27,7 @@ interface Props {
 
 export default function JoinLoginForm({ studentId, studentName, parentEmail, reason }: Props) {
   const router = useRouter()
-  const [state, action] = useActionState(loginFromJoin, { error: null, redirectTo: null })
+  const [state, action] = useFormState(loginFromJoin, { error: null, redirectTo: null })
 
   useEffect(() => {
     if (state.redirectTo) router.push(state.redirectTo)

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useActionState, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { registerUser } from './actions'
 
 function SubmitButton({ label }: { label: string }) {
@@ -20,7 +20,7 @@ function SubmitButton({ label }: { label: string }) {
 
 export default function RegisterForm() {
   const router = useRouter()
-  const [state, action] = useActionState(registerUser, { error: null, redirectTo: null })
+  const [state, action] = useFormState(registerUser, { error: null, redirectTo: null })
   const [role, setRole] = useState<'moderator' | 'student' | null>(null)
 
   useEffect(() => {

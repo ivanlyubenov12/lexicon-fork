@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useActionState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { createClass } from './actions'
 import DateInput from '@/components/DateInput'
 
@@ -29,7 +29,7 @@ function SubmitButton() {
 
 export default function CreateClassForm({ defaultModeratorName = '' }: { defaultModeratorName?: string }) {
   const router = useRouter()
-  const [state, action] = useActionState(createClass, { error: null, classId: null })
+  const [state, action] = useFormState(createClass, { error: null, classId: null })
 
   const [coverUrl, setCoverUrl] = useState<string | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)

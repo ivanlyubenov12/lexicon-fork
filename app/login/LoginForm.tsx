@@ -1,7 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useFormState, useFormStatus } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginModerator } from './actions'
@@ -22,7 +21,7 @@ function SubmitButton({ frozen }: { frozen: boolean }) {
 
 export default function LoginForm() {
   const router = useRouter()
-  const [state, formAction] = useActionState(loginModerator, { error: null, redirectTo: null })
+  const [state, formAction] = useFormState(loginModerator, { error: null, redirectTo: null })
   const [frozen, setFrozen] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
