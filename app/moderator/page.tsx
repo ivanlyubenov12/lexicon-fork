@@ -69,7 +69,7 @@ export default async function ModeratorIndexPage() {
       </aside>
 
       {/* Main */}
-      <main className="ml-64 flex-1 p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
         <header className="mb-10 flex justify-between items-end">
           <div>
             <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">

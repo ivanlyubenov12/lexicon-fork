@@ -65,7 +65,7 @@ export default async function PollsPage({ params }: { params: Promise<{ classId:
         logoUrl={classData?.school_logo_url ?? null}
         active="polls"
       />
-      <main className="ml-64 flex-1 p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
         <PollsEditor
           classId={classId}
           initialPolls={pollsWithCounts}

@@ -33,7 +33,7 @@ export default async function SeedPage({ params }: Props) {
         active="seed"
       />
 
-      <main className="ml-64 flex-1 p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">
             Тестова фаза

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
 import { createServerClient } from '@/lib/supabase/server'
+import MobileMenuWrapper from './MobileMenuWrapper'
 
 type ActiveNav =
   | 'dashboard'
@@ -42,8 +43,9 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
   const base = `/moderator/${classId}`
 
   return (
+    <MobileMenuWrapper namePart={namePart} finalizeHref={`${base}/finalize`}>
     <aside
-      className="w-64 fixed left-0 top-0 h-screen bg-[#f4f3f2] flex flex-col p-4 z-50"
+      className="w-64 h-screen bg-[#f4f3f2] flex flex-col p-4 overflow-y-auto"
       style={{ fontFamily: 'Manrope, sans-serif' }}
     >
       {/* Brand */}
@@ -143,5 +145,6 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
         </Link>
       </div>
     </aside>
+    </MobileMenuWrapper>
   )
 }

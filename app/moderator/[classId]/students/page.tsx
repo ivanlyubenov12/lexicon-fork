@@ -94,7 +94,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
       />
 
       {/* ── Main ─────────────────────────────────────────────────────── */}
-      <main className="ml-64 flex-1 p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
 
         {/* Header */}
         <div className="mb-10">

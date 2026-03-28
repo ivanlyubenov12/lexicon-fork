@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import AdminLogoutButton from './AdminLogoutButton'
@@ -14,10 +15,13 @@ const NAV_ITEMS = [
 
 export default function AdminSidebar() {
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
 
-  return (
+  useEffect(() => { setOpen(false) }, [pathname])
+
+  const sidebarContent = (
     <aside
-      className="w-64 fixed left-0 top-0 h-screen bg-[#f4f3f2] flex flex-col p-4 z-50"
+      className="w-64 h-screen bg-[#f4f3f2] flex flex-col p-4 overflow-y-auto"
       style={{ fontFamily: 'Manrope, sans-serif' }}
     >
       {/* Brand */}
@@ -69,5 +73,48 @@ export default function AdminSidebar() {
         <AdminLogoutButton />
       </div>
     </aside>
+  )
+
+  return (
+    <>
+      {/* ── Mobile top bar ─────────────────────────────────────────────── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#f4f3f2] border-b border-black/5 flex items-center justify-between px-4" style={{ fontFamily: 'Manrope, sans-serif' }}>
+        <button
+          onClick={() => setOpen(true)}
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors"
+        >
+          <span className="material-symbols-outlined text-xl text-slate-600">menu</span>
+        </button>
+        <span className="font-bold text-sm text-indigo-900" style={{ fontFamily: 'Noto Serif, serif' }}>
+          Admin Panel
+        </span>
+        <div className="w-10" />
+      </div>
+
+      {/* ── Backdrop ───────────────────────────────────────────────────── */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar panel ──────────────────────────────────────────────── */}
+      <div
+        className={`fixed left-0 top-0 h-screen z-50 transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0`}
+      >
+        {open && (
+          <button
+            onClick={() => setOpen(false)}
+            className="md:hidden absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+          >
+            <span className="material-symbols-outlined text-base text-slate-500">close</span>
+          </button>
+        )}
+        {sidebarContent}
+      </div>
+    </>
   )
 }
