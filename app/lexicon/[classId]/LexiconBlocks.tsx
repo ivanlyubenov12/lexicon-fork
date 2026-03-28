@@ -475,7 +475,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
     return (
       <section className="mb-12">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите спомени</h3>
+          <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
           <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -500,7 +500,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите спомени</h3>
+        <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
         <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
       </div>
       <div className={style === 'timeline' ? 'space-y-4' : 'columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6'}>

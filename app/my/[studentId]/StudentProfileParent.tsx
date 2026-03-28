@@ -619,12 +619,12 @@ export default function StudentProfileParent({
           </Section>
         )}
 
-        {/* ── Нашите спомени ─────────────────────────────────────────────── */}
+        {/* ── Нашите събития ─────────────────────────────────────────────── */}
         {events.length > 0 && (
           <Section
             id="memories"
             icon="photo_album"
-            title="Нашите спомени"
+            title="Нашите събития"
             description="Модераторът е добавил снимки от специални моменти на класа. Оставете кратък коментар към всяка снимка — той ще се покаже в лексикона."
             status={events.every(e => e.myComment) ? 'done' : events.some(e => e.myComment) ? 'partial' : 'todo'}
             statusLabel={

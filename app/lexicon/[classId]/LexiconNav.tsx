@@ -8,7 +8,7 @@ function getNavItems(themeId?: string | null) {
   return [
     { label: isKinder ? 'Групата'  : 'Класът',         icon: 'auto_stories', exact: true,  path: ''          },
     { label: 'Учениците',                               icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите спомени',                          icon: 'photo_album',  exact: false, path: '/memories' },
+    { label: 'Нашите събития',                          icon: 'photo_album',  exact: false, path: '/memories' },
   ]
 }
 

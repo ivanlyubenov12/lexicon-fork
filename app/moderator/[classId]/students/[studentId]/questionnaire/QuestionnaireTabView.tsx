@@ -45,7 +45,7 @@ interface Props {
 const TABS = [
   { key: 'questionnaire', label: 'Въпросник',           icon: 'quiz' },
   { key: 'polls',         label: 'Анкети',               icon: 'how_to_vote' },
-  { key: 'memories',      label: 'Спомени',              icon: 'photo_album' },
+  { key: 'memories',      label: 'Събития',              icon: 'photo_album' },
   { key: 'messages',      label: 'Послания',             icon: 'favorite' },
   { key: 'voice',         label: 'Анонимни въпроси',     icon: 'record_voice_over' },
 ] as const
@@ -204,10 +204,10 @@ export default function QuestionnaireTabView(props: Props) {
             )
         )}
 
-        {/* ── Спомени ───────────────────────────────────────────────── */}
+        {/* ── Събития ───────────────────────────────────────────────── */}
         {activeTab === 'memories' && (
           props.events.length === 0
-            ? <Empty icon="photo_album" text="Няма добавени спомени." />
+            ? <Empty icon="photo_album" text="Няма добавени събития." />
             : (
               <div className="space-y-3">
                 {props.events.map(event => (

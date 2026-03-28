@@ -23,7 +23,13 @@
       "Bash(node -e \":*)",
       "Read(//dev/**)",
       "Bash(git reset:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId] -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\))",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app -name LogoutButton* -o -name logout*)",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app -path */auth/callback* -o -path */auth/*)",
+      "Bash(curl -s -X POST \"https://jaekhawburxlnhpkqjoy.supabase.co/rest/v1/rpc/exec_sql\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZWtoYXdidXJ4bG5ocGtxam95Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDIxOTY2MiwiZXhwIjoyMDg5Nzk1NjYyfQ.ZMspKR3jlOC3u1WRDicLK5WSIfFhOB1e0ghsxMZIGBY\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZWtoYXdidXJ4bG5ocGtxam95Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDIxOTY2MiwiZXhwIjoyMDg5Nzk1NjYyfQ.ZMspKR3jlOC3u1WRDicLK5WSIfFhOB1e0ghsxMZIGBY\" -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"ALTER TABLE students ADD COLUMN IF NOT EXISTS questionnaire_submitted boolean NOT NULL DEFAULT false;\"\"}')",
+      "Read(//Users/andreylyubenov/.config/supabase/**)",
+      "Bash(grep -n \"Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId]/question/[questionId]/AnswerForm.tsx)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

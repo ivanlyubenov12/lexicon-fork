@@ -38,11 +38,11 @@ export default async function AdminPreviewMemoriesPage({ params }: { params: Pro
   return (
     <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={basePath}>
       <section className="mb-16">
-        <h3 className="text-2xl text-[#3632b7] mb-8" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите спомени</h3>
+        <h3 className="text-2xl text-[#3632b7] mb-8" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите събития</h3>
         {eventList.length === 0 ? (
           <div className="py-32 text-center">
             <span className="material-symbols-outlined text-5xl text-[#e9e8e7] block mb-4">photo_library</span>
-            <p className="text-stone-400 font-medium">Все още няма споделени спомени.</p>
+            <p className="text-stone-400 font-medium">Все още няма споделени събития.</p>
           </div>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">

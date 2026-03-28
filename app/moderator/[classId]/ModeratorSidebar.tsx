@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   { key: 'students',  icon: 'group',         label: 'Деца',     sub: '/students' },
   { key: 'answers',   icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
   { key: 'lexicon',   icon: 'view_quilt',    label: 'Лексикон', sub: '/lexicon' },
-  { key: 'events',    icon: 'photo_album',   label: 'Спомени',  sub: '/events' },
+  { key: 'events',    icon: 'photo_album',   label: 'Събития',  sub: '/events' },
   { key: 'preview',   icon: 'visibility',    label: 'Превю',    sub: '/preview' },
 ] as const
 

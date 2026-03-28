@@ -19,7 +19,7 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   polls_grid:    { label: 'Победители',       icon: 'emoji_events',      addLabel: 'Победители в анкети' },
   class_voice:   { label: 'Гласът на класа', icon: 'record_voice_over', addLabel: 'Гласът на класа' },
   subjects_bar:  { label: 'Предмети (графика)', icon: 'bar_chart',       addLabel: 'Бар диаграма' },
-  events:        { label: 'Спомени',          icon: 'photo_album',       addLabel: 'Добави спомени' },
+  events:        { label: 'Събития',          icon: 'photo_album',       addLabel: 'Добави събитие' },
   superhero:     { label: 'Супергерой',       icon: 'bolt',              addLabel: 'AI изображение на класа' },
 }
 
@@ -455,13 +455,13 @@ function EventsBlockCanvas({ block, assets, classId, isActive, onSelect }: {
       >
         <div className="absolute -top-3 left-4 z-10">
           <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${isActive ? 'bg-indigo-600 text-white' : 'bg-white text-gray-400 border border-gray-200'}`}>
-            Спомени
+            Събития
           </span>
         </div>
 
         <div className="space-y-3 pt-2">
           <div className="flex justify-between items-end px-1">
-            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите спомени</h2>
+            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите събития</h2>
             <span className="text-xs text-gray-400 uppercase tracking-widest">{events.length} / {cfg.limit ?? 20}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
