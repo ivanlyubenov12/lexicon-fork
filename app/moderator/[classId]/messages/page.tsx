@@ -69,10 +69,10 @@ export default async function MessagesPage({ params }: { params: Promise<{ class
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
             Преглед на съдържанието
           </p>
-          <div className="flex items-end justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1
-                className="text-4xl font-bold text-gray-900 leading-tight"
+                className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
                 style={{ fontFamily: 'Noto Serif, serif' }}
               >
                 Послания между деца

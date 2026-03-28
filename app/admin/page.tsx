@@ -105,6 +105,7 @@ export default async function AdminDashboard() {
             Виж всички →
           </Link>
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-50">
@@ -137,6 +138,7 @@ export default async function AdminDashboard() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

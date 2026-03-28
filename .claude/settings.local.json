@@ -16,7 +16,13 @@
       "Read(//Users/andreylyubenov/Desktop/Lexicon_Project/Avatars/**)",
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(grep -r \"parent_user_id\\\\|moderator_id\\\\|admin\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/actions.ts)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(node --input-type=module:*)",
+      "Bash(node -e \":*)",
+      "Read(//dev/**)",
+      "Bash(git reset:*)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

@@ -300,7 +300,7 @@ export default async function LexiconPage({
         {/* ── Послания ────────────────────────────────────────────────────── */}
         {tab === 'messages' && (
           <div>
-            <div className="flex items-end justify-between gap-6 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
                   Послания между деца

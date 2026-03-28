@@ -323,7 +323,7 @@ export default function PresetQuestionsTab({
   }
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <tbody>
           {questions.map((q, i) => (

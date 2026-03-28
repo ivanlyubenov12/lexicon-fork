@@ -95,6 +95,7 @@ export default async function AdminQuestionsPage({
                   <span className="ml-auto text-xs text-gray-400">{typeQuestions.length} въпроса</span>
                 </div>
                 {typeQuestions.length > 0 ? (
+                  <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <tbody>
                       {typeQuestions.map((q) => (
@@ -110,6 +111,7 @@ export default async function AdminQuestionsPage({
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 ) : (
                   <p className="px-6 py-5 text-xs text-gray-400 italic">Няма въпроси от този тип.</p>
                 )}

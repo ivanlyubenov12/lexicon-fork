@@ -71,7 +71,7 @@ export default async function AdminClassesPage() {
           <h2 className="font-bold text-gray-800">Showcase — публични примери</h2>
           <span className="ml-auto text-xs text-gray-400">{showcaseClasses.length}/3 слота заети</span>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((slot) => {
             const cls = showcaseClasses.find(c => c.showcase_order === slot)
             return (
@@ -102,6 +102,7 @@ export default async function AdminClassesPage() {
 
       {/* Classes table */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -163,6 +164,7 @@ export default async function AdminClassesPage() {
             })}
           </tbody>
         </table>
+        </div>
         {(classes ?? []).length === 0 && (
           <div className="px-6 py-16 text-center text-gray-400">
             <span className="material-symbols-outlined text-4xl block mb-2 text-gray-200">school</span>

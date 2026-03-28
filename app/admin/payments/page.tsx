@@ -41,7 +41,7 @@ export default async function AdminPaymentsPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
           <p className="text-3xl font-bold text-green-600">{totalRevenue.toFixed(2)} €</p>
           <p className="text-sm font-semibold text-gray-700 mt-1">Общ приход</p>
@@ -68,6 +68,7 @@ export default async function AdminPaymentsPage() {
               Чакат плащане
             </h2>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <tbody>
               {(pendingClasses ?? []).map((cls) => (
@@ -80,6 +81,7 @@ export default async function AdminPaymentsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -89,6 +91,7 @@ export default async function AdminPaymentsPage() {
           <h2 className="font-bold text-gray-800 text-sm">Платени лексикони</h2>
         </div>
         {(publishedClasses ?? []).length > 0 ? (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-50 bg-gray-50/50">
@@ -134,6 +137,7 @@ export default async function AdminPaymentsPage() {
               </tr>
             </tfoot>
           </table>
+          </div>
         ) : (
           <div className="px-6 py-16 text-center text-gray-400">
             <span className="material-symbols-outlined text-4xl block mb-2 text-gray-200">payments</span>

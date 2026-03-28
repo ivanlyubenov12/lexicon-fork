@@ -293,18 +293,18 @@ export default function Dashboard({
       <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
 
         {/* Header */}
-        <header className="mb-10 flex justify-between items-end">
+        <header className="mb-10 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
           <div>
             <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">
               <span>Admin Panel</span>
               <span>/</span>
               <span className="text-indigo-600 font-bold">Табло</span>
             </nav>
-            <h2 className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
               {classData.name}
             </h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-gray-100">
               <Icon name="calendar_today" className="text-amber-600 text-base" />
               <span className="text-sm font-semibold text-gray-700">{classData.school_year}</span>
@@ -341,7 +341,7 @@ export default function Dashboard({
           <div className="bg-white rounded-2xl border border-indigo-100 p-6 mb-8 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4">Настройки на класа</h3>
             {saveError && <p className="text-red-600 text-sm mb-3">{saveError}</p>}
-            <div className="grid grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Клас</label>
                 <input value={className} onChange={(e) => setClassName(e.target.value)}
@@ -368,7 +368,7 @@ export default function Dashboard({
             </div>
             <div className="flex items-start gap-6 flex-wrap">
               {/* Cover image */}
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
                 <p className="text-xs font-medium text-gray-500 mb-2">Снимка на класа</p>
                 {coverUrl ? (
                   <div className="relative rounded-xl overflow-hidden aspect-video mb-2 max-w-xs">
@@ -507,7 +507,7 @@ export default function Dashboard({
             </div>
 
             {/* Quick links row */}
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
               <Link href={`${base}/questions`}
                 className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow flex items-center gap-3">
                 <Icon name="quiz" className="text-indigo-400 text-xl" />

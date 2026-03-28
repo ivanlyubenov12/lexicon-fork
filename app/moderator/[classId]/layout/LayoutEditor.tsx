@@ -171,7 +171,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
       {/* ── Template picker ─────────────────────────────────────────── */}
       <div className="max-w-screen-sm mx-auto px-4 pt-6 pb-2">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Шаблон</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {TEMPLATE_UI.map(t => {
             const isActive = activeTemplate === t.id
             return (

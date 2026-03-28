@@ -70,18 +70,18 @@ export default async function ModeratorIndexPage() {
 
       {/* Main */}
       <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
-        <header className="mb-10 flex justify-between items-end">
+        <header className="mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
           <div>
             <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">
               <span className="text-indigo-600 font-bold">Всички класове</span>
             </nav>
-            <h2 className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
               Моите класове
             </h2>
           </div>
           <Link
             href="/moderator/new"
-            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm self-start sm:self-auto"
           >
             <span className="material-symbols-outlined text-base">add</span>
             Нов клас
