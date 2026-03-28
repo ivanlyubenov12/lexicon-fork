@@ -428,9 +428,9 @@ export default function Dashboard({
         />
 
         {/* Stats row */}
-        <section className="grid grid-cols-12 gap-5 mb-10">
+        <section className="grid grid-cols-12 gap-4 mb-8">
           {/* Progress */}
-          <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-8 shadow-sm relative overflow-hidden group border border-gray-100">
+          <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-5 md:p-8 shadow-sm relative overflow-hidden group border border-gray-100">
             <div className="relative z-10">
               <h3 className="text-xl font-bold text-gray-800 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
                 Прогрес на попълване
@@ -452,7 +452,7 @@ export default function Dashboard({
 
           {/* Quick stats */}
           <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-            <div className="bg-emerald-400 rounded-2xl p-6 flex flex-col justify-between flex-1">
+            <div className="bg-emerald-400 rounded-2xl p-5 flex flex-col justify-between flex-1">
               <Icon name="verified" className="text-emerald-900 text-2xl mb-3" />
               <div>
                 <p className="text-3xl font-bold text-emerald-900">{approvedAnswers}</p>
@@ -463,7 +463,7 @@ export default function Dashboard({
         </section>
 
         {/* Bento grid */}
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-12 gap-4 md:gap-8">
           {/* Awaiting approval list */}
           <div className="col-span-12 lg:col-span-8">
             <div className="flex items-center justify-between mb-5">

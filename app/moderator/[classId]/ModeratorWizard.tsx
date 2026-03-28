@@ -77,20 +77,19 @@ export default function ModeratorWizard(props: WizardProps) {
         </span>
       </div>
 
-      {/* Steps strip */}
-      <div className="px-6 py-5">
-        <div className="flex items-start gap-0">
+      {/* Steps strip — horizontally scrollable on mobile */}
+      <div className="px-4 py-4 overflow-x-auto hide-scrollbar">
+        <div className="flex items-start gap-0" style={{ minWidth: 480 }}>
           {STEPS.map((step, i) => {
             const done = stepDone(step.id, props)
             const isCurrent = currentStep?.id === step.id
-            const isLocked = !done && !isCurrent
 
             return (
-              <div key={step.id} className="flex items-start flex-1 min-w-0">
+              <div key={step.id} className="flex items-start flex-1">
                 {/* Step */}
-                <div className="flex flex-col items-center flex-1 min-w-0">
+                <div className="flex flex-col items-center flex-1">
                   {/* Circle */}
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm transition-all ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs transition-all ${
                     done
                       ? 'bg-emerald-100 text-emerald-600'
                       : isCurrent
@@ -98,13 +97,13 @@ export default function ModeratorWizard(props: WizardProps) {
                         : 'bg-gray-100 text-gray-400'
                   }`}>
                     {done
-                      ? <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
+                      ? <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
                       : step.id
                     }
                   </div>
 
                   {/* Label */}
-                  <p className={`mt-2 text-xs font-semibold text-center leading-tight px-1 ${
+                  <p className={`mt-1.5 text-[10px] font-semibold text-center leading-tight px-0.5 ${
                     done ? 'text-emerald-600' : isCurrent ? 'text-indigo-700' : 'text-gray-400'
                   }`}>
                     {step.label}
@@ -113,7 +112,7 @@ export default function ModeratorWizard(props: WizardProps) {
 
                 {/* Connector */}
                 {i < STEPS.length - 1 && (
-                  <div className={`h-[2px] flex-shrink-0 w-full mt-[18px] mx-1 max-w-12 ${
+                  <div className={`h-[2px] flex-shrink-0 w-6 mt-4 ${
                     stepDone(step.id + 1, props) || stepDone(step.id, props)
                       ? 'bg-emerald-200'
                       : isCurrent
@@ -129,7 +128,7 @@ export default function ModeratorWizard(props: WizardProps) {
 
       {/* CTA */}
       {allDone ? (
-        <div className="mx-6 mb-5 bg-emerald-50 border border-emerald-100 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+        <div className="mx-4 mb-4 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-emerald-500 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <div>
@@ -140,14 +139,14 @@ export default function ModeratorWizard(props: WizardProps) {
           <button
             onClick={handleRevertToDraft}
             disabled={isPending}
-            className="flex-shrink-0 flex items-center gap-2 border border-gray-200 bg-white text-gray-600 text-sm font-semibold px-4 py-2 rounded-xl hover:border-red-300 hover:text-red-600 transition-colors disabled:opacity-50"
+            className="self-start sm:self-auto flex items-center gap-2 border border-gray-200 bg-white text-gray-600 text-sm font-semibold px-4 py-2 rounded-xl hover:border-red-300 hover:text-red-600 transition-colors disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-base">undo</span>
             {isPending ? 'Връщане...' : 'Върни в чернова'}
           </button>
         </div>
       ) : (
-        <div className="mx-6 mb-5 bg-indigo-50 border border-indigo-100 rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+        <div className="mx-4 mb-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-0.5">Следваща стъпка</p>
             <p className="text-sm font-bold text-indigo-900">{currentStep?.label}</p>
@@ -156,7 +155,7 @@ export default function ModeratorWizard(props: WizardProps) {
           {currentStep?.href && (
             <Link
               href={`/moderator/${classId}${currentStep.href}`}
-              className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors"
+              className="self-start sm:self-auto flex items-center gap-2 bg-indigo-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors"
             >
               {currentStep.cta}
               <span className="material-symbols-outlined text-base">arrow_forward</span>
