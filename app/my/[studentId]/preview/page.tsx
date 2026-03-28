@@ -67,7 +67,7 @@ export default async function ParentPreviewPage({
       {/* Preview banner */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-500 text-white flex items-center justify-between px-5 py-2.5 text-sm shadow-lg">
         <Link
-          href={`/my/${studentId}/wizard`}
+          href={`/my/${studentId}`}
           className="flex items-center gap-1.5 text-amber-100 hover:text-white transition-colors font-medium"
         >
           <span className="material-symbols-outlined text-base">edit</span>
