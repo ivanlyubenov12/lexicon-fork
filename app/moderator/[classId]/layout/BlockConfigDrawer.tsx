@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import type { Block, BlockType, LayoutAssets, VoiceQuestionAsset } from '@/lib/templates/types'
-import { createPoll } from '../polls/actions'
+import { createPoll, deletePoll } from '../polls/actions'
 import { updateQuestion } from '../questions/actions'
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
@@ -397,36 +397,48 @@ function PollsGridConfig({ classId, existingPolls }: {
   classId: string
   existingPolls: { id: string; label: string }[]
 }) {
-  const [added, setAdded] = useState<Set<string>>(
-    new Set(existingPolls.map(p => p.label))
+  // Map label → poll id for existing polls
+  const [addedMap, setAddedMap] = useState<Map<string, string>>(
+    new Map(existingPolls.map(p => [p.label, p.id]))
   )
   const [isPending, startTransition] = useTransition()
   const [orderIndex, setOrderIndex] = useState(existingPolls.length + 1)
 
-  function handleAdd(question: string) {
-    if (added.has(question)) return
-    startTransition(async () => {
-      const result = await createPoll(classId, question, orderIndex)
-      if (!result.error) {
-        setAdded(prev => new Set([...prev, question]))
-        setOrderIndex(i => i + 1)
-      }
-    })
+  function handleToggle(question: string) {
+    const existingId = addedMap.get(question)
+    if (existingId) {
+      // Remove
+      startTransition(async () => {
+        const result = await deletePoll(classId, existingId)
+        if (!result.error) {
+          setAddedMap(prev => { const next = new Map(prev); next.delete(question); return next })
+        }
+      })
+    } else {
+      // Add
+      startTransition(async () => {
+        const result = await createPoll(classId, question, orderIndex)
+        if (!result.error && result.id) {
+          setAddedMap(prev => new Map([...prev, [question, result.id!]]))
+          setOrderIndex(i => i + 1)
+        }
+      })
+    }
   }
 
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Идеи за анкети</p>
       {POLL_SUGGESTIONS.map(q => {
-        const isAdded = added.has(q)
+        const isAdded = addedMap.has(q)
         return (
           <button
             key={q}
-            onClick={() => handleAdd(q)}
-            disabled={isAdded || isPending}
-            className={`w-full flex items-center gap-3 text-left text-sm px-4 py-3 rounded-xl border transition-all ${
+            onClick={() => handleToggle(q)}
+            disabled={isPending}
+            className={`w-full flex items-center gap-3 text-left text-sm px-4 py-3 rounded-xl border transition-all disabled:opacity-60 ${
               isAdded
-                ? 'border-green-200 bg-green-50 text-green-700 cursor-default'
+                ? 'border-green-200 bg-green-50 text-green-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600'
                 : 'border-gray-100 bg-white hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600'
             }`}
           >

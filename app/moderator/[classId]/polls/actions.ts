@@ -5,11 +5,13 @@ import { revalidatePath } from 'next/cache'
 
 export async function createPoll(classId: string, question: string, orderIndex: number) {
   const admin = createServiceRoleClient()
-  const { error } = await admin
+  const { data, error } = await admin
     .from('class_polls')
     .insert({ class_id: classId, question, order_index: orderIndex })
+    .select('id')
+    .single()
   revalidatePath(`/moderator/${classId}/polls`)
-  return { error: error?.message ?? null }
+  return { error: error?.message ?? null, id: data?.id ?? null }
 }
 
 export async function deletePoll(classId: string, pollId: string) {
