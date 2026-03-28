@@ -88,7 +88,7 @@ export async function registerParent(prevState: State, formData: FormData): Prom
   if (signInError) return { error: 'Регистрацията успя, но влизането се провали. Опитайте да влезете.', redirectTo: null }
 
   await linkStudent(studentId, created.user.id)
-  return { error: null, redirectTo: `/my/${studentId}/wizard` }
+  return { error: null, redirectTo: `/my/${studentId}` }
 }
 
 // Login for returning parents (or second-child invites)
@@ -104,5 +104,5 @@ export async function loginFromJoin(prevState: State, formData: FormData): Promi
 
   // Link this student too (covers the multi-child case)
   await linkStudent(studentId, data.user.id)
-  return { error: null, redirectTo: `/my/${studentId}/wizard` }
+  return { error: null, redirectTo: `/my/${studentId}` }
 }
