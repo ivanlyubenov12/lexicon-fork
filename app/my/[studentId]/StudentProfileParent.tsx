@@ -195,6 +195,7 @@ export default function StudentProfileParent({
     const approved = questions.filter(q => answerMap.get(q.id) === 'approved').length
     const submitted = questions.filter(q => answerMap.get(q.id) === 'submitted').length
     if (approved === questions.length) return 'done'
+    if (approved + submitted === questions.length) return 'done'  // all submitted = counts as complete
     if (submitted > 0 || approved > 0) return 'partial'
     return 'todo'
   }
@@ -204,6 +205,7 @@ export default function StudentProfileParent({
     const approved = questions.filter(q => answerMap.get(q.id) === 'approved').length
     const submitted = questions.filter(q => answerMap.get(q.id) === 'submitted').length
     if (approved === questions.length) return 'Всички одобрени'
+    if (approved + submitted === questions.length) return 'Изпратено за одобрение'
     if (submitted > 0) return `${approved + submitted} / ${questions.length} изпратени`
     if (approved > 0) return `${approved} / ${questions.length} одобрени`
     return 'Не е започнато'
