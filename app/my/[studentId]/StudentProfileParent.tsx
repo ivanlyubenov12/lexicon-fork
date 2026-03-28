@@ -26,6 +26,7 @@ interface Props {
     last_name: string
     photo_url: string | null
   }
+  questionnaireSubmitted: boolean
   personalQuestions: Question[]
   classQuestions: Question[]
   answers: Array<{ question_id: string; status: string }>
@@ -167,6 +168,7 @@ function Section({
 
 export default function StudentProfileParent({
   student,
+  questionnaireSubmitted,
   personalQuestions,
   classQuestions,
   classVoiceQuestions,
@@ -277,31 +279,18 @@ export default function StudentProfileParent({
   // ── Persist open section across sessions ────────────────────────────────────
 
   const STORAGE_KEY = `lexicon_open_section_${student.id}`
-  const SUBMIT_KEY = `lexicon_submitted_${student.id}`
 
   const allApproved = answers.length > 0 && answers.every(a => a.status === 'approved')
-  const hasDraftAfterSubmit = answers.some(a => a.status === 'draft')
 
   const [openSection, setOpenSection] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(questionnaireSubmitted)
 
   useEffect(() => {
-    if (allApproved) {
-      // All approved — clear submitted flag, show approved banner
-      localStorage.removeItem(SUBMIT_KEY)
-    } else if (hasDraftAfterSubmit) {
-      // Parent edited after submission — reset so they can re-submit
-      localStorage.removeItem(SUBMIT_KEY)
-    } else if (localStorage.getItem(SUBMIT_KEY) === '1') {
-      setSubmitted(true)
-    }
-
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved && SECTION_IDS.includes(saved)) {
       setOpenSection(saved)
     } else {
-      // Auto-open the first incomplete section
       const first = SECTION_IDS.find(id => sectionStatusMap[id] !== 'done') ?? SECTION_IDS[0] ?? null
       setOpenSection(first)
     }
@@ -663,7 +652,6 @@ export default function StudentProfileParent({
               await submitAllDrafts(student.id)
               setSubmitting(false)
               setSubmitted(true)
-              localStorage.setItem(SUBMIT_KEY, '1')
             }}
             disabled={submitting || submitted}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2"

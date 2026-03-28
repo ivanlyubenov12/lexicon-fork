@@ -19,7 +19,7 @@ export default async function MyChildPage({ params }: Props) {
 
   const { data: student, error: studentError } = await admin
     .from('students')
-    .select('id, first_name, last_name, photo_url, class_id, parent_user_id')
+    .select('id, first_name, last_name, photo_url, class_id, parent_user_id, questionnaire_submitted')
     .eq('id', studentId)
     .single()
 
@@ -110,6 +110,7 @@ export default async function MyChildPage({ params }: Props) {
 
   return (
     <StudentProfileParent
+      questionnaireSubmitted={student.questionnaire_submitted ?? false}
       student={student}
       personalQuestions={personalQuestions}
       classQuestions={classQuestions}

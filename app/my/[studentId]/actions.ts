@@ -102,36 +102,49 @@ export async function saveDraft(
 ): Promise<ActionResult> {
   const admin = createServiceRoleClient()
 
-  const { error } = await admin
-    .from('answers')
-    .upsert(
-      {
-        student_id: studentId,
-        question_id: questionId,
-        text_content: textContent,
-        status: 'draft',
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'student_id,question_id' }
-    )
+  const [answersResult, flagResult] = await Promise.all([
+    admin
+      .from('answers')
+      .upsert(
+        {
+          student_id: studentId,
+          question_id: questionId,
+          text_content: textContent,
+          status: 'draft',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'student_id,question_id' }
+      ),
+    admin
+      .from('students')
+      .update({ questionnaire_submitted: false })
+      .eq('id', studentId),
+  ])
 
-  if (error) {
+  if (answersResult.error) {
     return { error: 'Записването не успя.' }
   }
 
+  // flagResult error is non-critical — ignore
   return { error: null }
 }
 
 export async function submitAllDrafts(studentId: string): Promise<ActionResult> {
   const admin = createServiceRoleClient()
 
-  const { error } = await admin
-    .from('answers')
-    .update({ status: 'submitted', updated_at: new Date().toISOString() })
-    .eq('student_id', studentId)
-    .eq('status', 'draft')
+  const [answersResult, flagResult] = await Promise.all([
+    admin
+      .from('answers')
+      .update({ status: 'submitted', updated_at: new Date().toISOString() })
+      .eq('student_id', studentId)
+      .eq('status', 'draft'),
+    admin
+      .from('students')
+      .update({ questionnaire_submitted: true })
+      .eq('id', studentId),
+  ])
 
-  if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+  if (answersResult.error || flagResult.error) return { error: 'Изпращането не успя. Опитайте отново.' }
 
   revalidatePath(`/my/${studentId}`)
   return { error: null }
