@@ -290,7 +290,7 @@ export default function Dashboard({
       </div>
 
       {/* ── Main ────────────────────────────────────────────────────── */}
-      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
 
         {/* Header */}
         <header className="mb-10">
@@ -329,7 +329,7 @@ export default function Dashboard({
               className="bg-white px-3 py-1.5 rounded-lg border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm flex items-center gap-1.5"
             >
               <Icon name="edit" className="text-sm" />
-              Редактирай
+              <span className="hidden sm:inline">Редактирай</span>
             </button>
           </div>
         </header>

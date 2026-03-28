@@ -22,7 +22,8 @@
       "Bash(node --input-type=module:*)",
       "Bash(node -e \":*)",
       "Read(//dev/**)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(xargs sed:*)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

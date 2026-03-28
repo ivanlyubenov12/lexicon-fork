@@ -63,7 +63,7 @@ export default async function MessagesPage({ params }: { params: Promise<{ class
         active="messages"
       />
 
-      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">

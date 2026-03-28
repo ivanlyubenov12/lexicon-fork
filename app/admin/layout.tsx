@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
       <AdminSidebar />
-      <main className="md:ml-64 flex-1 p-4 pt-20 md:p-8 lg:p-12">
+      <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         {children}
       </main>
     </div>
