@@ -582,7 +582,7 @@ export default function StudentLexiconView({
         <div
           className="md:hidden fixed left-0 right-0 z-[49] flex items-center justify-between px-5 h-9"
           style={{
-            bottom: '80px',
+            bottom: '60px',
             backgroundColor: 'color-mix(in srgb, var(--lex-bg, #faf9f8) 75%, transparent)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
