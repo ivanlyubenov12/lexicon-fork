@@ -126,6 +126,7 @@ export async function saveDraft(
   }
 
   // flagResult error is non-critical — ignore
+  revalidatePath(`/my/${studentId}`)
   return { error: null }
 }
 

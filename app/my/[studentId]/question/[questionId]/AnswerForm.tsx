@@ -145,6 +145,7 @@ export default function AnswerForm({
       lastSavedRef.current = textValue
     }
     router.push(url)
+    router.refresh()
   }
 
   return (
