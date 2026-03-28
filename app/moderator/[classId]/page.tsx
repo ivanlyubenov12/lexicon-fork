@@ -22,7 +22,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
   const adminClient = createServiceRoleClient()
   const { data: classData, error: classError } = await adminClient
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, cover_image_url, deadline, layout')
+    .select('id, name, school_year, status, school_logo_url, cover_image_url, deadline, layout, teacher_name')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()

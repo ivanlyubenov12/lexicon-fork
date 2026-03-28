@@ -20,7 +20,7 @@ interface Contribution {
 }
 
 interface Props {
-  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null }
+  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null }
   moderatorEmail: string | null
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
@@ -81,6 +81,7 @@ export default function Dashboard({
   const [className, setClassName] = useState(namePart)
   const [school, setSchool] = useState(schoolPart)
   const [schoolYear, setSchoolYear] = useState(classData.school_year)
+  const [teacherName, setTeacherName] = useState(classData.teacher_name ?? '')
   const [logoUrl, setLogoUrl] = useState<string | null>(classData.school_logo_url)
   const [logoUploading, setLogoUploading] = useState(false)
   const [coverUrl, setCoverUrl] = useState<string | null>(classData.cover_image_url)
@@ -134,6 +135,7 @@ export default function Dashboard({
           school_year: schoolYear.trim(),
           school_logo_url: logoUrl ?? undefined,
           cover_image_url: coverUrl,
+          teacher_name: teacherName.trim() || null,
         }),
         setDeadline(classData.id, deadlineStr ? new Date(deadlineStr).toISOString() : null),
       ])
@@ -362,6 +364,12 @@ export default function Dashboard({
                   onChange={setDeadlineStr}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Класен ръководител</label>
+                <input value={teacherName} onChange={(e) => setTeacherName(e.target.value)}
+                  placeholder="Напр. Мария Иванова"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
             </div>
             <div className="flex items-start gap-6 flex-wrap">
