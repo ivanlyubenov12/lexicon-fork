@@ -223,7 +223,7 @@ export default function StudentLexiconView({
           className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
-          Предишно
+          Предишен
         </Link>
       )}
       {resolvedNextHref && (
@@ -231,7 +231,7 @@ export default function StudentLexiconView({
           href={resolvedNextHref}
           className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
         >
-          Следващо
+          Следващ
           <span className="material-symbols-outlined text-base">arrow_forward</span>
         </Link>
       )}
@@ -546,7 +546,7 @@ export default function StudentLexiconView({
           {resolvedPrevHref ? (
             <Link href={resolvedPrevHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
               <span className="material-symbols-outlined text-base">arrow_back</span>
-              Предишно дете
+              Предишен
             </Link>
           ) : <span />}
           <Link href={resolvedBackHref} className="text-sm text-on-surface-variant hover:text-primary transition-colors">
@@ -554,7 +554,7 @@ export default function StudentLexiconView({
           </Link>
           {resolvedNextHref ? (
             <Link href={resolvedNextHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
-              Следващо дете
+              Следващ
               <span className="material-symbols-outlined text-base">arrow_forward</span>
             </Link>
           ) : <span />}
@@ -565,7 +565,7 @@ export default function StudentLexiconView({
       {/* ── Fixed bottom navigation — only when not embedded ─────────── */}
       {!embedded && (
         <footer
-          className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-5 pt-2"
+          className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-1 md:pb-5 md:pt-2"
           style={{
             backgroundColor: 'color-mix(in srgb, var(--lex-bg, #faf9f8) 88%, transparent)',
             backdropFilter: 'blur(24px)',
@@ -582,7 +582,7 @@ export default function StudentLexiconView({
         <div
           className="md:hidden fixed left-0 right-0 z-[49] flex items-center justify-between px-5 h-9"
           style={{
-            bottom: embedded ? '72px' : '72px',
+            bottom: '80px',
             backgroundColor: 'color-mix(in srgb, var(--lex-bg, #faf9f8) 75%, transparent)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
@@ -596,7 +596,7 @@ export default function StudentLexiconView({
               style={{ color: 'var(--lex-primary)' }}
             >
               <span className="material-symbols-outlined text-sm">arrow_back_ios</span>
-              Предишно
+              Предишен
             </Link>
           ) : <span />}
           {resolvedNextHref ? (
@@ -605,7 +605,7 @@ export default function StudentLexiconView({
               className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-70"
               style={{ color: 'var(--lex-primary)' }}
             >
-              Следващо
+              Следващ
               <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
             </Link>
           ) : <span />}

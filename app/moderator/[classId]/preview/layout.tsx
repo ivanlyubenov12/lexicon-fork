@@ -58,16 +58,23 @@ export default async function PreviewLayout({
           className="flex items-center gap-1.5 text-indigo-200 hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
-          Назад към панела
+          <span className="hidden sm:inline">Назад към панела</span>
+          <span className="sm:hidden">Назад</span>
         </Link>
         <span className="font-semibold tracking-wide text-xs uppercase text-indigo-300">
           Превю — само ти виждаш това
         </span>
-        <div className="flex items-center gap-2 text-indigo-200">
+        <div className="hidden sm:flex items-center gap-2 text-indigo-200">
           <div className="w-24 h-1.5 rounded-full bg-indigo-700 overflow-hidden">
             <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${pct}%` }} />
           </div>
           <span className="text-xs tabular-nums">{studentsWithAnswers}/{totalStudents} деца</span>
+        </div>
+        {/* Mobile: just the progress bar, no count */}
+        <div className="sm:hidden flex items-center">
+          <div className="w-16 h-1.5 rounded-full bg-indigo-700 overflow-hidden">
+            <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${pct}%` }} />
+          </div>
         </div>
       </div>
 

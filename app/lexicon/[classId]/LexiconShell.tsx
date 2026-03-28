@@ -72,7 +72,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
 
       {/* ── Fixed bottom navigation ──────────────────────────────────── */}
       <footer
-        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-5 pt-2"
+        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-1 md:pb-5 md:pt-2"
         style={{
           backgroundColor: 'color-mix(in srgb, var(--lex-bg) 88%, transparent)',
           backdropFilter: 'blur(24px)',
