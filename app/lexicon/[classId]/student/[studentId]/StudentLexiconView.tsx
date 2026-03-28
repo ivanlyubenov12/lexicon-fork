@@ -542,23 +542,25 @@ export default function StudentLexiconView({
         )}
 
         {/* ── Prev / Next ───────────────────────────────────────────── */}
-        <div className="flex justify-between items-center pt-8 max-w-3xl mx-auto bg-surface-container-low px-6 py-4">
-          {resolvedPrevHref ? (
-            <Link href={resolvedPrevHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
-              <span className="material-symbols-outlined text-base">arrow_back</span>
-              Предишен
+        {!embedded && (
+          <div className="flex justify-between items-center pt-8 max-w-3xl mx-auto bg-surface-container-low px-6 py-4">
+            {resolvedPrevHref ? (
+              <Link href={resolvedPrevHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Предишен
+              </Link>
+            ) : <span />}
+            <Link href={resolvedBackHref} className="text-sm text-on-surface-variant hover:text-primary transition-colors">
+              Всички деца
             </Link>
-          ) : <span />}
-          <Link href={resolvedBackHref} className="text-sm text-on-surface-variant hover:text-primary transition-colors">
-            Всички деца
-          </Link>
-          {resolvedNextHref ? (
-            <Link href={resolvedNextHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
-              Следващ
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
-          ) : <span />}
-        </div>
+            {resolvedNextHref ? (
+              <Link href={resolvedNextHref} className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
+                Следващ
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            ) : <span />}
+          </div>
+        )}
 
       </main>
 

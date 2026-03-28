@@ -21,7 +21,7 @@ export async function submitClassVoiceAnswer(
 
 export async function updateStudentPhoto(
   studentId: string,
-  photoUrl: string
+  photoUrl: string | null
 ): Promise<{ error: string | null }> {
   const admin = createServiceRoleClient()
 
@@ -109,9 +109,8 @@ export async function saveDraft(
         student_id: studentId,
         question_id: questionId,
         text_content: textContent,
+        status: 'draft',
         updated_at: new Date().toISOString(),
-        // status is intentionally omitted — new rows get DB default 'draft',
-        // existing rows keep their current status (won't overwrite 'submitted')
       },
       { onConflict: 'student_id,question_id' }
     )

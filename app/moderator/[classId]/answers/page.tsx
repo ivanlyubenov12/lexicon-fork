@@ -5,19 +5,6 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 import ModeratorSidebar from '../ModeratorSidebar'
 import AnswersTable from './AnswersTable'
 
-interface AnswerRow {
-  id: string
-  status: string
-  text_content: string | null
-  media_url: string | null
-  media_type: string | null
-  updated_at: string
-  student_id: string
-  question_id: string
-  students: { first_name: string; last_name: string }
-  questions: { text: string; order_index: number }
-}
-
 export default async function AnswersPage({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
   const { classId } = await params
@@ -37,23 +24,38 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
   const studentIds = (students ?? []).map((s) => s.id)
 
   let answers: AnswerRow[] = []
+  let messages: MessageRow[] = []
+
   if (studentIds.length > 0) {
-    const { data } = await supabase
-      .from('answers')
-      .select(
-        'id, status, text_content, media_url, media_type, updated_at, student_id, question_id, students(first_name, last_name), questions(text, order_index)'
-      )
-      .in('student_id', studentIds)
-      .order('updated_at', { ascending: false })
-    answers = (data ?? []) as unknown as AnswerRow[]
+    const [answersRes, messagesRes] = await Promise.all([
+      supabase
+        .from('answers')
+        .select('id, status, text_content, media_url, media_type, updated_at, student_id, question_id, students(first_name, last_name), questions(text, order_index)')
+        .in('student_id', studentIds)
+        .order('updated_at', { ascending: false }),
+      supabase
+        .from('peer_messages')
+        .select('id, content, status, created_at, recipient_student_id, author_student_id, recipient:students!recipient_student_id(first_name, last_name), author:students!author_student_id(first_name, last_name)')
+        .in('recipient_student_id', studentIds)
+        .order('created_at', { ascending: false }),
+    ])
+    answers = (answersRes.data ?? []) as unknown as AnswerRow[]
+    messages = (messagesRes.data ?? []) as unknown as MessageRow[]
   }
 
   const [namePart] = classData?.name?.includes(' — ')
     ? classData.name.split(' — ')
     : [classData?.name ?? '']
 
-  const pendingCount = answers.filter((a) => a.status === 'submitted').length
-  const approvedCount = answers.filter((a) => a.status === 'approved').length
+  const pendingCount =
+    answers.filter((a) => a.status === 'submitted').length +
+    messages.filter((m) => m.status === 'pending').length
+
+  const approvedCount =
+    answers.filter((a) => a.status === 'approved').length +
+    messages.filter((m) => m.status === 'approved').length
+
+  const totalCount = answers.length + messages.length
 
   return (
     <div className="flex min-h-screen bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -65,9 +67,7 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
         active="answers"
       />
 
-      {/* ── Main ─────────────────────────────────────────────────────── */}
       <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
-
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
@@ -79,10 +79,10 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
                 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
                 style={{ fontFamily: 'Noto Serif, serif' }}
               >
-                Отговори за одобрение
+                За одобрение
               </h1>
               <p className="text-sm text-gray-500 mt-2">
-                Прегледайте и одобрете подадените отговори на учениците.
+                Отговори на въпроси и послания между деца.
               </p>
             </div>
             {pendingCount > 0 && (
@@ -93,13 +93,13 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
             )}
           </div>
 
-          {/* Stats row */}
+          {/* Stats */}
           <div className="flex gap-4 mt-6">
             <div className="bg-white border border-gray-100 rounded-xl px-5 py-3 flex items-center gap-3 shadow-sm">
               <span className="material-symbols-outlined text-slate-400 text-xl">forum</span>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wider">Общо</p>
-                <p className="text-lg font-bold text-gray-800">{answers.length}</p>
+                <p className="text-lg font-bold text-gray-800">{totalCount}</p>
               </div>
             </div>
             <div className="bg-white border border-amber-100 rounded-xl px-5 py-3 flex items-center gap-3 shadow-sm">
@@ -119,8 +119,32 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
           </div>
         </div>
 
-        <AnswersTable answers={answers} classId={classId} />
+        <AnswersTable answers={answers} messages={messages} classId={classId} />
       </main>
     </div>
   )
+}
+
+interface AnswerRow {
+  id: string
+  status: string
+  text_content: string | null
+  media_url: string | null
+  media_type: string | null
+  updated_at: string
+  student_id: string
+  question_id: string
+  students: { first_name: string; last_name: string }
+  questions: { text: string; order_index: number }
+}
+
+interface MessageRow {
+  id: string
+  content: string
+  status: string
+  created_at: string
+  recipient_student_id: string
+  author_student_id: string
+  recipient: { first_name: string; last_name: string }
+  author: { first_name: string; last_name: string }
 }

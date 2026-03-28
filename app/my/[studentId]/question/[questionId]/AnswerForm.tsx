@@ -135,7 +135,7 @@ export default function AnswerForm({
   }
 
   const answerStatus = submitStatus ?? answer?.status
-  const isLocked = answerStatus === 'submitted' || answerStatus === 'approved'
+  const isLocked = answerStatus === 'approved'
 
   return (
     <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -186,9 +186,9 @@ export default function AnswerForm({
           </div>
         )}
         {answerStatus === 'submitted' && (
-          <div className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
-            <span className="material-symbols-outlined text-base">schedule</span>
-            Изпратено — чака одобрение
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">edit</span>
+            Редактирате изпратен отговор — изпратете отново за потвърждение
           </div>
         )}
         {answer?.status === 'draft' && answer.moderator_note && !isLocked && (

@@ -62,6 +62,30 @@ export default async function ParentPreviewPage({
     return { id: m.id, content: m.content, authorName: a ? `${a.first_name} ${a.last_name}` : 'Съученик' }
   })
 
+  // Events where this student left a comment
+  const { data: eventComments } = await admin
+    .from('event_comments')
+    .select('event_id, comment_text')
+    .eq('student_id', studentId)
+
+  const commentedEventIds = [...new Set((eventComments ?? []).map(c => c.event_id))]
+  const { data: commentedEvents } = commentedEventIds.length > 0
+    ? await admin
+        .from('events')
+        .select('id, title, event_date, photos')
+        .in('id', commentedEventIds)
+        .eq('class_id', student.class_id)
+        .order('order_index')
+    : { data: [] }
+
+  const studentEvents = (commentedEvents ?? []).map(ev => ({
+    id: ev.id,
+    title: ev.title,
+    event_date: ev.event_date ?? null,
+    firstPhoto: (ev.photos as string[] | null)?.[0] ?? null,
+    comment: (eventComments ?? []).find(c => c.event_id === ev.id)?.comment_text ?? '',
+  }))
+
   return (
     <>
       {/* Preview banner */}
@@ -96,9 +120,11 @@ export default async function ParentPreviewPage({
           questions={allQuestions ?? []}
           answers={answers ?? []}
           messages={messages}
+          studentEvents={studentEvents}
           prevStudentId={null}
           nextStudentId={null}
           isPremium={true}
+          embedded={true}
         />
       </div>
     </>

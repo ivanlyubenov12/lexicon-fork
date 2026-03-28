@@ -20,6 +20,7 @@ interface Props {
   authorStudentId: string
   classmates: Classmate[]
   sentMessages: SentMessage[]
+  onMessageSent?: () => void
   onFinalize?: () => void
 }
 
@@ -27,10 +28,12 @@ function ClassmateMessageCard({
   classmate,
   authorStudentId,
   existingMessage,
+  onMessageSent,
 }: {
   classmate: Classmate
   authorStudentId: string
   existingMessage: SentMessage | undefined
+  onMessageSent?: () => void
 }) {
   const [text, setText] = useState(
     existingMessage?.status === 'pending' || existingMessage?.status === 'rejected'
@@ -53,6 +56,7 @@ function ClassmateMessageCard({
       setError(result.error)
     } else {
       setSent(true)
+      onMessageSent?.()
     }
   }
 
@@ -120,7 +124,7 @@ function ClassmateMessageCard({
   )
 }
 
-export default function MessagesSection({ authorStudentId, classmates, sentMessages, onFinalize }: Props) {
+export default function MessagesSection({ authorStudentId, classmates, sentMessages, onMessageSent, onFinalize }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const messageMap = new Map(sentMessages.map(m => [m.recipient_student_id, m]))
 
@@ -148,6 +152,7 @@ export default function MessagesSection({ authorStudentId, classmates, sentMessa
         classmate={classmate}
         authorStudentId={authorStudentId}
         existingMessage={messageMap.get(classmate.id)}
+        onMessageSent={onMessageSent}
       />
 
       <div className="flex gap-3 pt-2">

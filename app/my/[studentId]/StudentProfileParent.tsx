@@ -211,10 +211,16 @@ export default function StudentProfileParent({
     return 'Не е започнато'
   }
 
-  const sentCount = sentMessages.length
-  const messagesStatus: SectionStatus = sentCount === 0 ? 'todo' : sentCount < classmates.length ? 'partial' : 'done'
+  const [localSentCount, setLocalSentCount] = useState(0)
+  const [messagesFinalized, setMessagesFinalized] = useState(false)
+  const effectiveSentCount = sentMessages.length + localSentCount
+  const messagesStatus: SectionStatus =
+    messagesFinalized && effectiveSentCount > 0 ? 'done' :
+    effectiveSentCount === 0 ? 'todo' :
+    effectiveSentCount < classmates.length ? 'partial' : 'done'
   const messagesLabel = classmates.length === 0 ? 'Няма съученици' :
-    sentCount === 0 ? 'Не е започнато' : `${sentCount} / ${classmates.length} послания`
+    messagesFinalized && effectiveSentCount > 0 ? 'Изпратено за одобрение' :
+    effectiveSentCount === 0 ? 'Не е започнато' : `${effectiveSentCount} / ${classmates.length} послания`
 
   const voteCount = Object.keys(existingVotes).length
   const pollsStatus: SectionStatus = polls.length === 0 ? 'done' :
@@ -271,13 +277,27 @@ export default function StudentProfileParent({
   // ── Persist open section across sessions ────────────────────────────────────
 
   const STORAGE_KEY = `lexicon_open_section_${student.id}`
+  const SUBMIT_KEY = `lexicon_submitted_${student.id}`
+
+  const allApproved = answers.length > 0 && answers.every(a => a.status === 'approved')
+  const hasDraftAfterSubmit = answers.some(a => a.status === 'draft')
 
   const [openSection, setOpenSection] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    if (allApproved) {
+      // All approved — clear submitted flag, show approved banner
+      localStorage.removeItem(SUBMIT_KEY)
+    } else if (hasDraftAfterSubmit) {
+      // Parent edited after submission — reset so they can re-submit
+      localStorage.removeItem(SUBMIT_KEY)
+    } else if (localStorage.getItem(SUBMIT_KEY) === '1') {
+      setSubmitted(true)
+    }
+
+    const saved = localStorage.getItem(STORAGE_KEY)
     if (saved && SECTION_IDS.includes(saved)) {
       setOpenSection(saved)
     } else {
@@ -311,46 +331,6 @@ export default function StudentProfileParent({
     window.location.href = '/login'
   }
 
-  // ── Thank you screen ────────────────────────────────────────────────────────
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[#f4f3f2] flex flex-col items-center justify-center px-6 py-12 text-center" style={{ fontFamily: 'Manrope, sans-serif' }}>
-        <span className="material-symbols-outlined text-7xl text-emerald-400 block mb-6" style={{ fontVariationSettings: "'FILL' 1" }}>
-          celebration
-        </span>
-        <div className="max-w-sm space-y-4">
-          <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-            Въпросникът е изпратен за одобрение
-          </h1>
-          {deadlineFormatted && (
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Крайният срок за публикуване на лексикона е{' '}
-              <strong className="text-gray-700">{deadlineFormatted}</strong>.
-            </p>
-          )}
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Благодарим ти,{' '}
-            <strong className="text-gray-900">{student.first_name}</strong>
-            , ти помогна за създаването на незабравим спомен!
-          </p>
-          <div className="pt-4 flex flex-col gap-2">
-            <Link
-              href={`/my/${student.id}/preview`}
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors text-center shadow-sm"
-            >
-              Виж как изглежда страницата →
-            </Link>
-            <button
-              onClick={() => setSubmitted(false)}
-              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-white transition-colors"
-            >
-              Върни се към профила
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -400,6 +380,34 @@ export default function StudentProfileParent({
 
       <div className="max-w-xl mx-auto px-4 py-6 space-y-3">
 
+        {/* Submitted / approved banner */}
+        {allApproved ? (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-emerald-500 text-xl mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
+              celebration
+            </span>
+            <div>
+              <p className="text-sm font-bold text-emerald-800 mb-0.5">Въпросникът е финализиран и одобрен!</p>
+              <p className="text-xs text-emerald-700 leading-relaxed">
+                Благодарим ти, {student.first_name}! Ти помогна за създаването на незабравим спомен!
+              </p>
+            </div>
+          </div>
+        ) : submitted ? (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <span className="material-symbols-outlined text-emerald-500 text-xl mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
+              check_circle
+            </span>
+            <div>
+              <p className="text-sm font-bold text-emerald-800 mb-0.5">Изпратено за одобрение</p>
+              <p className="text-xs text-emerald-700 leading-relaxed">
+                Благодарим ти, {student.first_name}! {moderatorName ? `${moderatorName} ще прегледа отговорите.` : 'Модераторът ще прегледа отговорите.'}
+                {deadlineFormatted ? ` Крайният срок е ${deadlineFormatted}.` : ''}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {/* All done banner */}
         {progressPercent === 100 && (
           <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-start gap-3">
@@ -428,15 +436,13 @@ export default function StudentProfileParent({
           onToggle={() => toggle('photo')}
           accentColor="indigo"
         >
-          <div className="flex flex-col items-center gap-3">
+          <div className="w-full">
             <PhotoUpload
               studentId={student.id}
               photoUrl={student.photo_url}
               firstName={student.first_name}
+              wizardMode
             />
-            <p className="text-xs text-gray-400 text-center">
-              Кликнете върху иконата за редактиране, за да качите или смените снимката
-            </p>
           </div>
         </Section>
 
@@ -548,13 +554,23 @@ export default function StudentProfileParent({
             icon="record_voice_over"
             title="Анонимен глас на класа"
             description="Споделете мисли и спомени за класа напълно анонимно. Никой — дори модераторът — не може да разбере кой какво е написал."
-            status="todo"
-            statusLabel="Анонимно"
+            status={voiceStatus}
+            statusLabel={voiceStatus === 'done' ? 'Завършено' : 'Анонимно'}
             open={openSection === 'voice'}
             onToggle={() => toggle('voice')}
             accentColor="amber"
           >
-            <ClassVoiceSection classId={classId} questions={classVoiceQuestions} onFinalize={() => toggle('voice')} />
+            <ClassVoiceSection
+              classId={classId}
+              questions={classVoiceQuestions}
+              onFinalize={() => {
+                const allDone = classVoiceQuestions.every(q =>
+                  typeof window !== 'undefined' && !!localStorage.getItem(`class_voice_${classId}_${q.id}`)
+                )
+                if (allDone) setVoiceStatus('done')
+                toggle('voice')
+              }}
+            />
           </Section>
         )}
 
@@ -575,7 +591,11 @@ export default function StudentProfileParent({
               authorStudentId={student.id}
               classmates={classmates}
               sentMessages={sentMessages}
-              onFinalize={() => toggle('messages')}
+              onMessageSent={() => setLocalSentCount(c => c + 1)}
+              onFinalize={() => {
+                if (effectiveSentCount > 0) setMessagesFinalized(true)
+                toggle('messages')
+              }}
             />
           </Section>
         )}
@@ -628,31 +648,30 @@ export default function StudentProfileParent({
         )}
 
         {/* Submit button */}
-        {!submitted && (
-          <>
-            {doneCount < totalSections && (
-              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
-                <span className="material-symbols-outlined text-amber-500 text-lg flex-shrink-0 mt-0.5">warning</span>
-                <p className="text-sm text-amber-800">
-                  Въпросникът не е завършен — попълнени са <strong>{doneCount} от {totalSections}</strong> секции. Можете да изпратите и сега, но непопълнените секции няма да се покажат в лексикона.
-                </p>
-              </div>
-            )}
-            <button
-              onClick={async () => {
-                setSubmitting(true)
-                await submitAllDrafts(student.id)
-                setSubmitting(false)
-                setSubmitted(true)
-              }}
-              disabled={submitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-              {submitting ? 'Изпращане...' : `Изпрати към ${moderatorName ?? 'модератора'}`}
-            </button>
-          </>
-        )}
+        <>
+          {!submitted && doneCount < totalSections && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
+              <span className="material-symbols-outlined text-amber-500 text-lg flex-shrink-0 mt-0.5">warning</span>
+              <p className="text-sm text-amber-800">
+                Въпросникът не е завършен — попълнени са <strong>{doneCount} от {totalSections}</strong> секции. Можете да изпратите и сега, но непопълнените секции няма да се покажат в лексикона.
+              </p>
+            </div>
+          )}
+          <button
+            onClick={async () => {
+              setSubmitting(true)
+              await submitAllDrafts(student.id)
+              setSubmitting(false)
+              setSubmitted(true)
+              localStorage.setItem(SUBMIT_KEY, '1')
+            }}
+            disabled={submitting || submitted}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+            {submitting ? 'Изпращане...' : submitted ? `Изпратено към ${moderatorName ?? 'модератора'}` : `Изпрати към ${moderatorName ?? 'модератора'}`}
+          </button>
+        </>
 
         <p className="text-xs text-gray-400 text-center pb-4">
           Прогресът се запазва автоматично. Можете да продължите по всяко време.

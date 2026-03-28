@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import type { Message } from './MessagesTable'
 import { approveMessage, rejectMessage } from '../actions'
 
 interface Props {
-  message: Message
+  message: { id: string; status: string }
   classId: string
 }
 
