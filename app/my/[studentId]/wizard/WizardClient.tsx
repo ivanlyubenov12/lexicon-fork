@@ -26,6 +26,7 @@ interface Props {
   questions: WizardQuestion[]
   className: string | null
   deadline: string | null
+  moderatorName: string | null
 }
 
 // ── Step definitions ──────────────────────────────────────────────────────────
@@ -45,21 +46,59 @@ function buildSteps(questions: WizardQuestion[]): Step[] {
   ]
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────────
+// ── Step strip progress ───────────────────────────────────────────────────────
 
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  const pct = Math.round((current / total) * 100)
+function truncate(s: string, max: number) {
+  return s.length > max ? s.slice(0, max - 1) + '…' : s
+}
+
+function StepStrip({ steps, currentIndex }: { steps: Step[]; currentIndex: number }) {
+  // steps = all steps excluding intro and done
+  // currentIndex = position within those steps (0-based)
+  const stripRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = stripRef.current?.children[currentIndex] as HTMLElement | undefined
+    el?.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' })
+  }, [currentIndex])
+
   return (
-    <div className="w-full mb-8">
-      <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-        <span>Стъпка {current} от {total}</span>
-        <span>{pct}%</span>
-      </div>
-      <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-indigo-500 transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
+    <div className="overflow-x-auto -mx-8 px-8 mb-8 hide-scrollbar">
+      <div ref={stripRef} className="flex items-start gap-1 w-max">
+        {steps.map((step, i) => {
+          const isDone   = i < currentIndex
+          const isActive = i === currentIndex
+          const label    = step.kind === 'photo' ? 'Снимка' : step.kind === 'question' ? truncate(step.question.text, 18) : ''
+          return (
+            <div key={i} className="flex items-start">
+              {/* Step */}
+              <div className="flex flex-col items-center gap-1.5 w-16">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                  isDone   ? 'bg-emerald-500 text-white' :
+                  isActive ? 'bg-indigo-600 text-white ring-4 ring-indigo-100' :
+                             'bg-gray-100 text-gray-400'
+                }`}>
+                  {isDone
+                    ? <span className="material-symbols-outlined text-sm">check</span>
+                    : <span>{i + 1}</span>}
+                </div>
+                <p className={`text-[10px] text-center leading-tight w-full break-words transition-colors ${
+                  isActive ? 'text-indigo-700 font-semibold' :
+                  isDone   ? 'text-emerald-600' :
+                             'text-gray-300'
+                }`}>
+                  {label}
+                </p>
+              </div>
+              {/* Connector */}
+              {i < steps.length - 1 && (
+                <div className={`w-4 h-0.5 mt-3.5 flex-shrink-0 transition-colors ${
+                  i < currentIndex ? 'bg-emerald-400' : 'bg-gray-100'
+                }`} />
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -338,10 +377,12 @@ export default function WizardClient({
   questions,
   className,
   deadline,
+  moderatorName,
 }: Props) {
   const router = useRouter()
   const steps = buildSteps(questions)
-  const [stepIndex, setStepIndex] = useState(() => findResumeStep(steps, photoUrl))
+  const [stepIndex, setStepIndex]   = useState(() => findResumeStep(steps, photoUrl))
+  const [showExitDialog, setShowExitDialog] = useState(false)
 
   // Redirect to the student's main page when wizard is complete
   useEffect(() => {
@@ -350,9 +391,12 @@ export default function WizardClient({
     }
   }, [stepIndex, studentId, router, steps])
 
-  const step        = steps[stepIndex]
-  const totalVisible = steps.length - 2  // exclude intro and done from count display
-  const visibleIndex = stepIndex - 1     // 0-based after intro
+  const step = steps[stepIndex]
+
+  // Steps shown in the strip: everything except intro and done
+  const stripSteps = steps.filter(s => s.kind !== 'intro' && s.kind !== 'done')
+  // currentIndex in strip = stepIndex - 1 (because intro is index 0)
+  const stripIndex = stepIndex - 1
 
   function next() { setStepIndex(i => Math.min(i + 1, steps.length - 1)) }
   function back() { setStepIndex(i => Math.max(i - 1, 0)) }
@@ -362,15 +406,59 @@ export default function WizardClient({
       className="min-h-screen bg-[#faf9f8] flex flex-col items-center px-6 py-10"
       style={{ fontFamily: 'Manrope, sans-serif' }}
     >
-      {/* Brand */}
-      <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-8">
-        Един неразделен клас
-      </p>
+      {/* Exit dialog */}
+      {showExitDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4">
+            <div className="text-center">
+              <span className="material-symbols-outlined text-4xl text-indigo-400 block mb-2">bookmark</span>
+              <h3 className="font-bold text-gray-900 text-lg" style={{ fontFamily: 'Noto Serif, serif' }}>
+                Прогресът е запазен
+              </h3>
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                Въпросникът е подаден към{' '}
+                <strong className="text-gray-700">{moderatorName ?? 'учителя'}</strong>.
+                Можете да продължите по-късно.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => router.push(`/my/${studentId}`)}
+                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors"
+              >
+                Излез от формата
+              </button>
+              <button
+                onClick={() => setShowExitDialog(false)}
+                className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Продължи попълването
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top row: Brand + Exit button */}
+      <div className="w-full max-w-md flex items-center justify-between mb-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-300">
+          Един неразделен клас
+        </p>
+        {step.kind !== 'intro' && step.kind !== 'done' && (
+          <button
+            onClick={() => setShowExitDialog(true)}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">close</span>
+            Излез
+          </button>
+        )}
+      </div>
 
       <div className="w-full max-w-md">
-        {/* Progress (skip on intro/done) */}
+        {/* Step strip (skip on intro/done) */}
         {step.kind !== 'intro' && step.kind !== 'done' && (
-          <ProgressBar current={visibleIndex} total={totalVisible} />
+          <StepStrip steps={stripSteps} currentIndex={stripIndex} />
         )}
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">

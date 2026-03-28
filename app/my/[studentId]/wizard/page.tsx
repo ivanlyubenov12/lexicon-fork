@@ -27,7 +27,7 @@ export default async function WizardPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('name, deadline')
+    .select('name, deadline, teacher_name')
     .eq('id', student.class_id)
     .single()
 
@@ -72,6 +72,7 @@ export default async function WizardPage({
       questions={wizardQuestions}
       className={classData?.name ?? null}
       deadline={classData?.deadline ?? null}
+      moderatorName={classData?.teacher_name ?? null}
     />
   )
 }

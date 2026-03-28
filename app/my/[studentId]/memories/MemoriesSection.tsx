@@ -87,19 +87,19 @@ function EventCommentCard({ event, studentId }: { event: Event; studentId: strin
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-      <div className="flex gap-4 p-4">
-        {/* Photo thumbnail */}
-        {photo ? (
-          <img src={photo} alt={event.title} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
-        ) : (
-          <div className="w-20 h-20 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-indigo-300 text-2xl">event</span>
-          </div>
-        )}
+      {/* Full-width photo */}
+      {photo ? (
+        <img src={photo} alt={event.title} className="w-full aspect-video object-cover" />
+      ) : (
+        <div className="w-full aspect-video bg-indigo-50 flex items-center justify-center">
+          <span className="material-symbols-outlined text-indigo-300 text-4xl">event</span>
+        </div>
+      )}
 
+      <div className="p-4">
         {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{event.title}</p>
+        <div className="min-w-0 mb-3">
+          <p className="font-semibold text-gray-800 text-sm">{event.title}</p>
           {event.event_date && (
             <p className="text-xs text-gray-400 mt-0.5">
               {new Date(event.event_date).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
