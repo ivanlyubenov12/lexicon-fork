@@ -88,6 +88,7 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
+        setEditing(false)
         if (nextUnansweredId) {
           router.push(`/my/${studentId}/question/${nextUnansweredId}`)
         }
