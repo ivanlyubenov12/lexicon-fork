@@ -218,7 +218,7 @@ export async function addSingleStudent(
       class_id: classId,
       first_name: data.first_name,
       last_name: data.last_name,
-      parent_email: data.parent_email,
+      parent_email: data.parent_email || null,
     })
     .select('id')
     .single()

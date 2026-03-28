@@ -76,19 +76,21 @@ export default function AddStudentForm({ classId }: AddStudentFormProps) {
           </p>
         ) : (
           <div className="flex flex-col gap-3">
-            <button
-              onClick={handleSendInvite}
-              disabled={inviteLoading}
-              className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined text-base">send</span>
-              {inviteLoading ? 'Изпращане...' : 'Изпрати покана сега'}
-            </button>
+            {parentEmail && (
+              <button
+                onClick={handleSendInvite}
+                disabled={inviteLoading}
+                className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-base">send</span>
+                {inviteLoading ? 'Изпращане...' : 'Изпрати покана сега'}
+              </button>
+            )}
             <button
               onClick={() => router.push(`/moderator/${classId}/students`)}
               className="text-sm text-gray-400 hover:text-gray-600 text-left"
             >
-              По-късно
+              {parentEmail ? 'По-късно' : 'Към учениците'}
             </button>
             {inviteError && <p className="text-xs text-red-500">{inviteError}</p>}
           </div>
@@ -130,18 +132,17 @@ export default function AddStudentForm({ classId }: AddStudentFormProps) {
 
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-            Имейл на родителя <span className="text-red-400">*</span>
+            Имейл на родителя
           </label>
           <input
             type="email"
-            required
             value={parentEmail}
             onChange={(e) => setParentEmail(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
             placeholder="roditel@example.com"
           />
           <p className="text-xs text-gray-400 mt-1.5">
-            Родителят ще получи линк с въпросник за попълване.
+            Незадължително. Родителят ще получи линк с въпросник за попълване.
           </p>
         </div>
 
