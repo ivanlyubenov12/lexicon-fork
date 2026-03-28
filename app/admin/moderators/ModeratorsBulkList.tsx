@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { adminDeleteModerators } from '../actions'
+import { adminDeleteModerators, adminUpdateUserName } from '../actions'
 
 interface ModeratorClass {
   id: string
@@ -16,6 +16,7 @@ interface ModeratorClass {
 export interface ModeratorRowData {
   id: string
   email: string
+  fullName: string | null
   createdAt: string
   lastSignIn: string | null
   role: 'admin' | 'moderator' | 'student'
@@ -47,6 +48,51 @@ const ROLE_BADGE: Record<string, { label: string; color: string }> = {
   admin:     { label: 'Админ',     color: 'bg-purple-100 text-purple-700' },
   moderator: { label: 'Модератор', color: 'bg-indigo-100 text-indigo-700' },
   student:   { label: 'Родител',   color: 'bg-teal-100 text-teal-700' },
+}
+
+function NameEditor({ userId, initialName }: { userId: string; initialName: string | null }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(initialName ?? '')
+  const [saved, setSaved] = useState(initialName ?? '')
+  const [isPending, startTransition] = useTransition()
+
+  function handleSave() {
+    startTransition(async () => {
+      await adminUpdateUserName(userId, value)
+      setSaved(value)
+      setEditing(false)
+    })
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          autoFocus
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setValue(saved); setEditing(false) } }}
+          className="border border-indigo-300 rounded-lg px-2 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-48"
+          placeholder="Пълно име"
+        />
+        <button onClick={handleSave} disabled={isPending}
+          className="text-xs bg-indigo-600 text-white px-2 py-1 rounded-lg disabled:opacity-50">
+          {isPending ? '...' : 'Запази'}
+        </button>
+        <button onClick={() => { setValue(saved); setEditing(false) }} className="text-xs text-gray-400 hover:text-gray-600">Отказ</button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="flex items-center gap-1 mt-0.5 text-xs text-gray-400 hover:text-indigo-600 transition-colors group"
+    >
+      <span className="material-symbols-outlined text-sm">edit</span>
+      {saved ? <span className="font-medium text-gray-600 group-hover:text-indigo-600">{saved}</span> : <span className="italic">Добави ime</span>}
+    </button>
+  )
 }
 
 export default function ModeratorsBulkList({ moderators }: { moderators: ModeratorRowData[] }) {
@@ -162,6 +208,7 @@ export default function ModeratorsBulkList({ moderators }: { moderators: Moderat
                       {ROLE_BADGE[user.role]?.label}
                     </span>
                   </div>
+                  <NameEditor userId={user.id} initialName={user.fullName} />
                   <p className="text-xs text-gray-400 mt-0.5">
                     Регистриран: {new Date(user.createdAt).toLocaleDateString('bg-BG')}
                     {user.lastSignIn && (

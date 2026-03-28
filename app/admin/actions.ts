@@ -135,6 +135,16 @@ export async function adminDeleteModerators(userIds: string[]): Promise<{ error:
   return { error: null }
 }
 
+export async function adminUpdateUserName(userId: string, fullName: string): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    user_metadata: { full_name: fullName.trim() || null },
+  })
+  revalidatePath('/admin/moderators')
+  return { error: error?.message ?? null }
+}
+
 // ── System questions ──────────────────────────────────────────────────────────
 
 // ── Archive system questions ───────────────────────────────────────────────────

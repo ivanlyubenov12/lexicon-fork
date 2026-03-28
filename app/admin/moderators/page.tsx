@@ -50,6 +50,7 @@ export default async function AdminModeratorsPage() {
     return {
       id: user.id,
       email: user.email ?? user.id,
+      fullName: (user.user_metadata?.full_name || user.user_metadata?.name || null) as string | null,
       createdAt: user.created_at,
       lastSignIn: user.last_sign_in_at ?? null,
       role,
