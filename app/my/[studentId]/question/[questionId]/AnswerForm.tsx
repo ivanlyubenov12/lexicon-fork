@@ -45,6 +45,8 @@ export default function AnswerForm({
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // Start in locked view if question already has a submitted answer
+  const [editing, setEditing] = useState(answer?.status !== 'submitted')
 
   // ── Video state ─────────────────────────────────────────────────────────────
   const [mediaFile, setMediaFile] = useState<File | null>(null)
@@ -136,6 +138,13 @@ export default function AnswerForm({
   const answerStatus = submitStatus ?? answer?.status
   const isLocked = answerStatus === 'approved'
 
+  async function handleStartEdit() {
+    // Reset questionnaire_submitted immediately so profile page shows correct state
+    await saveDraft(studentId, question.id, textValue)
+    lastSavedRef.current = textValue
+    setEditing(true)
+  }
+
   // Flush any unsaved draft then hard-navigate — full reload bypasses
   // Next.js Router Cache so the profile page always reads fresh DB data.
   async function navigateTo(url: string) {
@@ -194,10 +203,10 @@ export default function AnswerForm({
             Одобрен
           </div>
         )}
-        {answerStatus === 'submitted' && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
-            <span className="material-symbols-outlined text-base">edit</span>
-            Редактирате изпратен отговор — изпратете отново за потвърждение
+        {answerStatus === 'submitted' && !editing && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            Изпратен за одобрение
           </div>
         )}
         {answer?.status === 'draft' && answer.moderator_note && !isLocked && (
@@ -261,22 +270,24 @@ export default function AnswerForm({
                 onChange={(e) => setTextValue(e.target.value)}
                 maxLength={question.max_length ?? undefined}
                 placeholder="Напишете отговора тук..."
-                disabled={isLocked}
-                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                disabled={isLocked || !editing}
+                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
               />
-              <div className="absolute bottom-3 right-3 flex items-center gap-3">
-                {question.max_length && (
-                  <span className="text-xs text-gray-300">
-                    {textValue.length}/{question.max_length}
-                  </span>
-                )}
-                {saveStatus === 'saving' && (
-                  <span className="text-xs text-gray-400">Записва се...</span>
-                )}
-                {saveStatus === 'saved' && (
-                  <span className="text-xs text-green-500">Записано</span>
-                )}
-              </div>
+              {editing && (
+                <div className="absolute bottom-3 right-3 flex items-center gap-3">
+                  {question.max_length && (
+                    <span className="text-xs text-gray-300">
+                      {textValue.length}/{question.max_length}
+                    </span>
+                  )}
+                  {saveStatus === 'saving' && (
+                    <span className="text-xs text-gray-400">Записва се...</span>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <span className="text-xs text-green-500">Записано</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {submitError && (
@@ -285,7 +296,15 @@ export default function AnswerForm({
               </div>
             )}
 
-            {!isLocked && (
+            {isLocked ? null : !editing ? (
+              <button
+                onClick={handleStartEdit}
+                className="w-full border-2 border-indigo-300 text-indigo-600 py-3.5 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base">edit</span>
+                Редактирай
+              </button>
+            ) : (
               <button
                 onClick={handleTextSubmit}
                 disabled={!textValue.trim() || submitting}
