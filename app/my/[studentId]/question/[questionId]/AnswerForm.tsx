@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { saveDraft, submitAnswer } from '../../actions'
 import RecordMedia from './RecordMedia'
 
@@ -53,8 +52,6 @@ export default function AnswerForm({
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedRef = useRef(answer?.text_content ?? '')
-  const textValueRef = useRef(textValue)
-  textValueRef.current = textValue
 
   // Auto-save text draft (3s debounce)
   useEffect(() => {
@@ -78,18 +75,6 @@ export default function AnswerForm({
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [textValue, isVideo, studentId, question.id])
-
-  // Flush draft immediately on unmount (e.g. user navigates back before debounce fires)
-  useEffect(() => {
-    return () => {
-      if (isVideo) return
-      const current = textValueRef.current
-      if (current !== lastSavedRef.current) {
-        saveDraft(studentId, question.id, current)
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   async function handleTextSubmit() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -151,18 +136,29 @@ export default function AnswerForm({
   const answerStatus = submitStatus ?? answer?.status
   const isLocked = answerStatus === 'approved'
 
+  // Flush any unsaved draft then navigate — prevents race condition where
+  // the profile page re-renders before saveDraft completes in the DB.
+  async function navigateTo(url: string) {
+    if (!isVideo && textValue !== lastSavedRef.current) {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      await saveDraft(studentId, question.id, textValue)
+      lastSavedRef.current = textValue
+    }
+    router.push(url)
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f3f2]" style={{ fontFamily: 'Manrope, sans-serif' }}>
       <div className="max-w-lg mx-auto px-4 py-6">
 
         {/* Back */}
-        <Link
-          href={`/my/${studentId}`}
+        <button
+          onClick={() => navigateTo(`/my/${studentId}`)}
           className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 transition-colors mb-6 font-medium"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Назад
-        </Link>
+        </button>
 
         {/* Question */}
         <div className="mb-6">
@@ -264,14 +260,6 @@ export default function AnswerForm({
                 rows={5}
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
-                onBlur={() => {
-                  if (textValue !== lastSavedRef.current) {
-                    if (debounceRef.current) clearTimeout(debounceRef.current)
-                    saveDraft(studentId, question.id, textValue).then(result => {
-                      if (!result.error) lastSavedRef.current = textValue
-                    })
-                  }
-                }}
                 maxLength={question.max_length ?? undefined}
                 placeholder="Напишете отговора тук..."
                 disabled={isLocked}
@@ -313,29 +301,29 @@ export default function AnswerForm({
         {/* Navigation */}
         <div className="flex justify-between mt-8 pt-5 border-t border-gray-200">
           {prevQuestionId ? (
-            <Link
-              href={`/my/${studentId}/question/${prevQuestionId}`}
+            <button
+              onClick={() => navigateTo(`/my/${studentId}/question/${prevQuestionId}`)}
               className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               <span className="material-symbols-outlined text-base">arrow_back</span>
               Предишен
-            </Link>
+            </button>
           ) : <span />}
           {nextQuestionId ? (
-            <Link
-              href={`/my/${studentId}/question/${nextQuestionId}`}
+            <button
+              onClick={() => navigateTo(`/my/${studentId}/question/${nextQuestionId}`)}
               className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               Следващ
               <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
+            </button>
           ) : (
-            <Link
-              href={`/my/${studentId}`}
+            <button
+              onClick={() => navigateTo(`/my/${studentId}`)}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
             >
               Финализирай секцията ✓
-            </Link>
+            </button>
           )}
         </div>
 
