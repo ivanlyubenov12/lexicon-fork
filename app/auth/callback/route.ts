@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         })
         .eq('id', student.id)
 
-      return NextResponse.redirect(`${origin}/my/${student.id}/wizard`)
+      return NextResponse.redirect(`${origin}/my/${student.id}`)
     }
   }
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     .eq('parent_user_id', user.id)
     .single()
 
-  if (studentData) return NextResponse.redirect(`${origin}/my/${studentData.id}/wizard`)
+  if (studentData) return NextResponse.redirect(`${origin}/my/${studentData.id}`)
 
   // ── Admin ──────────────────────────────────────────────────────────────────
   if (user.email === process.env.ADMIN_EMAIL) return NextResponse.redirect(`${origin}/admin`)
