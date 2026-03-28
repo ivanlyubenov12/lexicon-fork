@@ -263,8 +263,8 @@ export default function StudentLexiconView({
           <div className="h-px bg-surface-container-high" />
         </nav>
       ) : (
-        /* Inline prev/next when embedded — layout shell provides the main nav */
-        <div className="flex justify-end gap-4 mb-4">{prevNextNav}</div>
+        /* Inline prev/next when embedded — desktop only; mobile uses fixed strip */
+        <div className="hidden md:flex justify-end gap-4 mb-4">{prevNextNav}</div>
       )}
 
       <main className="max-w-screen-xl mx-auto px-6 py-12">
@@ -565,16 +565,51 @@ export default function StudentLexiconView({
       {/* ── Fixed bottom navigation — only when not embedded ─────────── */}
       {!embedded && (
         <footer
-          className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 rounded-t-[2rem]"
+          className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-5 pt-2"
           style={{
-            backgroundColor: 'rgba(252, 248, 255, 0.85)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            boxShadow: '0 -4px 40px rgba(27,13,162,0.06)',
+            backgroundColor: 'color-mix(in srgb, var(--lex-bg, #faf9f8) 88%, transparent)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
           }}
         >
           <LexiconBottomNav classId={classId} basePath={basePath} themeId={themeId} />
         </footer>
+      )}
+
+      {/* ── Mobile prev/next strip — above bottom nav ────────────────── */}
+      {(resolvedPrevHref || resolvedNextHref) && (
+        <div
+          className="md:hidden fixed left-0 right-0 z-[49] flex items-center justify-between px-5 h-9"
+          style={{
+            bottom: embedded ? '72px' : '72px',
+            backgroundColor: 'color-mix(in srgb, var(--lex-bg, #faf9f8) 75%, transparent)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(0,0,0,0.05)',
+          }}
+        >
+          {resolvedPrevHref ? (
+            <Link
+              href={resolvedPrevHref}
+              className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-70"
+              style={{ color: 'var(--lex-primary)' }}
+            >
+              <span className="material-symbols-outlined text-sm">arrow_back_ios</span>
+              Предишно
+            </Link>
+          ) : <span />}
+          {resolvedNextHref ? (
+            <Link
+              href={resolvedNextHref}
+              className="flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-70"
+              style={{ color: 'var(--lex-primary)' }}
+            >
+              Следващо
+              <span className="material-symbols-outlined text-sm">arrow_forward_ios</span>
+            </Link>
+          ) : <span />}
+        </div>
       )}
 
     </div>

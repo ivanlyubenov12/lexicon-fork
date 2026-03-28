@@ -53,19 +53,18 @@ export function LexiconBottomNav({ classId, basePath, themeId }: { classId: stri
           <Link
             key={item.label}
             href={href}
-            className="flex flex-col items-center justify-center rounded-2xl px-5 py-2 transition-all duration-150"
+            aria-label={item.label}
+            className="flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-200"
             style={active ? {
               backgroundColor: 'var(--lex-primary)',
               color: 'white',
-              transform: 'scale(1.1)',
-              boxShadow: '0 4px 20px color-mix(in srgb, var(--lex-primary) 30%, transparent)',
+              boxShadow: '0 4px 16px color-mix(in srgb, var(--lex-primary) 35%, transparent)',
             } : {
               color: 'var(--lex-muted)',
-              opacity: 0.7,
+              opacity: 0.5,
             }}
           >
-            <span className="material-symbols-outlined">{item.icon}</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest mt-1">{item.label}</span>
+            <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
           </Link>
         )
       })}

@@ -22,7 +22,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
 
   return (
     <div
-      className="min-h-screen pb-32 relative"
+      className="min-h-screen pb-36 relative"
       style={{
         fontFamily: 'Manrope, sans-serif',
         backgroundColor: 'var(--lex-bg)',
@@ -35,24 +35,24 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
       {showTeensPattern  && <TeensPattern />}
       {/* ── Sticky header ────────────────────────────────────────────── */}
       <header
-        className="flex flex-col items-center w-full pt-4 px-6 max-w-screen-xl mx-auto sticky top-0 z-40 relative"
+        className="flex flex-col items-center w-full pt-2 md:pt-4 px-4 md:px-6 max-w-screen-xl mx-auto sticky top-0 z-40 relative"
         style={{
           backgroundColor: 'color-mix(in srgb, var(--lex-bg) 82%, transparent)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         } as React.CSSProperties}
       >
-        <div className="flex items-center justify-between w-full pb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between w-full pb-1 md:pb-4">
+          <div className="flex items-center gap-2 md:gap-3">
             {logoUrl ? (
-              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-surface-container-low">
+              <div className="w-7 h-7 md:w-9 md:h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-surface-container-low">
                 <img src={logoUrl} alt="" className="w-full h-full object-contain p-0.5" />
               </div>
             ) : (
-              <span className="material-symbols-outlined text-xl" style={{ color: 'var(--lex-primary)' }}>school</span>
+              <span className="material-symbols-outlined text-base md:text-xl" style={{ color: 'var(--lex-primary)' }}>school</span>
             )}
             <h1
-              className="text-2xl italic"
+              className="text-base md:text-2xl italic"
               style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}
             >
               {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Един неразделен клас'}
@@ -72,11 +72,12 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
 
       {/* ── Fixed bottom navigation ──────────────────────────────────── */}
       <footer
-        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 rounded-t-[2rem]"
+        className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-5 pt-2"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--lex-bg) 80%, transparent)',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 -4px 40px rgba(26,28,28,0.06)',
+          backgroundColor: 'color-mix(in srgb, var(--lex-bg) 88%, transparent)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
         }}
       >
         <LexiconBottomNav classId={classId} basePath={basePath} themeId={themeId} />
