@@ -411,8 +411,7 @@ export default function StudentProfileParent({
             <div>
               <p className="text-sm font-bold text-green-800 mb-0.5">Профилът е готов!</p>
               <p className="text-xs text-green-700 leading-relaxed">
-                Отлична работа! Профилът на {student.first_name} е напълно попълнен.{' '}
-                {moderatorName ? `${moderatorName} ще прегледа отговорите и ще ги одобри.` : 'Модераторът ще прегледа отговорите и ще ги одобри.'}
+                Профилът на {student.first_name} е напълно попълнен. Изпрати към модератор за преглед и одобрение.
               </p>
             </div>
           </div>
