@@ -39,6 +39,7 @@ export async function updateStudentPhoto(
 
   if (error) return { error: 'Снимката не се запази. Опитайте отново.' }
 
+  await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
   revalidatePath(`/my/${studentId}`)
   if (student?.class_id) {
     revalidatePath(`/moderator/${student.class_id}/students`)
@@ -87,6 +88,7 @@ export async function submitMessage(
 
   if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
 
+  await admin.from('students').update({ questionnaire_submitted: false }).eq('id', authorStudentId)
   revalidatePath(`/my/${authorStudentId}`)
   return { error: null }
 }
@@ -179,6 +181,7 @@ export async function submitAnswer(
     return { error: 'Изпращането не успя. Опитайте отново.' }
   }
 
+  await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
   revalidatePath(`/my/${studentId}`)
 
   return { error: null }

@@ -37,6 +37,7 @@ export async function castVote(
       { onConflict: 'poll_id,voter_student_id' }
     )
 
+  await admin.from('students').update({ questionnaire_submitted: false }).eq('id', voterStudentId)
   revalidatePath(`/my/${voterStudentId}`)
   return { error: error?.message ?? null }
 }
@@ -63,6 +64,7 @@ export async function removeVote(pollId: string, voterStudentId: string) {
     .eq('poll_id', pollId)
     .eq('voter_student_id', voterStudentId)
 
+  await admin.from('students').update({ questionnaire_submitted: false }).eq('id', voterStudentId)
   revalidatePath(`/my/${voterStudentId}`)
   return { error: error?.message ?? null }
 }
