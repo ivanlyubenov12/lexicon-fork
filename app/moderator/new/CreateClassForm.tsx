@@ -13,12 +13,19 @@ function currentSchoolYear(): string {
   return m >= 9 ? `${y}/${y + 1}` : `${y - 1}/${y}`
 }
 
-const TYPE_META: Record<string, { groupLabel: string; memberLabel: string; groupPlaceholder: string; orgLabel: string; orgPlaceholder: string; countLabel: string }> = {
-  primary:      { groupLabel: 'Паралелка', memberLabel: 'ученик', groupPlaceholder: '3А', orgLabel: 'Училище', orgPlaceholder: 'ОУ Христо Ботев', countLabel: 'Брой деца в класа' },
-  teens:        { groupLabel: 'Паралелка', memberLabel: 'ученик', groupPlaceholder: '9А', orgLabel: 'Училище', orgPlaceholder: 'СУ Климент Охридски', countLabel: 'Брой деца в класа' },
-  kindergarten: { groupLabel: 'Група',     memberLabel: 'дете',   groupPlaceholder: 'Слончета', orgLabel: 'Детска градина', orgPlaceholder: 'ДГ Дъга', countLabel: 'Брой деца в групата' },
-  sports:       { groupLabel: 'Отбор',     memberLabel: 'играч',  groupPlaceholder: 'Левски U12', orgLabel: 'Клуб / Организация', orgPlaceholder: 'ФК Левски', countLabel: 'Брой играчи' },
-  friends:      { groupLabel: 'Група',     memberLabel: 'приятел', groupPlaceholder: 'Наши хора', orgLabel: 'Организация (по желание)', orgPlaceholder: 'Не е задължително', countLabel: 'Брой членове' },
+const TYPE_META: Record<string, {
+  groupLabel: string; memberLabel: string; groupPlaceholder: string
+  orgLabel: string; orgPlaceholder: string; orgRequired: boolean
+  countLabel: string
+  yearLabel: string | null   // null = hide field
+  leaderLabel: string | null // null = hide field
+  coverLabel: string; logoLabel: string | null
+}> = {
+  primary:      { groupLabel: 'Паралелка', memberLabel: 'ученик',   groupPlaceholder: '3А',          orgLabel: 'Училище',                 orgPlaceholder: 'ОУ Христо Ботев',       orgRequired: true,  countLabel: 'Брой деца в класа',   yearLabel: 'Учебна година',  leaderLabel: 'Класен ръководител', coverLabel: 'Снимка на класа',   logoLabel: 'Лого на училището' },
+  teens:        { groupLabel: 'Паралелка', memberLabel: 'ученик',   groupPlaceholder: '9А',          orgLabel: 'Училище',                 orgPlaceholder: 'СУ Климент Охридски',   orgRequired: true,  countLabel: 'Брой деца в класа',   yearLabel: 'Учебна година',  leaderLabel: 'Класен ръководител', coverLabel: 'Снимка на класа',   logoLabel: 'Лого на училището' },
+  kindergarten: { groupLabel: 'Група',     memberLabel: 'дете',     groupPlaceholder: 'Слончета',    orgLabel: 'Детска градина',          orgPlaceholder: 'ДГ Дъга',               orgRequired: true,  countLabel: 'Брой деца в групата', yearLabel: 'Учебна година',  leaderLabel: 'Учител',             coverLabel: 'Снимка на групата', logoLabel: 'Лого на градината' },
+  sports:       { groupLabel: 'Отбор',     memberLabel: 'играч',    groupPlaceholder: 'Левски U12',  orgLabel: 'Клуб / Организация',      orgPlaceholder: 'ФК Левски',             orgRequired: true,  countLabel: 'Брой играчи',         yearLabel: 'Сезон',          leaderLabel: 'Треньор',            coverLabel: 'Снимка на отбора',  logoLabel: 'Лого на клуба' },
+  friends:      { groupLabel: 'Група',     memberLabel: 'приятел',  groupPlaceholder: 'Наши хора',   orgLabel: 'Организация (по желание)', orgPlaceholder: 'Не е задължително',    orgRequired: false, countLabel: 'Брой членове',        yearLabel: null,             leaderLabel: null,                 coverLabel: 'Снимка на групата', logoLabel: null },
 }
 
 function SubmitButton() {
@@ -119,7 +126,7 @@ export default function CreateClassForm({ defaultModeratorName = '', lexiconType
           <input
             name="school"
             type="text"
-            required={lexiconType !== 'friends'}
+            required={meta.orgRequired}
             placeholder={meta.orgPlaceholder}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           />
@@ -144,7 +151,7 @@ export default function CreateClassForm({ defaultModeratorName = '', lexiconType
       <div className="space-y-4">
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400">По желание</p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${meta.yearLabel ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Град</label>
             <input
@@ -155,26 +162,30 @@ export default function CreateClassForm({ defaultModeratorName = '', lexiconType
             />
           </div>
 
+          {meta.yearLabel && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.yearLabel}</label>
+              <input
+                name="school_year"
+                type="text"
+                defaultValue={currentSchoolYear()}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+            </div>
+          )}
+        </div>
+
+        {meta.leaderLabel && (
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Учебна година</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.leaderLabel}</label>
             <input
-              name="school_year"
+              name="teacher_name"
               type="text"
-              defaultValue={currentSchoolYear()}
+              placeholder="Мария Иванова"
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Класен ръководител</label>
-          <input
-            name="teacher_name"
-            type="text"
-            placeholder="Мария Иванова"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-        </div>
+        )}
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -192,7 +203,7 @@ export default function CreateClassForm({ defaultModeratorName = '', lexiconType
         {/* Cover photo */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Снимка на класа
+            {meta.coverLabel}
             <span className="text-gray-400 font-normal ml-1">— кавър на лексикона</span>
           </label>
           {coverUrl ? (
@@ -231,33 +242,35 @@ export default function CreateClassForm({ defaultModeratorName = '', lexiconType
           )}
         </div>
 
-        {/* School logo */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Лого на училището</label>
-          <div className="flex items-center gap-4">
-            {logoUrl && (
-              <img
-                src={logoUrl}
-                alt="Лого"
-                className="w-14 h-14 rounded-xl object-contain border border-gray-200 bg-white p-1"
-              />
-            )}
-            <label className="inline-flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 cursor-pointer transition-colors">
-              <span className="material-symbols-outlined text-base">upload</span>
-              {logoUploading ? 'Качване...' : logoUrl ? 'Смени логото' : 'Качи лого'}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={logoUploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) uploadFile(f, setLogoUrl, setLogoUploading)
-                }}
-              />
-            </label>
+        {/* Logo */}
+        {meta.logoLabel && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.logoLabel}</label>
+            <div className="flex items-center gap-4">
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt="Лого"
+                  className="w-14 h-14 rounded-xl object-contain border border-gray-200 bg-white p-1"
+                />
+              )}
+              <label className="inline-flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:border-indigo-400 hover:text-indigo-600 cursor-pointer transition-colors">
+                <span className="material-symbols-outlined text-base">upload</span>
+                {logoUploading ? 'Качване...' : logoUrl ? 'Смени логото' : 'Качи лого'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={logoUploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) uploadFile(f, setLogoUrl, setLogoUploading)
+                  }}
+                />
+              </label>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <SubmitButton />
