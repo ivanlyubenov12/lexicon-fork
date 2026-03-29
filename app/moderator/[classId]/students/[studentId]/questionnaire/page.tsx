@@ -129,7 +129,7 @@ export default async function ModeratorQuestionnairePage({
           </span>
         </div>
         <Link
-          href={`/moderator/${classId}/students/${studentId}`}
+          href={`/moderator/${classId}/students`}
           className="flex items-center gap-1.5 text-sm text-indigo-200 hover:text-white transition-colors font-medium"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
