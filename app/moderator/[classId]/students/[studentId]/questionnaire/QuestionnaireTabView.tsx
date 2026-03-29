@@ -294,13 +294,23 @@ export default function QuestionnaireTabView(props: Props) {
                     Отговорите на анонимните въпроси са криптирани и не могат да се свържат с конкретен ученик — дори от модератора.
                   </p>
                 </div>
-                {props.voiceQuestions.map(q => (
-                  <div key={q.id} className="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm flex items-center gap-3">
-                    <span className="material-symbols-outlined text-purple-300 text-base flex-shrink-0">record_voice_over</span>
-                    <p className="text-sm text-gray-700 flex-1">{q.text}</p>
-                    <span className="text-xs bg-purple-50 text-purple-500 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Анонимно</span>
-                  </div>
-                ))}
+                {props.voiceQuestions.map(q => {
+                  const ans = answerMap.get(q.id)
+                  const answered = !!(ans?.text_content || ans?.media_url)
+                  return (
+                    <div key={q.id} className="bg-white rounded-xl border border-gray-100 px-4 py-4 shadow-sm flex items-center gap-3">
+                      <span className="material-symbols-outlined text-purple-300 text-base flex-shrink-0">record_voice_over</span>
+                      <p className="text-sm text-gray-700 flex-1">{q.text}</p>
+                      {answered
+                        ? <span className="flex items-center gap-1 text-xs bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
+                            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>check</span>
+                            Отговорено
+                          </span>
+                        : <span className="text-xs bg-purple-50 text-purple-500 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Анонимно</span>
+                      }
+                    </div>
+                  )
+                })}
               </div>
             )
         )}
