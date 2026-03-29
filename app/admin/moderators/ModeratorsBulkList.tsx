@@ -90,7 +90,7 @@ function NameEditor({ userId, initialName }: { userId: string; initialName: stri
       className="flex items-center gap-1 mt-0.5 text-xs text-gray-400 hover:text-indigo-600 transition-colors group"
     >
       <span className="material-symbols-outlined text-sm">edit</span>
-      {saved ? <span className="font-medium text-gray-600 group-hover:text-indigo-600">{saved}</span> : <span className="italic">Добави ime</span>}
+      {saved ? <span className="font-medium text-gray-600 group-hover:text-indigo-600">{saved}</span> : <span className="italic">Добави име</span>}
     </button>
   )
 }
