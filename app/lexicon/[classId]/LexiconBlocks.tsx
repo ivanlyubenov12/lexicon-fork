@@ -26,6 +26,7 @@ export interface VoiceItem {
 
 export interface LexiconData {
   classId: string
+  preset?: string | null
   classData: {
     name: string
     superhero_prompt?: string | null
@@ -94,9 +95,17 @@ function SuperheroBlock({ data }: { data: LexiconData }) {
 }
 
 function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
-  const { classId, studentList } = data
+  const { classId, studentList, preset } = data
   const base = basePath ?? `/lexicon/${classId}`
   if (studentList.length === 0) return null
+
+  const studentsHeading = preset === 'friends' ? 'Хората'
+    : preset === 'sports' ? 'Играчите'
+    : preset === 'kindergarten' ? 'Децата'
+    : 'Учениците'
+  const studentsCount = preset === 'friends' || preset === 'sports' || preset === 'kindergarten'
+    ? `${studentList.length} участници`
+    : `${studentList.length} ученици`
 
   // Show preview of first 8, link out for all
   const preview = studentList.slice(0, 8)
@@ -109,13 +118,13 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
           className="font-headline font-bold text-on-surface leading-none"
           style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}
         >
-          Учениците
+          {studentsHeading}
         </h3>
         <Link
           href={`${base}/students`}
           className="text-xs font-bold tracking-[0.25em] uppercase text-on-surface-variant hover:text-primary transition-colors duration-200"
         >
-          {studentList.length} ученици →
+          {studentsCount} →
         </Link>
       </div>
 
@@ -364,11 +373,16 @@ function SubjectsBarBlock({ data, config }: { data: LexiconData; config: Record<
 
 function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
   const pollIds = (config.pollIds as string[] | undefined) ?? Object.keys(data.pollData)
-  const polls = pollIds
-    .map(id => ({ id, ...(data.pollData[id] ?? {}) }))
-    .filter(p => p.nominees && p.nominees.length > 0) as Array<{ id: string; question: string; nominees: { studentId: string; name: string; pct: number; photoUrl: string | null }[] }>
+  const allPolls = pollIds.map(id => ({ id, ...(data.pollData[id] ?? { question: id, nominees: [], totalVotes: 0 }) }))
+  const hasAnyVotes = allPolls.some(p => p.nominees && p.nominees.length > 0)
 
-  if (polls.length === 0) return <PlaceholderBlock icon="emoji_events" text="Все още няма гласове за анкетите" color="secondary" />
+  if (allPolls.length === 0) return <PlaceholderBlock icon="emoji_events" text="Все още няма анкети" color="secondary" />
+
+  const starsTitle = data.preset === 'sports'
+    ? 'Звездите на отбора'
+    : (data.preset === 'friends' || data.preset === 'kindergarten')
+      ? 'Звездите на групата'
+      : 'Звездите на класа'
 
   return (
     <section className="mb-16">
@@ -376,14 +390,44 @@ function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config:
       <div className="flex items-center gap-3 mb-8">
         <span className="text-3xl">⭐</span>
         <h3 className="text-2xl font-bold" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>
-          Звездите на класа
+          {starsTitle}
         </h3>
         <span className="text-3xl">⭐</span>
       </div>
 
+      {!hasAnyVotes && (
+        <p className="text-sm text-center mb-6" style={{ color: 'var(--lex-muted)' }}>
+          Победителите от всички анкети ще се покажат автоматично
+        </p>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {polls.map((poll) => {
-          const winner = poll.nominees[0]
+        {allPolls.map((poll) => {
+          const winner = poll.nominees?.[0]
+
+          // No votes yet — show a pending placeholder card
+          if (!winner) {
+            return (
+              <div
+                key={poll.id}
+                className="flex flex-col items-center gap-4 text-center pt-8 pb-6 px-6"
+                style={{
+                  backgroundColor: 'var(--lex-card)',
+                  borderRadius: 'var(--lex-radius)',
+                  opacity: 0.55,
+                  border: '1.5px dashed var(--lex-primary)',
+                }}
+              >
+                <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--lex-primary-light)' }}>
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <div className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style={{ backgroundColor: 'var(--lex-primary-light)', color: 'var(--lex-primary)' }}>
+                  {poll.question}
+                </div>
+              </div>
+            )
+          }
+
           const initials = winner.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
           const studentHref = basePath && winner.studentId
             ? `${basePath}/student/${winner.studentId}`

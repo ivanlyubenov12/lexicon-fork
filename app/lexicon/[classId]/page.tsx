@@ -182,6 +182,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
 
   const lexiconData: LexiconData = {
     classId,
+    preset: classData.template_id ?? null,
     classData: {
       name: classData.name,
       superhero_prompt: classData.superhero_prompt,

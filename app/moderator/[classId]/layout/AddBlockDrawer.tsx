@@ -9,8 +9,8 @@ const ALL_BLOCKS: Array<{ type: BlockType; label: string; icon: string; descript
   { type: 'photo_gallery', label: 'Галерия', icon: 'photo_library', description: 'Колаж от снимки.' },
   { type: 'poll',       label: 'Анкета',     icon: 'bar_chart',    description: 'Резултати от класна анкета.' },
   { type: 'polls_grid', label: 'Победители', icon: 'emoji_events', description: 'Грид с победителите от всички анкети.' },
-  { type: 'class_voice', label: 'Гласът на класа', icon: 'record_voice_over', description: 'Облак от думи на класа.' },
-  { type: 'subjects_bar', label: 'Предмети (графика)', icon: 'bar_chart', description: 'Хоризонтална графика с топ 3 отговора.' },
+  { type: 'class_voice', label: 'Анонимен въпрос (облак)', icon: 'record_voice_over', description: 'Облак от думи на класа.' },
+  { type: 'subjects_bar', label: 'Анонимен въпрос (графика)', icon: 'bar_chart', description: 'Хоризонтална графика с топ 3 отговора.' },
   { type: 'events', label: 'Събития', icon: 'photo_album', description: 'Снимки и бележки от събитията.' },
   { type: 'superhero', label: 'Супергерой', icon: 'bolt', description: 'AI-генерирано изображение на класа.' },
 ]

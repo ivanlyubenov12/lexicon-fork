@@ -76,7 +76,7 @@ export default async function PreviewLayout({
 
       {/* Content pushed below banner */}
       <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
           {children}
         </LexiconShell>
       </div>

@@ -213,6 +213,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
 
   const lexiconData: LexiconData = {
     classId,
+    preset: cls.template_id ?? null,
     classData: {
       name: cls.name,
       superhero_prompt: cls.superhero_prompt ?? null,

@@ -4,29 +4,33 @@ import LexiconDevPanel from './LexiconDevPanel'
 import SchoolPattern from './SchoolPattern'
 import KindergartenPattern from './KindergartenPattern'
 import TeensPattern from './TeensPattern'
+import LevskiPattern from './LevskiPattern'
 
 interface Props {
   classId: string
   logoUrl?: string | null
   themeId?: string | null
+  preset?: string | null
   bgPattern?: string | null
   basePath?: string
   children: React.ReactNode
 }
 
-export default function LexiconShell({ classId, logoUrl, themeId, bgPattern, basePath, children }: Props) {
+export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPattern, basePath, children }: Props) {
   const theme = (themeId && themes[themeId]) ? themes[themeId] : defaultTheme
 
   // bgPattern overrides the auto-derived pattern from themeId
   const effectivePattern = bgPattern !== undefined ? bgPattern : (
     !themeId || themeId === 'primary' || themeId === 'classic' ? 'school' :
     themeId === 'kindergarten' ? 'kindergarten' :
-    themeId === 'teens' ? 'teens' : 'none'
+    themeId === 'teens' ? 'teens' :
+    themeId === 'levski' ? 'levski' : 'none'
   )
 
-  const showSchoolPattern = effectivePattern === 'school'
-  const showKinderPattern = effectivePattern === 'kindergarten'
-  const showTeensPattern  = effectivePattern === 'teens'
+  const showSchoolPattern  = effectivePattern === 'school'
+  const showKinderPattern  = effectivePattern === 'kindergarten'
+  const showTeensPattern   = effectivePattern === 'teens'
+  const showLevskiPattern  = effectivePattern === 'levski'
 
   return (
     <div
@@ -38,9 +42,10 @@ export default function LexiconShell({ classId, logoUrl, themeId, bgPattern, bas
         ...theme.vars,
       } as React.CSSProperties}
     >
-      {showSchoolPattern && <SchoolPattern />}
-      {showKinderPattern && <KindergartenPattern />}
-      {showTeensPattern  && <TeensPattern />}
+      {showSchoolPattern  && <SchoolPattern />}
+      {showKinderPattern  && <KindergartenPattern />}
+      {showTeensPattern   && <TeensPattern />}
+      {showLevskiPattern  && <LevskiPattern />}
       {/* ── Sticky header ────────────────────────────────────────────── */}
       <header
         className="flex flex-col items-center w-full pt-2 md:pt-4 px-4 md:px-6 max-w-screen-xl mx-auto sticky top-0 z-40 relative"
@@ -63,11 +68,11 @@ export default function LexiconShell({ classId, logoUrl, themeId, bgPattern, bas
               className="text-base md:text-2xl italic"
               style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}
             >
-              {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Малки спомени'}
+              {(preset ?? themeId) === 'kindergarten' ? 'Нашата страхотна група' : 'Малки спомени'}
             </h1>
           </div>
         </div>
-        <LexiconHeaderNav classId={classId} basePath={basePath} themeId={themeId} />
+        <LexiconHeaderNav classId={classId} basePath={basePath} themeId={preset ?? themeId} />
       </header>
 
       {/* ── Page content ─────────────────────────────────────────────── */}
@@ -88,7 +93,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, bgPattern, bas
           boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
         }}
       >
-        <LexiconBottomNav classId={classId} basePath={basePath} themeId={themeId} />
+        <LexiconBottomNav classId={classId} basePath={basePath} themeId={preset ?? themeId} />
       </footer>
     </div>
   )

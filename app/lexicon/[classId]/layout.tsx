@@ -25,6 +25,7 @@ export default async function LexiconLayout({
       classId={classId}
       logoUrl={cls.school_logo_url}
       themeId={cls.theme_id ?? cls.template_id}
+      preset={cls.template_id}
       bgPattern={cls.bg_pattern}
     >
       {children}

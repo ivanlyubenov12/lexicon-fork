@@ -33,14 +33,6 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
 
   return (
     <section className="mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl text-[#3632b7]" style={{ fontFamily: 'Noto Serif, serif' }}>
-            Всички ученици
-          </h3>
-          <span className="text-[#855300] font-semibold text-sm tracking-widest uppercase">
-            {studentList.length} ученици
-          </span>
-        </div>
         {studentList.length === 0 ? (
           <div className="py-32 text-center">
             <span className="material-symbols-outlined text-5xl text-[#e9e8e7] block mb-4">group</span>

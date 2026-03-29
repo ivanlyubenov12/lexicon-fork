@@ -10,8 +10,10 @@ import MessagesTable from '../messages/MessagesTable'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 import { applyTemplate } from '../template/actions'
 import { updateBgPattern } from './bgActions'
+import { updateTheme } from './themeActions'
 import type { QuestionPreset } from '@/lib/templates/defaultSeed'
 import { BG_PATTERN_OPTIONS } from '@/lib/lexicon/bgPatterns'
+import { themes } from '@/lib/templates/themes'
 
 const TABS = [
   { key: 'template',   label: 'Шаблон',     icon: 'style' },
@@ -76,7 +78,7 @@ export default async function LexiconPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, template_id, bg_pattern, layout')
+    .select('id, name, school_year, school_logo_url, template_id, theme_id, bg_pattern, layout')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -202,11 +204,20 @@ export default async function LexiconPage({
 
       <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         {/* Page header */}
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1">Лексикон</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-            Настройки на лексикона
-          </h1>
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1">Лексикон</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
+              Настройки на лексикона
+            </h1>
+          </div>
+          <Link
+            href={`/moderator/${classId}/layout`}
+            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 hover:border-indigo-400 hover:text-indigo-700 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all"
+          >
+            <span className="material-symbols-outlined text-base">tune</span>
+            Редактирай оформлението
+          </Link>
         </div>
 
         {/* Tab nav */}
@@ -281,6 +292,48 @@ export default async function LexiconPage({
                 </div>
               )
             })}
+            {/* ── Цветова палитра ───────────────────────────────────── */}
+            <div className="pt-6 border-t border-gray-100 mt-2">
+              <h2 className="text-base font-bold text-gray-900 mb-1">Цветова палитра</h2>
+              <p className="text-sm text-gray-500 mb-4">Избери визуален стил на лексикона.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.values(themes).map(theme => {
+                  const isActive = (classData.theme_id ?? 'classic') === theme.id
+                  const primary = (theme.vars as Record<string, string>)['--lex-primary']
+                  const bg = (theme.vars as Record<string, string>)['--lex-bg']
+                  const accent = (theme.vars as Record<string, string>)['--lex-accent']
+                  return (
+                    <form key={theme.id} action={updateTheme.bind(null, classId, theme.id)}>
+                      <button
+                        type="submit"
+                        className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${
+                          isActive ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
+                        }`}
+                      >
+                        {/* Color swatch */}
+                        <div
+                          className="h-14 w-full flex items-end px-3 pb-2 gap-1.5"
+                          style={{ backgroundColor: bg }}
+                        >
+                          <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: primary }} />
+                          <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
+                          <div className="flex-1 h-2 rounded-full opacity-20" style={{ backgroundColor: primary }} />
+                        </div>
+                        <div className="px-3 py-2.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-sm text-gray-900">{theme.name}</span>
+                            {isActive && (
+                              <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Текущ</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </form>
+                  )
+                })}
+              </div>
+            </div>
+
             {/* ── Background pattern picker ─────────────────────────── */}
             <div className="pt-6 border-t border-gray-100 mt-2">
               <h2 className="text-base font-bold text-gray-900 mb-1">Фон на лексикона</h2>
@@ -301,6 +354,7 @@ export default async function LexiconPage({
                           {opt.id === 'school' && <span className="text-2xl opacity-60">✏️📐📏</span>}
                           {opt.id === 'kindergarten' && <span className="text-2xl opacity-60">🧸🌈🌻</span>}
                           {opt.id === 'teens' && <span className="text-2xl opacity-60">🎓💻📐</span>}
+                          {opt.id === 'levski' && <span className="text-2xl opacity-60">⚽🏆⭐</span>}
                           {opt.id === 'none' && <span className="text-lg opacity-30 font-medium text-gray-400">Аа</span>}
                         </div>
                         <div className="px-3 py-2.5">
@@ -317,16 +371,6 @@ export default async function LexiconPage({
                   )
                 })}
               </div>
-            </div>
-
-            <div className="pt-2">
-              <Link
-                href={`/moderator/${classId}/layout`}
-                className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:underline font-medium"
-              >
-                <span className="material-symbols-outlined text-base">tune</span>
-                Редактирай оформлението на блокове
-              </Link>
             </div>
           </div>
         )}

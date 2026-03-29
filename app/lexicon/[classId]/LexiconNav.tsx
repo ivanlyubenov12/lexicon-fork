@@ -4,11 +4,25 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 function getNavItems(themeId?: string | null) {
-  const isKinder = themeId === 'kindergarten'
+  if (themeId === 'friends') return [
+    { label: 'Групата',       icon: 'auto_stories', exact: true,  path: ''          },
+    { label: 'Хората',        icon: 'people',       exact: false, path: '/students' },
+    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
+  ]
+  if (themeId === 'sports') return [
+    { label: 'Отборът',       icon: 'auto_stories', exact: true,  path: ''          },
+    { label: 'Играчите',      icon: 'people',       exact: false, path: '/students' },
+    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
+  ]
+  if (themeId === 'kindergarten') return [
+    { label: 'Групата',       icon: 'auto_stories', exact: true,  path: ''          },
+    { label: 'Децата',        icon: 'people',       exact: false, path: '/students' },
+    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
+  ]
   return [
-    { label: isKinder ? 'Групата'  : 'Класът',         icon: 'auto_stories', exact: true,  path: ''          },
-    { label: 'Учениците',                               icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите събития',                          icon: 'photo_album',  exact: false, path: '/memories' },
+    { label: 'Класът',        icon: 'auto_stories', exact: true,  path: ''          },
+    { label: 'Учениците',     icon: 'people',       exact: false, path: '/students' },
+    { label: 'Нашите събития', icon: 'photo_album',  exact: false, path: '/memories' },
   ]
 }
 

@@ -123,8 +123,8 @@ export default function Dashboard({
   }
 
   function handleSaveSettings() {
-    if (!className.trim() || !school.trim() || !schoolYear.trim()) {
-      setSaveError('Моля попълнете всички полета.')
+    if (!className.trim() || !school.trim()) {
+      setSaveError('Моля попълнете задължителните полета.')
       return
     }
     setSaveError(null)
@@ -147,7 +147,7 @@ export default function Dashboard({
 
   const navItems = [
     { icon: 'dashboard',    label: 'Табло',     href: base,                active: true },
-    { icon: 'group',        label: 'Деца',      href: `${base}/students` },
+    { icon: 'group',        label: 'Участници', href: `${base}/students` },
     { icon: 'volunteer_activism', label: 'Отговори', href: `${base}/answers` },
     { icon: 'view_quilt',   label: 'Лексикон',  href: `${base}/lexicon` },
     { icon: 'calendar_month', label: 'Събития', href: `${base}/events` },
@@ -343,12 +343,12 @@ export default function Dashboard({
             {saveError && <p className="text-red-600 text-sm mb-3">{saveError}</p>}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Клас</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Клас <span className="text-red-400">*</span></label>
                 <input value={className} onChange={(e) => setClassName(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Училище</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Училище <span className="text-red-400">*</span></label>
                 <input value={school} onChange={(e) => setSchool(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>

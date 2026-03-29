@@ -23,7 +23,7 @@ export default async function AdminQuestionsPage({
 }) {
   noStore()
   const admin = createServiceRoleClient()
-  const { tab = 'archive' } = await searchParams
+  const { tab = 'primary' } = await searchParams
 
   // ── Archive questions (no preset) ──────────────────────────────────────
   const { data: archiveQuestions } = await admin
@@ -52,8 +52,8 @@ export default async function AdminQuestionsPage({
   const maxArchiveOrder = Math.max(0, ...(archiveQuestions ?? []).map(q => q.order_index))
 
   const tabs = [
-    { id: 'archive', label: 'Архив' },
     ...QUESTION_PRESETS.map(p => ({ id: p.id, label: p.label })),
+    { id: 'archive', label: 'Архив' },
   ]
 
   return (

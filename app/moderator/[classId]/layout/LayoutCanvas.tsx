@@ -17,8 +17,8 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   photo_gallery: { label: 'Галерия',          icon: 'photo_library',     addLabel: 'Избери въпрос за снимки' },
   poll:          { label: 'Анкета',           icon: 'poll',              addLabel: 'Добави анкета' },
   polls_grid:    { label: 'Победители',       icon: 'emoji_events',      addLabel: 'Победители в анкети' },
-  class_voice:   { label: 'Гласът на класа', icon: 'record_voice_over', addLabel: 'Гласът на класа' },
-  subjects_bar:  { label: 'Предмети (графика)', icon: 'bar_chart',       addLabel: 'Бар диаграма' },
+  class_voice:   { label: 'Анонимен въпрос — облак', icon: 'record_voice_over', addLabel: 'Анонимен въпрос (облак)' },
+  subjects_bar:  { label: 'Анонимен въпрос — графика', icon: 'bar_chart',      addLabel: 'Анонимен въпрос (графика)' },
   events:        { label: 'Събития',          icon: 'photo_album',       addLabel: 'Добави събитие' },
   superhero:     { label: 'Супергерой',       icon: 'bolt',              addLabel: 'AI изображение на класа' },
 }

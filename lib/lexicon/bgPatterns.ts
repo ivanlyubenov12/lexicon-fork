@@ -26,6 +26,12 @@ export const BG_PATTERN_OPTIONS: BgPatternOption[] = [
     previewClass: 'bg-gradient-to-br from-violet-100 to-slate-50',
   },
   {
+    id: 'levski',
+    name: 'Левски София',
+    description: 'Футболни топки, бутонки и ламбда — Левски брандинг',
+    previewClass: 'bg-gradient-to-br from-blue-200 to-blue-50',
+  },
+  {
     id: 'none',
     name: 'Без украса',
     description: 'Чист фон — минималистичен и четим',

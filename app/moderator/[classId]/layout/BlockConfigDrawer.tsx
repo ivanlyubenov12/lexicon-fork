@@ -2,8 +2,8 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import type { Block, BlockType, LayoutAssets, VoiceQuestionAsset } from '@/lib/templates/types'
-import { createPoll, deletePoll } from '../polls/actions'
-import { updateQuestion } from '../questions/actions'
+import { createPoll, deletePoll, reorderPolls } from '../polls/actions'
+import { createQuestion, updateQuestion } from '../questions/actions'
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
   hero:          { label: 'Корица',           icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
@@ -12,8 +12,8 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
   photo_gallery: { label: 'Галерия',          icon: 'photo_library',     color: 'bg-pink-50 text-pink-700'    },
   poll:          { label: 'Анкета',           icon: 'bar_chart',         color: 'bg-green-50 text-green-700'  },
   polls_grid:    { label: 'Победители',       icon: 'emoji_events',      color: 'bg-emerald-50 text-emerald-700' },
-  class_voice:   { label: 'Гласът на класа', icon: 'record_voice_over', color: 'bg-purple-50 text-purple-700'},
-  subjects_bar:  { label: 'Предмети (графика)', icon: 'bar_chart',       color: 'bg-teal-50 text-teal-700'   },
+  class_voice:   { label: 'Анонимен въпрос — облак',   icon: 'record_voice_over', color: 'bg-purple-50 text-purple-700'},
+  subjects_bar:  { label: 'Анонимен въпрос — графика', icon: 'bar_chart',         color: 'bg-teal-50 text-teal-700'   },
   events:        { label: 'Събития',          icon: 'photo_album',       color: 'bg-orange-50 text-orange-700'},
   superhero:     { label: 'Супергерой',       icon: 'bolt',              color: 'bg-yellow-50 text-yellow-700'},
 }
@@ -140,6 +140,7 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
           cfg={cfg}
           assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display !== 'barchart') }}
           classId={classId}
+          defaultDisplay="wordcloud"
           set={set}
         />
       )
@@ -150,6 +151,7 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
           cfg={cfg}
           assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display === 'barchart') }}
           classId={classId}
+          defaultDisplay="barchart"
           set={set}
         />
       )
@@ -230,22 +232,30 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
 
 // ── Class voice: full question editor ─────────────────────────────────────
 
-function ClassVoiceConfig({ cfg, assets, classId, set }: {
+function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
   cfg: Record<string, unknown>
   assets: LayoutAssets
   classId: string
+  defaultDisplay: 'wordcloud' | 'barchart'
   set: (key: string, value: unknown) => void
 }) {
   const selectedId = (cfg.questionId as string) ?? ''
-  const selected = assets.voiceQuestions.find(q => q.id === selectedId) as VoiceQuestionAsset | undefined
+  const [extraOptions, setExtraOptions] = useState<{ id: string; label: string }[]>([])
+  const allOptions = [...assets.voiceQuestions, ...extraOptions]
+  const selected = allOptions.find(q => q.id === selectedId) as VoiceQuestionAsset | undefined
 
   const [text,         setText]        = useState(selected?.label ?? '')
   const [description,  setDescription] = useState(selected?.description ?? '')
   const [maxLength,    setMaxLength]   = useState(selected?.max_length != null ? String(selected.max_length) : '')
   const [qType,        setQType]       = useState(selected?.type ?? 'class_voice')
-  const [voiceDisplay, setVoiceDisplay] = useState<'wordcloud' | 'barchart'>(selected?.voice_display ?? 'wordcloud')
+  const [voiceDisplay, setVoiceDisplay] = useState<'wordcloud' | 'barchart'>(selected?.voice_display ?? defaultDisplay)
   const [isPending,    startTransition] = useTransition()
   const [saved,        setSaved]        = useState(false)
+
+  // Create new question
+  const [showCreate,  setShowCreate]  = useState(false)
+  const [newText,     setNewText]     = useState('')
+  const [creating,    startCreate]    = useTransition()
 
   useEffect(() => {
     if (selected) {
@@ -253,7 +263,7 @@ function ClassVoiceConfig({ cfg, assets, classId, set }: {
       setDescription(selected.description ?? '')
       setMaxLength(selected.max_length != null ? String(selected.max_length) : '')
       setQType(selected.type ?? 'class_voice')
-      setVoiceDisplay(selected.voice_display ?? 'wordcloud')
+      setVoiceDisplay(selected.voice_display ?? defaultDisplay)
       setSaved(false)
     }
   }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -275,9 +285,35 @@ function ClassVoiceConfig({ cfg, assets, classId, set }: {
     })
   }
 
+  function handleCreate() {
+    const q = newText.trim()
+    if (!q) return
+    startCreate(async () => {
+      const nextIndex = allOptions.length
+      const { error } = await createQuestion(classId, {
+        text: q,
+        type: 'class_voice',
+        allows_text: true,
+        allows_media: false,
+        max_length: null,
+        order_index: nextIndex,
+        voice_display: defaultDisplay,
+      })
+      if (!error) {
+        // Re-fetch the newly created question id by fetching the questions list
+        // Simplest approach: reload assets via router refresh. For now add optimistically with a temp id
+        // and let the user pick it from dropdown after page reload.
+        setNewText('')
+        setShowCreate(false)
+        // Trigger a soft-reload so the new question appears in the picker
+        window.location.reload()
+      }
+    })
+  }
+
   const TYPE_OPTIONS = [
     { value: 'personal',        label: 'Лично' },
-    { value: 'class_voice',     label: 'Гласът на класа' },
+    { value: 'class_voice',     label: 'Анонимен въпрос' },
     { value: 'better_together', label: 'Заедно сме по-добри' },
     { value: 'superhero',       label: 'Супергерой' },
     { value: 'video',           label: 'Видео' },
@@ -285,13 +321,42 @@ function ClassVoiceConfig({ cfg, assets, classId, set }: {
 
   return (
     <div className="space-y-4">
-      <AssetPicker
-        label="Въпрос за гласа на класа"
-        value={selectedId}
-        options={assets.voiceQuestions}
-        emptyLabel="Избери въпрос..."
-        onChange={v => { set('questionId', v || null); setSaved(false) }}
-      />
+      <div>
+        <AssetPicker
+          label="Анонимен въпрос"
+          value={selectedId}
+          options={allOptions}
+          emptyLabel="Избери въпрос..."
+          onChange={v => { set('questionId', v || null); setSaved(false) }}
+        />
+        <button
+          onClick={() => setShowCreate(v => !v)}
+          className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors"
+        >
+          <span className="material-symbols-outlined text-sm">{showCreate ? 'remove' : 'add'}</span>
+          Създай нов въпрос
+        </button>
+        {showCreate && (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              value={newText}
+              onChange={e => setNewText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleCreate()}
+              placeholder="Напиши въпроса..."
+              className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              autoFocus
+            />
+            <button
+              onClick={handleCreate}
+              disabled={creating || !newText.trim()}
+              className="flex-none px-3 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">check</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {selectedId && (
         <>
@@ -397,73 +462,110 @@ function PollsGridConfig({ classId, existingPolls }: {
   classId: string
   existingPolls: { id: string; label: string }[]
 }) {
-  // Map label → poll id for existing polls
-  const [addedMap, setAddedMap] = useState<Map<string, string>>(
-    new Map(existingPolls.map(p => [p.label, p.id]))
-  )
+  // Ordered list of added polls (shown at top)
+  const [added, setAdded] = useState<{ id: string; label: string }[]>(existingPolls)
+  const addedIds = new Set(added.map(p => p.id))
+  const addedLabels = new Set(added.map(p => p.label))
+
   const [isPending, startTransition] = useTransition()
-  const [orderIndex, setOrderIndex] = useState(existingPolls.length + 1)
   const [customText, setCustomText] = useState('')
 
-  function handleToggle(question: string) {
-    const existingId = addedMap.get(question)
-    if (existingId) {
-      startTransition(async () => {
-        const result = await deletePoll(classId, existingId)
-        if (!result.error) {
-          setAddedMap(prev => { const next = new Map(prev); next.delete(question); return next })
-        }
-      })
-    } else {
-      startTransition(async () => {
-        const result = await createPoll(classId, question, orderIndex)
-        if (!result.error && result.id) {
-          setAddedMap(prev => new Map([...prev, [question, result.id!]]))
-          setOrderIndex(i => i + 1)
-        }
-      })
-    }
+  function handleRemove(id: string) {
+    startTransition(async () => {
+      const result = await deletePoll(classId, id)
+      if (!result.error) setAdded(prev => prev.filter(p => p.id !== id))
+    })
   }
 
-  function handleAddCustom() {
-    const q = customText.trim()
-    if (!q || addedMap.has(q)) return
+  function handleAdd(question: string) {
+    if (addedLabels.has(question)) return
     startTransition(async () => {
-      const result = await createPoll(classId, q, orderIndex)
+      const result = await createPoll(classId, question, added.length + 1)
       if (!result.error && result.id) {
-        setAddedMap(prev => new Map([...prev, [q, result.id!]]))
-        setOrderIndex(i => i + 1)
-        setCustomText('')
+        setAdded(prev => [...prev, { id: result.id!, label: question }])
       }
     })
   }
 
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Идеи за анкети</p>
-      {POLL_SUGGESTIONS.map(q => {
-        const isAdded = addedMap.has(q)
-        return (
-          <button
-            key={q}
-            onClick={() => handleToggle(q)}
-            disabled={isPending}
-            className={`w-full flex items-center gap-3 text-left text-sm px-4 py-3 rounded-xl border transition-all disabled:opacity-60 ${
-              isAdded
-                ? 'border-green-200 bg-green-50 text-green-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600'
-                : 'border-gray-100 bg-white hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600'
-            }`}
-          >
-            <span className={`material-symbols-outlined text-base flex-none ${isAdded ? 'text-green-500' : 'text-gray-300'}`}>
-              {isAdded ? 'check_circle' : 'add_circle'}
-            </span>
-            {q}
-          </button>
-        )
-      })}
+  function handleMove(index: number, dir: 'up' | 'down') {
+    const next = [...added]
+    const swap = dir === 'up' ? index - 1 : index + 1
+    ;[next[index], next[swap]] = [next[swap], next[index]]
+    setAdded(next)
+    startTransition(async () => {
+      await reorderPolls(classId, next.map(p => p.id))
+    })
+  }
 
-      {/* Custom poll */}
-      <div className="pt-2 border-t border-gray-100 mt-2">
+  function handleAddCustom() {
+    const q = customText.trim()
+    if (!q) return
+    handleAdd(q)
+    setCustomText('')
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* ── Added polls ── */}
+      {added.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Избрани анкети</p>
+          <div className="space-y-1.5">
+            {added.map((p, i) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800"
+              >
+                <div className="flex flex-col gap-0.5 flex-none">
+                  <button
+                    onClick={() => handleMove(i, 'up')}
+                    disabled={i === 0 || isPending}
+                    className="text-emerald-400 hover:text-emerald-700 disabled:opacity-20 leading-none"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_upward</span>
+                  </button>
+                  <button
+                    onClick={() => handleMove(i, 'down')}
+                    disabled={i === added.length - 1 || isPending}
+                    className="text-emerald-400 hover:text-emerald-700 disabled:opacity-20 leading-none"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_downward</span>
+                  </button>
+                </div>
+                <span className="flex-1 leading-snug">{p.label}</span>
+                <button
+                  onClick={() => handleRemove(p.id)}
+                  disabled={isPending}
+                  className="flex-none text-emerald-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Suggestions ── */}
+      <div>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Идеи за анкети</p>
+        <div className="space-y-1.5">
+          {POLL_SUGGESTIONS.filter(q => !addedLabels.has(q)).map(q => (
+            <button
+              key={q}
+              onClick={() => handleAdd(q)}
+              disabled={isPending}
+              className="w-full flex items-center gap-3 text-left text-sm px-4 py-3 rounded-xl border border-gray-100 bg-white hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600 transition-all disabled:opacity-60"
+            >
+              <span className="material-symbols-outlined text-base flex-none text-gray-300">add_circle</span>
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Custom poll ── */}
+      <div className="border-t border-gray-100 pt-3">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Своя анкета</p>
         <div className="flex gap-2">
           <input
@@ -476,7 +578,7 @@ function PollsGridConfig({ classId, existingPolls }: {
           />
           <button
             onClick={handleAddCustom}
-            disabled={isPending || !customText.trim() || addedMap.has(customText.trim())}
+            disabled={isPending || !customText.trim()}
             className="flex-none px-3 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-40 transition-colors"
           >
             <span className="material-symbols-outlined text-base">add</span>

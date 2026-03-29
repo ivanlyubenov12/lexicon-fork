@@ -36,9 +36,8 @@ export default async function AdminPreviewMemoriesPage({ params }: { params: Pro
   const basePath = `/admin/classes/${classId}/preview`
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
       <section className="mb-16">
-        <h3 className="text-2xl text-[#3632b7] mb-8" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите събития</h3>
         {eventList.length === 0 ? (
           <div className="py-32 text-center">
             <span className="material-symbols-outlined text-5xl text-[#e9e8e7] block mb-4">photo_library</span>

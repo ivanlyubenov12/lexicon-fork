@@ -206,6 +206,7 @@ function QuestionCard({
   featuredCount,
   onFeaturedChange,
   onUpdate,
+  onDelete,
 }: {
   question: Question
   classId: string
@@ -216,6 +217,7 @@ function QuestionCard({
   featuredCount: number
   onFeaturedChange: (id: string, val: boolean) => void
   onUpdate: (id: string, partial: Partial<Question>) => void
+  onDelete: (id: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -263,6 +265,7 @@ function QuestionCard({
     startTransition(async () => {
       const result = await deleteQuestion(classId, question.id)
       if (result.error) setError(result.error)
+      else onDelete(question.id)
     })
   }
 
@@ -693,6 +696,9 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
               }
               onUpdate={(id, partial) =>
                 setCustomQuestions(prev => prev.map(q => q.id === id ? { ...q, ...partial } : q))
+              }
+              onDelete={(id) =>
+                setCustomQuestions(prev => prev.filter(q => q.id !== id))
               }
             />
           ))}

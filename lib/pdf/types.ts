@@ -73,6 +73,7 @@ export interface PDFEvent {
 export interface PDFData {
   /** Rasterized background pattern PNG (A4 595×842). null = no background. */
   bg_pattern_png?: Buffer | null
+  preset?: string | null
   classInfo: {
     name: string
     namePart: string

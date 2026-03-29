@@ -22,12 +22,8 @@ export default async function AdminPreviewStudentsPage({ params }: { params: Pro
   const basePath = `/admin/classes/${classId}/preview`
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
       <section className="mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl text-[#3632b7]" style={{ fontFamily: 'Noto Serif, serif' }}>Всички ученици</h3>
-          <span className="text-[#855300] font-semibold text-sm tracking-widest uppercase">{studentList.length} ученици</span>
-        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {studentList.map(student => (
             <StudentCard key={student.id} student={student} classId={classId} basePath={basePath} />

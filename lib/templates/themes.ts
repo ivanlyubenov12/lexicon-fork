@@ -101,6 +101,27 @@ export const themes: Record<string, Theme> = {
       '--lex-hero-grad': 'linear-gradient(to bottom right, #FF7043, #FFA726, #29B6F6)',
     },
   },
+
+  levski: {
+    id: 'levski',
+    name: 'Левски София',
+    previewBg: 'bg-[#d0daf7]',
+    vars: {
+      '--lex-primary': '#1A3D8F',
+      '--lex-primary-light': '#d0daf7',
+      '--lex-secondary': '#c8a020',
+      '--lex-secondary-light': '#fef3c7',
+      '--lex-accent': '#FFD700',
+      '--lex-bg': '#f4f7fe',
+      '--lex-surface': '#ffffff',
+      '--lex-card': '#eef2fb',
+      '--lex-text': '#0e1e3d',
+      '--lex-muted': '#5a6e9c',
+      '--lex-radius': '1.5rem',
+      '--lex-radius-card': '2rem',
+      '--lex-hero-grad': 'linear-gradient(135deg, #0e1e3d 0%, #1A3D8F 50%, #2952B3 100%)',
+    },
+  },
 }
 
 export const defaultTheme = themes.classic

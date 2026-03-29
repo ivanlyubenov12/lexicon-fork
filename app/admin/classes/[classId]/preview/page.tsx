@@ -123,7 +123,8 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
 
   const basePath = `/admin/classes/${classId}/preview`
   const lexiconData: LexiconData = {
-    classId, classData: { name: classData.name, superhero_prompt: classData.superhero_prompt, superhero_image_url: classData.superhero_image_url, cover_image_url: classData.cover_image_url },
+    classId, preset: classData.template_id ?? null,
+    classData: { name: classData.name, superhero_prompt: classData.superhero_prompt, superhero_image_url: classData.superhero_image_url, cover_image_url: classData.cover_image_url },
     namePart, schoolPart, studentList, teaserMap, questionData, voiceData, pollData, eventList: events ?? [],
   }
 
@@ -142,7 +143,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
         </span>
       </div>
       <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
           <LexiconBlocks blocks={blocks} data={lexiconData} basePath={basePath} />
         </LexiconShell>
       </div>

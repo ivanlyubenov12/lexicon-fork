@@ -187,6 +187,7 @@ export default async function ModeratorPreviewPage({
 
   const lexiconData: LexiconData = {
     classId,
+    preset: classData.template_id ?? null,
     classData: {
       name: classData.name,
       superhero_prompt: classData.superhero_prompt,

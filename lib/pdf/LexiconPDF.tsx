@@ -742,7 +742,7 @@ function CoverPage({ data }: { data: PDFData }) {
       {/* Student count */}
       <View style={{ position: 'absolute', bottom: 24, right: 36 }}>
         <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)', letterSpacing: 1 }}>
-          {data.students.length} ученика
+          {data.students.length} {(data.preset === 'friends' || data.preset === 'sports' || data.preset === 'kindergarten') ? 'участника' : 'ученика'}
         </Text>
       </View>
     </Page>
@@ -863,7 +863,11 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
       {/* Polls grid — winners */}
       {polls.length > 0 && (
         <View style={s.overviewSection}>
-          <Text style={s.overviewSectionLabel}>Звездите на класа</Text>
+          <Text style={s.overviewSectionLabel}>
+            {data.preset === 'sports' ? 'Звездите на отбора'
+              : (data.preset === 'friends' || data.preset === 'kindergarten') ? 'Звездите на групата'
+              : 'Звездите на класа'}
+          </Text>
           <View style={s.pollsGridRow}>
             {polls.filter(p => p.nominees.length > 0).map((poll, i) => {
               const winner = poll.nominees[0]

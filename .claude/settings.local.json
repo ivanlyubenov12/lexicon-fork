@@ -36,13 +36,27 @@
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/student/)",
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/student/[studentId]/)",
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/student/[studentId]/)",
-      "Bash(grep -rn \"ЕДИН НЕРАЗДЕЛЕН КЛАС\\\\|един неразделен клас\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon --include=*.tsx --include=*.ts ! -path */node_modules/*)"
+      "Bash(grep -rn \"ЕДИН НЕРАЗДЕЛЕН КЛАС\\\\|един неразделен клас\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon --include=*.tsx --include=*.ts ! -path */node_modules/*)",
+      "Bash(grep -n \"students\\\\|questionnaire_submitted\\\\|invite_accepted\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/page.tsx)",
+      "Bash(grep -rn \"supabase.*storage\\\\|storage.*upload\\\\|video.*url\\\\|Supabase\\\\|cloudflare\\\\|mux\\\\|bunny\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId]/question --include=\"*.ts\" --include=\"*.tsx\")",
+      "Bash(npm install:*)",
+      "Bash(grep -n \"bulkApprove\\\\|approveMessage\\\\|approve.*message\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/actions.ts)",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon -type f \\\\\\(-name *.sql -o -name *.md \\\\\\))",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/lib /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/supabase -type f \\\\\\(-name *.sql -o -name *.ts -o -name *.tsx -o -name *.md \\\\\\))",
+      "Bash(grep -n \"event\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/seed/actions.ts)",
+      "Bash(grep -r \"1-4 клас\\\\|primary.*background\\\\|cover.*image\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/lib --include=*.ts --include=*.tsx)",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/lib/templates -type f ! -path */node_modules/*)",
+      "Bash(ls -la \"/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/\\(public\\)/\")",
+      "Bash(grep -n \"LexiconShell classId\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/students/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/memories/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/layout.tsx)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/*/lexicon/)",
+      "Bash(grep -r \"SUPABASE_URL\\\\|supabase.*url\\\\|DATABASE_URL\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/.env*)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/student/[studentId]",
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]",
-      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/students"
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/students",
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview"
     ]
   }
 }

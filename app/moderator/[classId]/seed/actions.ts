@@ -474,6 +474,7 @@ export async function seedDummyData(
       first_name: first,
       last_name: last,
       invite_accepted_at: new Date().toISOString(),
+      is_seed: true,
     }))
     const { data: students, error: sErr } = await admin
       .from('students')
@@ -676,17 +677,26 @@ export async function seedDummyData(
 export async function clearClassData(classId: string): Promise<{ error: string | null }> {
   const admin = createServiceRoleClient()
   try {
-    // Students cascade → answers, peer_messages, class_poll_votes, event_comments
-    await admin.from('students').delete().eq('class_id', classId)
-    // Poll votes already gone; delete polls themselves
-    await admin.from('class_polls').delete().eq('class_id', classId)
-    // Class voice answers
-    await admin.from('class_voice_answers').delete().eq('class_id', classId)
-    // Class-specific questions
-    await admin.from('questions').delete().eq('class_id', classId).eq('is_system', false)
-    // NOTE: events are intentionally preserved — they are entered by the moderator
+    // Only delete seed (dummy) students — real profiles, questionnaire, polls,
+    // questions, events are all preserved.
+    const { data: seedStudents } = await admin
+      .from('students')
+      .select('id')
+      .eq('class_id', classId)
+      .eq('is_seed', true)
+
+    if (seedStudents && seedStudents.length > 0) {
+      const ids = seedStudents.map(s => s.id)
+
+      // Delete class_voice_answers submitted by seed students (not cascade-linked to student)
+      await admin.from('class_voice_answers').delete().eq('class_id', classId).in('student_id', ids)
+
+      // Delete seed student rows — cascade removes answers, poll votes, peer messages
+      await admin.from('students').delete().eq('class_id', classId).eq('is_seed', true)
+    }
 
     revalidatePath(`/moderator/${classId}`)
+    revalidatePath(`/lexicon/${classId}`)
     return { error: null }
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Неочаквана грешка' }
