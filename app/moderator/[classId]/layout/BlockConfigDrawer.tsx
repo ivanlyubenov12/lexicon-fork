@@ -403,11 +403,11 @@ function PollsGridConfig({ classId, existingPolls }: {
   )
   const [isPending, startTransition] = useTransition()
   const [orderIndex, setOrderIndex] = useState(existingPolls.length + 1)
+  const [customText, setCustomText] = useState('')
 
   function handleToggle(question: string) {
     const existingId = addedMap.get(question)
     if (existingId) {
-      // Remove
       startTransition(async () => {
         const result = await deletePoll(classId, existingId)
         if (!result.error) {
@@ -415,7 +415,6 @@ function PollsGridConfig({ classId, existingPolls }: {
         }
       })
     } else {
-      // Add
       startTransition(async () => {
         const result = await createPoll(classId, question, orderIndex)
         if (!result.error && result.id) {
@@ -424,6 +423,19 @@ function PollsGridConfig({ classId, existingPolls }: {
         }
       })
     }
+  }
+
+  function handleAddCustom() {
+    const q = customText.trim()
+    if (!q || addedMap.has(q)) return
+    startTransition(async () => {
+      const result = await createPoll(classId, q, orderIndex)
+      if (!result.error && result.id) {
+        setAddedMap(prev => new Map([...prev, [q, result.id!]]))
+        setOrderIndex(i => i + 1)
+        setCustomText('')
+      }
+    })
   }
 
   return (
@@ -449,6 +461,28 @@ function PollsGridConfig({ classId, existingPolls }: {
           </button>
         )
       })}
+
+      {/* Custom poll */}
+      <div className="pt-2 border-t border-gray-100 mt-2">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Своя анкета</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={customText}
+            onChange={e => setCustomText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddCustom()}
+            placeholder="Напишете въпрос..."
+            className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          />
+          <button
+            onClick={handleAddCustom}
+            disabled={isPending || !customText.trim() || addedMap.has(customText.trim())}
+            className="flex-none px-3 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-40 transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">add</span>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
