@@ -13,6 +13,14 @@ function currentSchoolYear(): string {
   return m >= 9 ? `${y}/${y + 1}` : `${y - 1}/${y}`
 }
 
+const TYPE_META: Record<string, { groupLabel: string; memberLabel: string; groupPlaceholder: string; orgLabel: string; orgPlaceholder: string; countLabel: string }> = {
+  primary:      { groupLabel: 'Паралелка', memberLabel: 'ученик', groupPlaceholder: '3А', orgLabel: 'Училище', orgPlaceholder: 'ОУ Христо Ботев', countLabel: 'Брой деца в класа' },
+  teens:        { groupLabel: 'Паралелка', memberLabel: 'ученик', groupPlaceholder: '9А', orgLabel: 'Училище', orgPlaceholder: 'СУ Климент Охридски', countLabel: 'Брой деца в класа' },
+  kindergarten: { groupLabel: 'Група',     memberLabel: 'дете',   groupPlaceholder: 'Слончета', orgLabel: 'Детска градина', orgPlaceholder: 'ДГ Дъга', countLabel: 'Брой деца в групата' },
+  sports:       { groupLabel: 'Отбор',     memberLabel: 'играч',  groupPlaceholder: 'Левски U12', orgLabel: 'Клуб / Организация', orgPlaceholder: 'ФК Левски', countLabel: 'Брой играчи' },
+  friends:      { groupLabel: 'Група',     memberLabel: 'приятел', groupPlaceholder: 'Наши хора', orgLabel: 'Организация (по желание)', orgPlaceholder: 'Не е задължително', countLabel: 'Брой членове' },
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
@@ -21,13 +29,14 @@ function SubmitButton() {
       disabled={pending}
       className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow"
     >
-      <span className="material-symbols-outlined text-base">school</span>
-      {pending ? 'Създаване...' : 'Създай класа →'}
+      <span className="material-symbols-outlined text-base">auto_stories</span>
+      {pending ? 'Създаване...' : 'Създай лексикона →'}
     </button>
   )
 }
 
-export default function CreateClassForm({ defaultModeratorName = '' }: { defaultModeratorName?: string }) {
+export default function CreateClassForm({ defaultModeratorName = '', lexiconType = 'primary' }: { defaultModeratorName?: string; lexiconType?: string }) {
+  const meta = TYPE_META[lexiconType] ?? TYPE_META.primary
   const router = useRouter()
   const [state, action] = useFormState(createClass, { error: null, classId: null })
 
@@ -69,6 +78,7 @@ export default function CreateClassForm({ defaultModeratorName = '' }: { default
       <input type="hidden" name="cover_image_url" value={coverUrl ?? ''} />
       <input type="hidden" name="school_logo_url" value={logoUrl ?? ''} />
       <input type="hidden" name="deadline" value={deadlineStr} />
+      <input type="hidden" name="preset" value={lexiconType} />
 
       {(uploadError || state.error) && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
@@ -94,30 +104,29 @@ export default function CreateClassForm({ defaultModeratorName = '' }: { default
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Паралелка</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.groupLabel}</label>
           <input
             name="parallel"
             type="text"
             required
-            placeholder="3А"
+            placeholder={meta.groupPlaceholder}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           />
-          <p className="text-xs text-gray-400 mt-1">Напр. 3А, 5Б, 7В</p>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Училище</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.orgLabel}</label>
           <input
             name="school"
             type="text"
-            required
-            placeholder="ОУ Христо Ботев"
+            required={lexiconType !== 'friends'}
+            placeholder={meta.orgPlaceholder}
             className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Брой деца в класа</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">{meta.countLabel}</label>
           <input
             name="expected_student_count"
             type="number"
@@ -205,7 +214,7 @@ export default function CreateClassForm({ defaultModeratorName = '' }: { default
                 <>
                   <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">add_photo_alternate</span>
                   <span className="text-sm text-gray-400">Кликнете за качване</span>
-                  <span className="text-xs text-gray-300 mt-1">Групова снимка на класа</span>
+                  <span className="text-xs text-gray-300 mt-1">Групова снимка</span>
                 </>
               )}
               <input

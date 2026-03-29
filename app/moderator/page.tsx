@@ -21,7 +21,7 @@ export default async function ModeratorIndexPage() {
 
   const { data: classes } = await admin
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, created_at')
+    .select('id, name, school_year, status, school_logo_url, member_label, created_at')
     .eq('moderator_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -50,7 +50,7 @@ export default async function ModeratorIndexPage() {
             <h1 className="text-indigo-900 text-xl font-bold tracking-tight" style={{ fontFamily: 'Noto Serif, serif' }}>
               Малки спомени
             </h1>
-            <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>
+            <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Моите лексикони</p>
           </div>
 
           <div className="flex items-center gap-3 px-2 py-3 bg-white/60 rounded-xl mb-4">
@@ -58,7 +58,7 @@ export default async function ModeratorIndexPage() {
               <span className="material-symbols-outlined text-xl">person</span>
             </div>
             <div className="overflow-hidden">
-              <p className="font-bold text-sm text-indigo-900 truncate">Моите класове</p>
+              <p className="font-bold text-sm text-indigo-900 truncate">Моите лексикони</p>
               <p className="text-xs text-slate-400 truncate mt-0.5">{user.email}</p>
             </div>
           </div>
@@ -76,10 +76,10 @@ export default async function ModeratorIndexPage() {
         <header className="mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
           <div>
             <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">
-              <span className="text-indigo-600 font-bold">Всички класове</span>
+              <span className="text-indigo-600 font-bold">Всички лексикони</span>
             </nav>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Моите класове
+              Моите лексикони
             </h2>
           </div>
           <Link
@@ -87,23 +87,23 @@ export default async function ModeratorIndexPage() {
             className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors shadow-sm self-start sm:self-auto"
           >
             <span className="material-symbols-outlined text-base">add</span>
-            Нов клас
+            Нов лексикон
           </Link>
         </header>
 
         {classList.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-gray-200 block mb-4">school</span>
+            <span className="material-symbols-outlined text-5xl text-gray-200 block mb-4">auto_stories</span>
             <h3 className="text-xl font-bold text-gray-700 mb-2" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Нямате класове още
+              Нямате лексикони още
             </h3>
-            <p className="text-sm text-slate-400 mb-6">Създайте първия си лексикон за да започнете.</p>
+            <p className="text-sm text-slate-400 mb-6">Създайте първия си лексикон, за да започнете.</p>
             <Link
               href="/moderator/new"
               className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors"
             >
               <span className="material-symbols-outlined text-base">add</span>
-              Създай клас
+              Създай лексикон
             </Link>
           </div>
         ) : (
@@ -143,7 +143,7 @@ export default async function ModeratorIndexPage() {
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50">
                     <div className="flex items-center gap-1.5 text-sm text-slate-400">
                       <span className="material-symbols-outlined text-base">group</span>
-                      {count} {count === 1 ? 'ученик' : 'ученици'}
+                      {count} {(cls.member_label ?? 'ученик').toLowerCase()}{count !== 1 ? 'а' : ''}
                     </div>
                     <div className="flex items-center gap-1 text-xs font-semibold text-slate-400">
                       <span>{cls.school_year}</span>

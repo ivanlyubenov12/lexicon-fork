@@ -26,18 +26,18 @@ const testimonials = [
 const steps = [
   {
     number: '01',
-    title: 'Регистрираш класа',
-    desc: 'Въвеждаш имената на децата. Системата изпраща покани до родителите автоматично.',
+    title: 'Регистрираш групата',
+    desc: 'Въвеждаш имената на членовете. Системата изпраща покани автоматично.',
   },
   {
     number: '02',
-    title: 'Децата попълват профилите',
-    desc: 'Всяко дете отговаря на въпроси с текст, видео или глас — у дома, заедно с родителите.',
+    title: 'Членовете попълват профилите',
+    desc: 'Всеки отговаря на въпроси с текст, видео или глас — когато му е удобно.',
   },
   {
     number: '03',
     title: 'Одобряваш и публикуваш',
-    desc: 'Преглеждаш отговорите, одобряваш и с един клик лексиконът е готов за целия клас.',
+    desc: 'Преглеждаш отговорите, одобряваш и с един клик лексиконът е готов за всички.',
   },
 ]
 
@@ -52,7 +52,7 @@ export default function HomePage() {
           {/* Left */}
           <div className="lg:col-span-6 z-10 space-y-8">
             <span className="inline-block px-4 py-1.5 bg-[#ffddb8] text-[#2a1700] text-xs font-bold uppercase tracking-widest rounded-full">
-              Дигиталната хроника на вашия клас
+              Дигитална хроника на вашата група
             </span>
             <h1
               className="text-5xl lg:text-7xl font-bold text-[#3632b7] leading-tight"
@@ -63,8 +63,8 @@ export default function HomePage() {
               <span className="italic text-amber-600">избледняват.</span>
             </h1>
             <p className="text-lg text-[#464555] max-w-lg leading-relaxed">
-              Традиционният училищен лексикон се преражда в модерна дигитална платформа.
-              Съхранете гласовете, снимките и историите на своя клас в едно вечно, неразделено пространство.
+              Традиционният лексикон се преражда в модерна дигитална платформа — за класове, детски градини, спортни отбори и приятелски групи.
+              Съхранете гласовете, снимките и историите в едно вечно, неразделено пространство.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Link
@@ -117,6 +117,29 @@ export default function HomePage() {
                 video_camera_back
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── For whom ───────────────────────────────────────────────────── */}
+      <section className="py-16 bg-white px-8">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-[#3632b7]/50 mb-10">
+            Подходящ за всяка група
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { emoji: '🏫', label: 'Училищен клас',    desc: 'Начален и горен курс' },
+              { emoji: '🧸', label: 'Детска градина',   desc: 'За малки деца' },
+              { emoji: '⚽', label: 'Спортен отбор',    desc: 'Всякакъв спорт' },
+              { emoji: '👥', label: 'Приятелска група', desc: 'Приятели и колеги' },
+            ].map(item => (
+              <div key={item.label} className="bg-[#faf9f8] rounded-2xl p-6 flex flex-col items-center text-center gap-3">
+                <span className="text-4xl">{item.emoji}</span>
+                <p className="font-bold text-[#1a1c1c] text-sm">{item.label}</p>
+                <p className="text-xs text-[#464555]/60">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

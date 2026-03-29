@@ -44,9 +44,9 @@ export default function RegisterForm() {
                 : 'border-gray-200 text-gray-500 hover:border-gray-300'
             }`}
           >
-            <span className="material-symbols-outlined text-2xl">school</span>
-            <span className="text-sm font-semibold leading-tight text-center">Учител / Модератор</span>
-            <span className="text-xs text-center opacity-70">Създавате лексикон за клас</span>
+            <span className="material-symbols-outlined text-2xl">auto_stories</span>
+            <span className="text-sm font-semibold leading-tight text-center">Ще създам лексикон</span>
+            <span className="text-xs text-center opacity-70">Учител, треньор или организатор</span>
           </button>
           <button
             type="button"
@@ -57,9 +57,9 @@ export default function RegisterForm() {
                 : 'border-gray-200 text-gray-500 hover:border-gray-300'
             }`}
           >
-            <span className="material-symbols-outlined text-2xl">family_restroom</span>
-            <span className="text-sm font-semibold leading-tight text-center">Родител / Ученик</span>
-            <span className="text-xs text-center opacity-70">Попълвате анкета за дете</span>
+            <span className="material-symbols-outlined text-2xl">edit_note</span>
+            <span className="text-sm font-semibold leading-tight text-center">Поканен съм да попълня лексикон</span>
+            <span className="text-xs text-center opacity-70">Родител, ученик или член</span>
           </button>
         </div>
       </div>
@@ -116,10 +116,10 @@ export default function RegisterForm() {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
             <p className="font-semibold mb-1 flex items-center gap-1.5">
               <span className="material-symbols-outlined text-base">info</span>
-              Нужна е покана от учителя
+              Нужна е покана от организатора
             </p>
             <p className="text-xs leading-relaxed">
-              Родителите и учениците обикновено влизат чрез личен линк от имейла на покана.
+              Обикновено влизате чрез личен линк от имейла на покана.
               Ако нямате линк, можете да се регистрирате тук и да въведете кода по-късно.
             </p>
           </div>

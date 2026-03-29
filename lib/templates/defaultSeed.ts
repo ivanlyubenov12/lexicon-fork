@@ -7,6 +7,8 @@ export const QUESTION_PRESETS = [
   { id: 'primary',      label: '1–4 клас',       description: 'Начален курс' },
   { id: 'kindergarten', label: 'Детска градина',  description: 'Детска градина' },
   { id: 'teens',        label: 'Горен курс',      description: 'Горен курс' },
+  { id: 'sports',       label: 'Спортен отбор',   description: 'Спортен отбор' },
+  { id: 'friends',      label: 'Приятелска група', description: 'Приятелска група' },
 ] as const
 
 export type QuestionPreset = (typeof QUESTION_PRESETS)[number]['id']

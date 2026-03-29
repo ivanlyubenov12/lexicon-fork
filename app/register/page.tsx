@@ -8,13 +8,12 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Малки спомени</h1>
           <p className="mt-2 text-gray-500 text-sm">
-            Създайте профил, с който да модерирате и изградите лексикона на класа си
+            Създайте профил, с който да създадете лексикон или да попълните лексикон
           </p>
         </div>
 
         {/* Form card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6">Регистрация на модератор</h2>
           <RegisterForm />
         </div>
       </div>
