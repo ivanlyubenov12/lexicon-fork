@@ -6,6 +6,19 @@ import { createServerClient, createServiceRoleClient } from '@/lib/supabase/serv
 import LogoutButton from '@/app/moderator/[classId]/LogoutButton'
 import MobileMenuWrapper from '@/app/moderator/[classId]/MobileMenuWrapper'
 
+const MEMBER_PLURALS: Record<string, string> = {
+  'ученик':  'ученика',
+  'дете':    'деца',
+  'играч':   'играчи',
+  'приятел': 'приятели',
+  'член':    'членове',
+}
+function pluralMember(label: string, count: number): string {
+  const lower = label.toLowerCase()
+  if (count === 1) return lower
+  return MEMBER_PLURALS[lower] ?? lower + 'а'
+}
+
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   draft:     { label: 'Настройка',   color: 'bg-gray-100 text-gray-600' },
   filling:   { label: 'Попълва се',  color: 'bg-amber-100 text-amber-700' },
@@ -143,7 +156,7 @@ export default async function ModeratorIndexPage() {
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50">
                     <div className="flex items-center gap-1.5 text-sm text-slate-400">
                       <span className="material-symbols-outlined text-base">group</span>
-                      {count} {(cls.member_label ?? 'ученик').toLowerCase()}{count !== 1 ? 'а' : ''}
+                      {count} {pluralMember(cls.member_label ?? 'ученик', count)}
                     </div>
                     <div className="flex items-center gap-1 text-xs font-semibold text-slate-400">
                       <span>{cls.school_year}</span>
