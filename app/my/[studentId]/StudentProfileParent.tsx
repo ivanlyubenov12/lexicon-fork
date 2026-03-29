@@ -356,17 +356,17 @@ export default function StudentProfileParent({
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               href={`/my/${student.id}/preview`}
-              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg transition-colors"
             >
               <span className="material-symbols-outlined text-sm">visibility</span>
-              Преглед
+              <span className="hidden sm:inline">Преглед</span>
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors"
             >
               <span className="material-symbols-outlined text-sm">logout</span>
-              Изход
+              <span className="hidden sm:inline">Изход</span>
             </button>
           </div>
         </div>

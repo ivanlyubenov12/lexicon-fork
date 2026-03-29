@@ -191,52 +191,46 @@ export default function ModeratorsBulkList({ moderators }: { moderators: Moderat
               }`}
             >
               {/* User header */}
-              <div className="flex items-center gap-4 px-6 py-5 border-b border-gray-50">
+              <div className="flex items-start gap-3 px-4 py-4 border-b border-gray-50">
                 <input
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => toggle(user.id)}
-                  className="w-4 h-4 rounded accent-indigo-600 cursor-pointer flex-shrink-0"
+                  className="w-4 h-4 rounded accent-indigo-600 cursor-pointer flex-shrink-0 mt-1"
                 />
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
+                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm flex-shrink-0">
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900 text-sm">{user.email}</p>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${ROLE_BADGE[user.role]?.color}`}>
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <p className="font-semibold text-gray-900 text-sm break-all leading-tight">{user.email}</p>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${ROLE_BADGE[user.role]?.color}`}>
                       {ROLE_BADGE[user.role]?.label}
                     </span>
                   </div>
                   <NameEditor userId={user.id} initialName={user.fullName} />
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-1">
                     Регистриран: {new Date(user.createdAt).toLocaleDateString('bg-BG')}
-                    {user.lastSignIn && (
-                      <> · Последен вход: {new Date(user.lastSignIn).toLocaleDateString('bg-BG')}</>
-                    )}
                   </p>
-                </div>
-                <div className="flex items-center gap-4 text-center flex-shrink-0">
-                  <div>
-                    <p className="text-lg font-bold text-gray-900">{user.classes.length}</p>
-                    <p className="text-xs text-gray-400">класа</p>
+                  {user.lastSignIn && (
+                    <p className="text-xs text-gray-400">
+                      Последен вход: {new Date(user.lastSignIn).toLocaleDateString('bg-BG')}
+                    </p>
+                  )}
+                  {/* Stats row */}
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <span className="text-xs text-gray-500"><span className="font-bold text-gray-800">{user.classes.length}</span> класа</span>
+                    <span className="text-xs text-gray-500"><span className="font-bold text-gray-800">{user.totalStudents}</span> деца</span>
+                    <span className="text-xs text-gray-500"><span className="font-bold text-green-600">{user.publishedCount}</span> публ.</span>
+                    <button
+                      onClick={() => setConfirm([user.id])}
+                      title={`Изтрий ${user.email}`}
+                      className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors ml-auto"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+                      Изтрий
+                    </button>
                   </div>
-                  <div>
-                    <p className="text-lg font-bold text-gray-900">{user.totalStudents}</p>
-                    <p className="text-xs text-gray-400">деца</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-green-600">{user.publishedCount}</p>
-                    <p className="text-xs text-gray-400">публ.</p>
-                  </div>
-                  <button
-                    onClick={() => setConfirm([user.id])}
-                    title={`Изтрий ${user.email}`}
-                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
-                    Изтрий
-                  </button>
                 </div>
               </div>
 
