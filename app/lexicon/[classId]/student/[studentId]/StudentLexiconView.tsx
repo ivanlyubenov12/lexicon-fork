@@ -196,9 +196,8 @@ export default function StudentLexiconView({
     ? consumeN((_, a) => !!(a.text_content && !a.media_url), 3)
     : []
 
-  // Slot 3 — Row 2: first video (always consume to prevent it leaking into the grid)
-  const firstVideoRaw = consumeFirst((_, a) => a.media_type === 'video')
-  const firstVideo = isPremium ? firstVideoRaw : null
+  // Slot 3 — Row 2: first video (always consume + always show if present)
+  const firstVideo = consumeFirst((_, a) => a.media_type === 'video')
 
   // Slot 4 — Row 2: first audio
   const firstAudio = consumeFirst((_, a) => a.media_type === 'audio')
@@ -364,7 +363,7 @@ export default function StudentLexiconView({
           <div className="mt-8 max-w-2xl mx-auto">
             {firstVideo ? (
               <VideoCard answer={firstVideo.answer} question={firstVideo.question} />
-            ) : isPremium ? (
+            ) : (
               <div className="bg-primary-container relative overflow-hidden aspect-video flex items-center justify-center">
                 <div
                   className="absolute inset-0 opacity-20"
@@ -378,7 +377,7 @@ export default function StudentLexiconView({
                   </span>
                 )}
               </div>
-            ) : null}
+            )}
             {firstAudio && (
               <div className="bg-tertiary-container text-white p-8 flex flex-col justify-between mt-6">
                 <div>
