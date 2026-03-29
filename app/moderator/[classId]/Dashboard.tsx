@@ -23,8 +23,8 @@ interface Props {
   classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null }
   moderatorEmail: string | null
   deadline: string | null
-  students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
-  awaitingApproval: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null }>
+  students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null; questionnaire_submitted: boolean }>
+  awaitingApproval: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null; questionnaire_submitted: boolean }>
   pendingAnswers: number
   pendingMessages: number
   approvedAnswers: number
@@ -63,9 +63,9 @@ export default function Dashboard({
   approvedAnswers, hasQuestionnaire, hasLayout, events, recentContributions,
 }: Props) {
   const totalStudents = students.length
-  const acceptedStudents = students.filter((s) => s.invite_accepted_at !== null).length
-  const progressPercent = totalStudents > 0 ? Math.round((acceptedStudents / totalStudents) * 100) : 0
-  const remaining = totalStudents - acceptedStudents
+  const submittedStudents = students.filter((s) => s.questionnaire_submitted).length
+  const progressPercent = totalStudents > 0 ? Math.round((submittedStudents / totalStudents) * 100) : 0
+  const remaining = totalStudents - submittedStudents
 
   const base = `/moderator/${classData.id}`
 

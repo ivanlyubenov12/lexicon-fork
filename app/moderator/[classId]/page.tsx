@@ -35,7 +35,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
   // 3. Fetch students
   const { data: students } = await adminClient
     .from('students')
-    .select('id, first_name, last_name, invite_accepted_at')
+    .select('id, first_name, last_name, invite_accepted_at, questionnaire_submitted')
     .eq('class_id', classId)
     .order('last_name', { ascending: true })
 
