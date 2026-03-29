@@ -6,7 +6,7 @@ const info = [
   {
     icon: 'mail',
     label: 'Имейл',
-    value: 'hello@lexikon.bg',
+    value: 'alubenov@gmail.com',
   },
   {
     icon: 'schedule',
