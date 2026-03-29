@@ -61,6 +61,24 @@ export default function StudentsBulkList({
   function handleDeleteSelected() { setConfirm([...selected]) }
   function handleDeleteOne(id: string) { setConfirm([id]) }
 
+  function downloadCsv() {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin
+    const noEmail = students.filter(s => !s.parent_email && !s.invite_accepted_at)
+    if (noEmail.length === 0) return
+    const rows = [
+      ['Име', 'Фамилия', 'Линк за регистрация'],
+      ...noEmail.map(s => [s.first_name, s.last_name, `${base}/join/${s.invite_token}`]),
+    ]
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'деца-без-имейл.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   function confirmDelete() {
     if (!confirm) return
     const ids = confirm
@@ -76,6 +94,8 @@ export default function StudentsBulkList({
     })
   }
 
+  const noEmailCount = students.filter(s => !s.parent_email && !s.invite_accepted_at).length
+
   return (
     <>
       {/* ── List ──────────────────────────────────────────────────────── */}
@@ -89,9 +109,18 @@ export default function StudentsBulkList({
             onChange={toggleAll}
             className="w-4 h-4 rounded accent-indigo-600 cursor-pointer"
           />
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-gray-400 font-medium flex-1">
             {selected.size > 0 ? `${selected.size} избрани` : 'Избери всички'}
           </span>
+          {noEmailCount > 0 && (
+            <button
+              onClick={downloadCsv}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors border border-gray-200 hover:border-indigo-300 px-3 py-1.5 rounded-lg"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>download</span>
+              CSV с линкове ({noEmailCount})
+            </button>
+          )}
         </div>
 
         {students.map(student => {
