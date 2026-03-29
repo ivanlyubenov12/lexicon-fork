@@ -14,6 +14,7 @@ interface StudentRow {
   first_name: string
   last_name: string
   parent_email: string | null
+  parent_user_id: string | null
   photo_url: string | null
   invite_accepted_at: string | null
   invite_token: string
@@ -32,11 +33,23 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
 
   const { data: students } = await supabase
     .from('students')
-    .select('id, first_name, last_name, parent_email, photo_url, invite_accepted_at, invite_token')
+    .select('id, first_name, last_name, parent_email, parent_user_id, photo_url, invite_accepted_at, invite_token')
     .eq('class_id', classId)
     .order('last_name', { ascending: true })
 
   const studentList: StudentRow[] = students ?? []
+
+  // Fetch registered emails for parents who accepted invite
+  const parentUserIds = studentList.map(s => s.parent_user_id).filter(Boolean) as string[]
+  const registeredEmailMap: Record<string, string> = {}
+  if (parentUserIds.length > 0) {
+    const { data: usersData } = await supabase.auth.admin.listUsers()
+    for (const u of usersData?.users ?? []) {
+      if (parentUserIds.includes(u.id) && u.email) {
+        registeredEmailMap[u.id] = u.email
+      }
+    }
+  }
 
   const { count: totalQuestions } = await supabase
     .from('questions')
@@ -231,6 +244,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
                 first_name:       student.first_name,
                 last_name:        student.last_name,
                 parent_email:     student.parent_email,
+                registered_email: student.parent_user_id ? (registeredEmailMap[student.parent_user_id] ?? null) : null,
                 photo_url:        student.photo_url,
                 invite_accepted_at: student.invite_accepted_at,
                 invite_token:     student.invite_token,

@@ -10,6 +10,7 @@ export interface StudentRowData {
   first_name: string
   last_name: string
   parent_email: string | null
+  registered_email: string | null
   photo_url: string | null
   invite_accepted_at: string | null
   invite_token: string
@@ -190,10 +191,18 @@ export default function StudentsBulkList({
               {isExpanded && (
                 <div className="border-t border-gray-50 px-4 py-3 bg-gray-50/50 space-y-3">
                   {/* Email */}
-                  <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-gray-300" style={{ fontSize: 14 }}>mail</span>
-                    {student.parent_email ?? <span className="italic text-gray-400">Без имейл на родителя</span>}
-                  </p>
+                  <div className="space-y-1">
+                    {student.registered_email && (
+                      <p className="text-xs text-gray-700 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-green-500" style={{ fontSize: 14 }}>how_to_reg</span>
+                        {student.registered_email}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-gray-300" style={{ fontSize: 14 }}>mail</span>
+                      {student.parent_email ?? <span className="italic text-gray-400">Без имейл на родителя</span>}
+                    </p>
+                  </div>
 
                   {/* Progress bar */}
                   {student.total > 0 && (
