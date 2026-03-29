@@ -304,9 +304,9 @@ export default function QuestionnaireTabView(props: Props) {
                       {answered
                         ? <span className="flex items-center gap-1 text-xs bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
                             <span className="material-symbols-outlined" style={{ fontSize: 12 }}>check</span>
-                            Отговорено
+                            Анонимно
                           </span>
-                        : <span className="text-xs bg-purple-50 text-purple-500 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Анонимно</span>
+                        : <span className="text-xs bg-gray-50 text-gray-400 font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Няма отговор</span>
                       }
                     </div>
                   )
