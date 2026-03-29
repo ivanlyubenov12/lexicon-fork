@@ -5,7 +5,7 @@ export type UserRole = 'admin' | 'moderator' | 'parent'
 export type AnswerStatus = 'draft' | 'submitted' | 'approved'
 export type MessageStatus = 'pending' | 'approved' | 'rejected'
 export type MediaType = 'video' | 'audio'
-export type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero'
+export type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
 
 export interface Class {
   id: string

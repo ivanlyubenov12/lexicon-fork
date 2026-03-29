@@ -4,11 +4,12 @@ import { useState, useTransition } from 'react'
 import { addSystemQuestion } from '../actions'
 
 const TYPES = [
-  { value: 'personal',        label: 'Личен' },
+  { value: 'personal',        label: 'Въпрос за мен' },
+  { value: 'video',           label: 'Видео' },
+  { value: 'photo',           label: 'Снимка' },
+  { value: 'class_voice',     label: 'Анонимен' },
   { value: 'better_together', label: 'По-добри заедно' },
   { value: 'superhero',       label: 'Супергерой' },
-  { value: 'class_voice',     label: 'Глас на класа' },
-  { value: 'video',           label: 'Видео' },
 ] as const
 
 export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {

@@ -8,11 +8,12 @@ import AddQuestionForm from './AddQuestionForm'
 import PresetQuestionsTab from './PresetQuestionsTab'
 
 const TYPE_GROUPS = [
-  { type: 'personal',        label: 'Лични въпроси',        icon: 'person',            color: 'text-blue-500' },
+  { type: 'personal',        label: 'Въпроси за мен',        icon: 'person',            color: 'text-blue-500' },
+  { type: 'video',           label: 'Видео въпроси',         icon: 'videocam',          color: 'text-rose-500' },
+  { type: 'photo',           label: 'Въпроси — снимка',      icon: 'add_photo_alternate', color: 'text-teal-500' },
+  { type: 'class_voice',     label: 'Анонимни въпроси',      icon: 'record_voice_over', color: 'text-amber-500' },
   { type: 'better_together', label: 'По-добри заедно',       icon: 'diversity_3',       color: 'text-green-500' },
   { type: 'superhero',       label: 'Супергерой',            icon: 'auto_awesome',      color: 'text-purple-500' },
-  { type: 'class_voice',     label: 'Гласът на класа',       icon: 'record_voice_over', color: 'text-amber-500' },
-  { type: 'video',           label: 'Видео въпроси',         icon: 'videocam',          color: 'text-rose-500' },
 ]
 
 export default async function AdminQuestionsPage({

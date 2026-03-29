@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions, toggleFeaturedQuestion, reseedDefaultQuestions } from './actions'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
 
 interface Question {
   id: string
@@ -26,18 +26,18 @@ interface Props {
 }
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  personal: 'Личен',
-  class_voice: 'Гласът на класа',
+  personal:        'Въпрос за мен',
+  class_voice:     'Анонимен',
   better_together: 'По-добри заедно',
-  superhero: 'Супергерой',
-  video: 'Видео въпрос',
+  superhero:       'Супергерой',
+  video:           'Видео',
+  photo:           'Снимка',
 }
 
-// Video questions require video, all others are text-only
 function mediaFlagsForType(type: QuestionType) {
-  return type === 'video'
-    ? { allows_text: false, allows_media: true }
-    : { allows_text: true, allows_media: false }
+  if (type === 'video') return { allows_text: false, allows_media: true }
+  if (type === 'photo') return { allows_text: true,  allows_media: true }
+  return { allows_text: true, allows_media: false }
 }
 
 const EMPTY_FORM = {

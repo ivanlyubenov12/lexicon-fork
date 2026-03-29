@@ -170,7 +170,7 @@ export async function updateSystemQuestion(
 
 export async function addSystemQuestion(data: {
   text: string
-  type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
+  type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
   order_index: number
 }): Promise<{ error: string | null }> {
   await assertAdmin()
@@ -181,7 +181,7 @@ export async function addSystemQuestion(data: {
     type: data.type,
     is_system: true,
     allows_text: data.type !== 'video',
-    allows_media: data.type === 'video',
+    allows_media: data.type === 'video' || data.type === 'photo',
     order_index: data.order_index,
     class_id: null,
   })
@@ -210,7 +210,7 @@ export async function deleteSystemQuestion(id: string): Promise<{ error: string 
 
 // ── Preset questionnaire questions ─────────────────────────────────────────────
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
 
 export async function updatePresetQuestion(
   id: string,
@@ -265,7 +265,7 @@ export async function addPresetQuestion(data: {
     is_system: true,
     preset: data.preset,
     allows_text: data.type !== 'video',
-    allows_media: data.type === 'video',
+    allows_media: data.type === 'video' || data.type === 'photo',
     voice_display: data.voice_display,
     is_featured: data.is_featured,
     order_index: data.order_index,

@@ -11,7 +11,7 @@ interface WizardQuestion {
   id: string
   text: string
   description: string | null
-  type: 'video' | 'personal' | 'superhero'
+  type: 'video' | 'personal' | 'superhero' | 'photo'
   maxLength: number | null
   existingAnswer: string
   existingMediaUrl: string | null
@@ -351,6 +351,126 @@ function VideoStep({
   )
 }
 
+// ── Photo step ────────────────────────────────────────────────────────────────
+
+function PhotoStep({
+  studentId,
+  question,
+  onNext,
+  onBack,
+}: {
+  studentId: string
+  question: WizardQuestion
+  onNext: () => void
+  onBack: () => void
+}) {
+  const [photoUrl, setPhotoUrl]     = useState<string | null>(question.existingMediaUrl)
+  const [comment, setComment]       = useState(question.existingAnswer)
+  const [uploading, setUploading]   = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+
+  async function uploadFile(file: File) {
+    setError(null)
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    try {
+      const res  = await fetch('/api/media/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (data.error || !data.url) { setError('Качването не успя.'); return }
+      setPhotoUrl(data.url)
+    } catch {
+      setError('Качването не успя.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleNext() {
+    if (!photoUrl) { onNext(); return }
+    setSubmitting(true)
+    setError(null)
+    const payload: Parameters<typeof submitAnswer>[2] = { media_url: photoUrl }
+    if (comment.trim()) payload.text_content = comment.trim()
+    const res = await submitAnswer(studentId, question.id, payload)
+    if (res.error) { setError(res.error); setSubmitting(false) }
+    else onNext()
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest text-teal-500 mb-3">Снимка</p>
+        <h2 className="text-2xl font-bold text-indigo-900 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
+          {question.text}
+        </h2>
+        {question.description && (
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed">{question.description}</p>
+        )}
+      </div>
+
+      {photoUrl ? (
+        <div className="space-y-2">
+          <img src={photoUrl} alt="Снимка" className="w-full rounded-2xl border border-gray-200 shadow-sm object-cover max-h-64" />
+          <button
+            onClick={() => setPhotoUrl(null)}
+            className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 w-full text-center"
+          >
+            Смени снимката
+          </button>
+        </div>
+      ) : (
+        <label className="flex flex-col items-center justify-center w-full h-40 rounded-2xl border-2 border-dashed border-gray-200 hover:border-teal-300 cursor-pointer bg-gray-50 hover:bg-teal-50/30 transition-colors">
+          {uploading ? (
+            <span className="text-sm text-gray-400">Качване...</span>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">add_photo_alternate</span>
+              <span className="text-sm text-gray-400">Кликнете за качване на снимка</span>
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploading || submitting}
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f) }}
+          />
+        </label>
+      )}
+
+      <textarea
+        rows={3}
+        value={comment}
+        onChange={e => setComment(e.target.value)}
+        placeholder="Коментар (по желание)..."
+        className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none shadow-sm"
+      />
+
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
+      )}
+
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={onBack}
+          className="flex-none px-5 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+        >
+          ← Назад
+        </button>
+        <button
+          onClick={handleNext}
+          disabled={submitting || uploading}
+          className="flex-1 bg-teal-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-teal-700 disabled:opacity-50 transition-colors shadow-sm"
+        >
+          {submitting ? 'Записва се...' : photoUrl ? 'Напред →' : 'Пропусни →'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main wizard ───────────────────────────────────────────────────────────────
 
 function findResumeStep(steps: Step[], photoUrl: string | null): number {
@@ -576,7 +696,16 @@ export default function WizardClient({
               onBack={back}
             />
           )}
-          {step.kind === 'question' && step.question.type !== 'video' && (
+          {step.kind === 'question' && step.question.type === 'photo' && (
+            <PhotoStep
+              key={step.question.id}
+              studentId={studentId}
+              question={step.question}
+              onNext={next}
+              onBack={back}
+            />
+          )}
+          {step.kind === 'question' && step.question.type !== 'video' && step.question.type !== 'photo' && (
             <QuestionStep
               key={step.question.id}
               studentId={studentId}
