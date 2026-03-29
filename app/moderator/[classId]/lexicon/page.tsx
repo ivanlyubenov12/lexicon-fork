@@ -38,6 +38,16 @@ const PRESET_META: Record<string, { emoji: string; description: string; examples
     description: 'За ученици от 5 до 12 клас',
     examples: ['Бъдеща кариера', 'Неща, от които ме е срам', 'Съвет към 5-годишния мен'],
   },
+  sports: {
+    emoji: '⚽',
+    description: 'За спортен отбор',
+    examples: ['Любима позиция', 'Тайна суперсила на терена', 'Мечтан клуб'],
+  },
+  friends: {
+    emoji: '👥',
+    description: 'За приятелска група',
+    examples: ['Как се запознахме', 'Тайна суперсила', 'Най-смешен спомен'],
+  },
 }
 
 interface MessageRow {
