@@ -332,6 +332,21 @@ export async function approveMessage(
   return { error: null }
 }
 
+export async function bulkApproveMessages(
+  messageIds: string[],
+  classId: string
+): Promise<{ error: string | null }> {
+  const supabase = createServiceRoleClient()
+  const { error } = await supabase
+    .from('peer_messages')
+    .update({ status: 'approved' })
+    .in('id', messageIds)
+  if (error) return { error: 'Неуспешно одобряване. Опитайте отново.' }
+  revalidatePath(`/moderator/${classId}/messages`)
+  revalidatePath(`/moderator/${classId}`)
+  return { error: null }
+}
+
 export async function rejectMessage(
   messageId: string,
   classId: string

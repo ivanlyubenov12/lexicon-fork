@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import AnswerActions from './AnswerActions'
 import MessageActions from '../messages/MessageActions'
-import { bulkApproveAnswers } from '../actions'
+import { bulkApproveAnswers, bulkApproveMessages } from '../actions'
 
 export interface Answer {
   id: string
@@ -199,6 +199,9 @@ function AnswersSection({ answers, classId, filter }: { answers: Answer[]; class
 // ── Messages section ─────────────────────────────────────────────────────────
 
 function MessagesSection({ messages, classId, filter }: { messages: Message[]; classId: string; filter: FilterTab }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [isPending, startTransition] = useTransition()
+
   const filtered = messages.filter(m => {
     if (filter === 'all') return true
     if (filter === 'pending') return m.status === 'pending'
@@ -208,51 +211,112 @@ function MessagesSection({ messages, classId, filter }: { messages: Message[]; c
 
   if (filtered.length === 0) return null
 
+  const pendingIds = filtered.filter(m => m.status === 'pending').map(m => m.id)
+  const allPendingSelected = pendingIds.length > 0 && pendingIds.every(id => selected.has(id))
+
+  function toggleAll() {
+    if (allPendingSelected) {
+      setSelected(prev => { const next = new Set(prev); pendingIds.forEach(id => next.delete(id)); return next })
+    } else {
+      setSelected(prev => new Set([...prev, ...pendingIds]))
+    }
+  }
+
+  function toggle(id: string) {
+    setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
+  }
+
+  function handleBulkApprove() {
+    const ids = [...selected].filter(id => pendingIds.includes(id))
+    if (!ids.length) return
+    startTransition(async () => {
+      await bulkApproveMessages(ids, classId)
+      setSelected(new Set())
+    })
+  }
+
   function initials(first: string, last: string) {
     return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
   }
 
   return (
     <div>
-      <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-        <span className="material-symbols-outlined text-base">favorite</span>
-        Послания между деца
-        <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded-full">{filtered.length}</span>
-      </h2>
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <span className="material-symbols-outlined text-base">favorite</span>
+          Послания между деца
+          <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded-full">{filtered.length}</span>
+        </h2>
+        {pendingIds.length > 0 && (
+          <div className="flex items-center gap-2 ml-auto">
+            {selected.size > 0 && (
+              <button
+                onClick={handleBulkApprove}
+                disabled={isPending}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-sm">check</span>
+                Одобри избраните ({selected.size})
+              </button>
+            )}
+            <button
+              onClick={toggleAll}
+              className="text-xs font-semibold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 hover:border-indigo-600 px-3 py-1.5 rounded-lg transition-all"
+            >
+              {allPendingSelected ? 'Отмени избора' : `Избери всички чакащи (${pendingIds.length})`}
+            </button>
+          </div>
+        )}
+      </div>
       <div className="space-y-3">
-        {filtered.map(message => (
-          <div key={message.id} className="bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start gap-5">
-              <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold">
-                  {initials(message.author.first_name, message.author.last_name)}
+        {filtered.map(message => {
+          const isPending_ = message.status === 'pending'
+          const isSelected = selected.has(message.id)
+          return (
+            <div
+              key={message.id}
+              className={`bg-white border rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow ${isSelected ? 'border-indigo-300 ring-1 ring-indigo-200' : 'border-gray-100'}`}
+            >
+              <div className="flex items-start gap-5">
+                {isPending_ && (
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggle(message.id)}
+                    className="w-4 h-4 rounded accent-indigo-600 cursor-pointer flex-shrink-0 mt-1"
+                  />
+                )}
+                <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold">
+                    {initials(message.author.first_name, message.author.last_name)}
+                  </div>
+                  <span className="material-symbols-outlined text-gray-300 text-base">arrow_forward</span>
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
+                    {initials(message.recipient.first_name, message.recipient.last_name)}
+                  </div>
                 </div>
-                <span className="material-symbols-outlined text-gray-300 text-base">arrow_forward</span>
-                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
-                  {initials(message.recipient.first_name, message.recipient.last_name)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {message.author.first_name} {message.author.last_name}
+                    </span>
+                    <span className="text-xs text-gray-400">→</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {message.recipient.first_name} {message.recipient.last_name}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed italic" style={{ fontFamily: 'Noto Serif, serif' }}>
+                    „{message.content.length > 160 ? message.content.slice(0, 160) + '…' : message.content}"
+                  </p>
                 </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                  <span className="text-sm font-semibold text-gray-800">
-                    {message.author.first_name} {message.author.last_name}
-                  </span>
-                  <span className="text-xs text-gray-400">→</span>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {message.recipient.first_name} {message.recipient.last_name}
-                  </span>
+                <div className="flex flex-col items-end gap-3 flex-shrink-0 pt-0.5">
+                  <StatusBadge status={message.status} />
+                  <MessageActions message={message} classId={classId} />
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed italic" style={{ fontFamily: 'Noto Serif, serif' }}>
-                  „{message.content.length > 160 ? message.content.slice(0, 160) + '…' : message.content}"
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-3 flex-shrink-0 pt-0.5">
-                <StatusBadge status={message.status} />
-                <MessageActions message={message} classId={classId} />
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
