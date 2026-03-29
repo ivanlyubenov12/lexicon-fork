@@ -4,6 +4,8 @@ import { useState, useCallback, useTransition } from 'react'
 import Link from 'next/link'
 import { saveLayout } from './actions'
 import type { Block, BlockType, LayoutAssets } from '@/lib/templates/types'
+import type { LexiconData } from '@/app/lexicon/[classId]/LexiconBlocks'
+import LexiconBlocks from '@/app/lexicon/[classId]/LexiconBlocks'
 import LayoutCanvas from './LayoutCanvas'
 import AddBlockDrawer from './AddBlockDrawer'
 import BlockConfigDrawer from './BlockConfigDrawer'
@@ -24,9 +26,10 @@ interface Props {
   initialBlocks: Block[]
   templateId: string
   assets: LayoutAssets
+  lexiconData: LexiconData
 }
 
-export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets }: Props) {
+export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData }: Props) {
   const [blocks, setBlocks]           = useState<Block[]>(initialBlocks)
   // Map legacy 'classic' to 'primary' so the template picker highlights correctly
   const [activeTemplate, setActiveTemplate] = useState(
@@ -132,7 +135,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   }, [classId, blocks, activeTemplate])
 
   return (
-    <div className="min-h-screen bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
+    <div className="min-h-screen bg-[#faf9f8] flex flex-col" style={{ fontFamily: 'Manrope, sans-serif' }}>
 
       {/* ── Top bar ────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
@@ -140,16 +143,9 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Редактор</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Редактор на оформлението</p>
           <p className="font-bold text-gray-800 text-sm truncate">{className}</p>
         </div>
-        <Link
-          href={`/moderator/${classId}/preview`}
-          className="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 border border-gray-200 rounded-xl px-3 py-2 transition-colors"
-        >
-          <span className="material-symbols-outlined text-base">visibility</span>
-          Преглед
-        </Link>
         <button
           onClick={handleSave}
           disabled={isPending || saved}
@@ -168,57 +164,82 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
         <div className="mx-4 mt-3 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{saveError}</div>
       )}
 
-      {/* ── Template picker ─────────────────────────────────────────── */}
-      <div className="max-w-screen-sm mx-auto px-4 pt-6 pb-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Шаблон</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {TEMPLATE_UI.map(t => {
-            const isActive = activeTemplate === t.id
-            return (
-              <button
-                key={t.id}
-                onClick={() => handleTemplateClick(t.id)}
-                className={`relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl border-2 transition-all ${
-                  isActive ? `${t.border} ${t.color}` : 'border-gray-100 bg-white hover:border-gray-200'
-                }`}
-              >
-                {isActive && <span className="absolute top-1.5 right-1.5 material-symbols-outlined text-xs text-green-500">check_circle</span>}
-                <span className={`material-symbols-outlined text-xl ${isActive ? t.accent : 'text-gray-300'}`}>{t.icon}</span>
-                <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? t.accent : 'text-gray-400'}`}>{t.name}</span>
-                {t.subtitle && <span className={`text-[9px] text-center leading-tight ${isActive ? t.accent : 'text-gray-300'} opacity-80`}>{t.subtitle}</span>}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      {/* ── Split layout ─────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
 
-      {/* ── Visual canvas ───────────────────────────────────────────── */}
-      <main className="max-w-screen-sm mx-auto px-4 py-6 pb-32">
-        {blocks.length === 0 ? (
-          <div className="dashed-placeholder rounded-2xl p-16 flex flex-col items-center justify-center gap-4 text-center">
-            <span className="material-symbols-outlined text-5xl text-gray-200">view_quilt</span>
-            <p className="text-gray-400 text-sm">Изберете шаблон или добавете блокове</p>
+        {/* Left: block editor */}
+        <aside className="w-full lg:w-96 lg:flex-shrink-0 flex flex-col overflow-y-auto border-r border-gray-100 bg-[#faf9f8]">
+          {/* Template picker */}
+          <div className="px-4 pt-5 pb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Шаблон</p>
+            <div className="grid grid-cols-2 gap-2">
+              {TEMPLATE_UI.map(t => {
+                const isActive = activeTemplate === t.id
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => handleTemplateClick(t.id)}
+                    className={`relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl border-2 transition-all ${
+                      isActive ? `${t.border} ${t.color}` : 'border-gray-100 bg-white hover:border-gray-200'
+                    }`}
+                  >
+                    {isActive && <span className="absolute top-1.5 right-1.5 material-symbols-outlined text-xs text-green-500">check_circle</span>}
+                    <span className={`material-symbols-outlined text-xl ${isActive ? t.accent : 'text-gray-300'}`}>{t.icon}</span>
+                    <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? t.accent : 'text-gray-400'}`}>{t.name}</span>
+                    {t.subtitle && <span className={`text-[9px] text-center leading-tight ${isActive ? t.accent : 'text-gray-300'} opacity-80`}>{t.subtitle}</span>}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        ) : (
-          <LayoutCanvas
-            blocks={blocks}
-            assets={assets}
-            classId={classId}
-            activeId={activeBlockId}
-            onSelect={id => setActiveBlockId(prev => prev === id ? null : id)}
-            onAssign={assignBlock}
-          />
-        )}
-      </main>
 
-      {/* ── FAB: add block ──────────────────────────────────────────── */}
-      <div className="fixed bottom-8 right-5 z-30">
-        <button
-          onClick={() => setAddDrawerOpen(true)}
-          className="w-14 h-14 bg-[#3632b7] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-        >
-          <span className="material-symbols-outlined text-2xl">add</span>
-        </button>
+          <div className="border-t border-gray-100 mx-4" />
+
+          {/* Block list */}
+          <div className="px-4 py-4 flex-1">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Блокове</p>
+              <button
+                onClick={() => setAddDrawerOpen(true)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
+                Добави
+              </button>
+            </div>
+            {blocks.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-gray-200 p-10 flex flex-col items-center justify-center gap-3 text-center">
+                <span className="material-symbols-outlined text-4xl text-gray-200">view_quilt</span>
+                <p className="text-gray-400 text-sm">Изберете шаблон или добавете блокове</p>
+              </div>
+            ) : (
+              <LayoutCanvas
+                blocks={blocks}
+                assets={assets}
+                classId={classId}
+                activeId={activeBlockId}
+                onSelect={id => setActiveBlockId(prev => prev === id ? null : id)}
+                onAssign={assignBlock}
+              />
+            )}
+          </div>
+        </aside>
+
+        {/* Right: live preview */}
+        <div className="hidden lg:block flex-1 overflow-y-auto bg-gray-50">
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-5 py-2.5 flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm text-gray-400">visibility</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Живо превю</span>
+            {!saved && <span className="ml-auto text-xs text-amber-500 font-medium">Незапазени промени</span>}
+          </div>
+          <div className="max-w-3xl mx-auto py-6 px-4">
+            <LexiconBlocks
+              blocks={blocks}
+              data={lexiconData}
+              basePath={`/moderator/${classId}/preview`}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ── Block config drawer (slide from bottom) ─────────────────── */}

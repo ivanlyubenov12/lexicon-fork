@@ -30,7 +30,7 @@ interface Props {
 
 const NAV_ITEMS = [
   { key: 'dashboard', icon: 'dashboard',    label: 'Табло',    sub: '' },
-  { key: 'students',  icon: 'group',         label: 'Деца',     sub: '/students' },
+  { key: 'students',  icon: 'group',         label: 'Участници', sub: '/students' },
   { key: 'answers',   icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
   { key: 'lexicon',   icon: 'view_quilt',    label: 'Лексикон', sub: '/lexicon' },
   { key: 'events',    icon: 'photo_album',   label: 'Събития',  sub: '/events' },
