@@ -7,9 +7,7 @@ export async function updateTemplateDefault(
   preset: string,
   themeId: string,
   bgPattern: string,
-  memberLabel?: string,
-  groupLabel?: string,
-  memoriesLabel?: string,
+  _formData: FormData,
 ) {
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -20,9 +18,6 @@ export async function updateTemplateDefault(
     preset_id: preset,
     theme_id: themeId,
     bg_pattern: bgPattern,
-    ...(memberLabel !== undefined ? { member_label: memberLabel } : {}),
-    ...(groupLabel !== undefined ? { group_label: groupLabel } : {}),
-    ...(memoriesLabel !== undefined ? { memories_label: memoriesLabel } : {}),
   })
 
   redirect('/admin/templates')
