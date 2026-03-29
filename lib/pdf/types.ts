@@ -1,12 +1,19 @@
+export interface PDFAnswer {
+  question_text: string
+  text_content: string | null
+  media_url: string | null
+  media_type: string | null
+  // Resolved at data-fetch time for PDF rendering
+  video_thumbnail_url?: string | null
+  video_qr_png?: Buffer | null
+}
+
 export interface PDFStudent {
   id: string
   first_name: string
   last_name: string
   photo_url: string | null
-  answers: Array<{
-    question_text: string
-    text_content: string
-  }>
+  answers: PDFAnswer[]
   messages: Array<{
     content: string
     author_name: string

@@ -1,7 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { generatePDFBuffer } from '@/lib/pdf/LexiconPDF'
-import type { PDFData, PDFStudent, PDFPoll } from '@/lib/pdf/types'
+import type { PDFData, PDFStudent, PDFPoll, PDFAnswer } from '@/lib/pdf/types'
+import QRCode from 'qrcode'
+
+function cloudinaryVideoThumbnail(videoUrl: string): string {
+  // https://res.cloudinary.com/{cloud}/video/upload/v.../file.mp4
+  // → https://res.cloudinary.com/{cloud}/video/upload/w_400,h_300,c_fill,so_2/v.../file.jpg
+  return videoUrl
+    .replace('/video/upload/', '/video/upload/w_400,h_300,c_fill,so_2/')
+    .replace(/\.[^.]+$/, '.jpg')
+}
 
 export const config = {
   api: { responseLimit: false },
@@ -53,10 +62,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { data: answers } = studentIds.length > 0
     ? await admin
         .from('answers')
-        .select('student_id, question_id, text_content')
+        .select('student_id, question_id, text_content, media_url, media_type')
         .in('student_id', studentIds)
         .eq('status', 'approved')
-        .not('text_content', 'is', null)
+        .or('text_content.not.is.null,media_url.not.is.null')
     : { data: [] }
 
   const answersByStudent = new Map<string, any[]>()
@@ -87,17 +96,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     msgByStudent.set(m.recipient_student_id, list)
   }
 
+  // Pre-generate QR codes for video answers
+  const allVideoAnswers = (answers ?? []).filter((a: any) => a.media_type === 'video' && a.media_url)
+  const qrCache = new Map<string, Buffer>()
+  await Promise.all(allVideoAnswers.map(async (a: any) => {
+    if (!qrCache.has(a.media_url)) {
+      try {
+        const buf = await QRCode.toBuffer(a.media_url, { width: 120, margin: 1 })
+        qrCache.set(a.media_url, buf)
+      } catch { /* skip on error */ }
+    }
+  }))
+
   const pdfStudents: PDFStudent[] = (students ?? []).map((s: any) => ({
     id: s.id,
     first_name: s.first_name,
     last_name: s.last_name,
     photo_url: s.photo_url ?? null,
-    answers: (answersByStudent.get(s.id) ?? [])
-      .filter((a: any) => a.text_content)
-      .map((a: any) => ({
-        question_text: qMap.get(a.question_id) ?? '',
-        text_content: a.text_content,
-      })),
+    answers: (answersByStudent.get(s.id) ?? []).map((a: any): PDFAnswer => ({
+      question_text: qMap.get(a.question_id) ?? '',
+      text_content: a.text_content ?? null,
+      media_url: a.media_url ?? null,
+      media_type: a.media_type ?? null,
+      video_thumbnail_url: a.media_type === 'video' && a.media_url
+        ? cloudinaryVideoThumbnail(a.media_url)
+        : null,
+      video_qr_png: a.media_type === 'video' && a.media_url
+        ? (qrCache.get(a.media_url) ?? null)
+        : null,
+    })),
     messages: msgByStudent.get(s.id) ?? [],
   }))
 

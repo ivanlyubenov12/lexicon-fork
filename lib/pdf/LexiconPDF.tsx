@@ -3,7 +3,7 @@ import {
   Document, Page, View, Text, Image,
   StyleSheet, Font, renderToBuffer,
 } from '@react-pdf/renderer'
-import type { PDFData, PDFStudent, PDFPoll, PDFEvent } from './types'
+import type { PDFData, PDFStudent, PDFPoll, PDFEvent, PDFAnswer } from './types'
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 
@@ -450,7 +450,7 @@ function StudentPage({ student, classInfo, pageNum }: {
   pageNum: number
 }) {
   const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
-  const qas = student.answers.slice(0, 5)
+  const qas: PDFAnswer[] = student.answers.slice(0, 5)
 
   return (
     <Page size="A4" style={s.page}>
@@ -489,7 +489,29 @@ function StudentPage({ student, classInfo, pageNum }: {
             qas.map((qa, i) => (
               <View key={i} style={s.qaBlock}>
                 <Text style={s.qLabel}>{qa.question_text}</Text>
-                <Text style={s.aText}>{truncate(qa.text_content, 280)}</Text>
+                {qa.media_type === 'video' ? (
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+                    {/* Thumbnail */}
+                    {qa.video_thumbnail_url && (
+                      <Image
+                        src={qa.video_thumbnail_url}
+                        style={{ width: 90, height: 68, borderRadius: 4, objectFit: 'cover' }}
+                      />
+                    )}
+                    {/* QR code + label */}
+                    <View style={{ justifyContent: 'center', gap: 4 }}>
+                      {qa.video_qr_png && (
+                        <Image
+                          src={`data:image/png;base64,${qa.video_qr_png.toString('base64')}`}
+                          style={{ width: 60, height: 60 }}
+                        />
+                      )}
+                      <Text style={{ fontSize: 6, color: C.muted }}>Скенирай за видео</Text>
+                    </View>
+                  </View>
+                ) : qa.text_content ? (
+                  <Text style={s.aText}>{truncate(qa.text_content, 280)}</Text>
+                ) : null}
               </View>
             ))
           ) : (
