@@ -71,7 +71,7 @@ export default async function AdminModeratorsPage() {
       <div className="mb-10">
         <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Администрация</p>
         <h1 className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-          Модератори
+          Потребители
         </h1>
         <p className="text-sm text-gray-500 mt-2">{allUsers.length} регистрирани потребители</p>
       </div>

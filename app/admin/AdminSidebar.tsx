@@ -7,7 +7,7 @@ import AdminLogoutButton from './AdminLogoutButton'
 
 const NAV_ITEMS = [
   { key: 'dashboard',  icon: 'dashboard',      label: 'Табло',       href: '/admin' },
-  { key: 'moderators', icon: 'manage_accounts', label: 'Модератори',  href: '/admin/moderators' },
+  { key: 'moderators', icon: 'manage_accounts', label: 'Потребители',  href: '/admin/moderators' },
   { key: 'classes',    icon: 'school',          label: 'Класове',     href: '/admin/classes' },
   { key: 'questions',  icon: 'quiz',            label: 'Въпроси',     href: '/admin/questions' },
   { key: 'payments',   icon: 'payments',        label: 'Плащания',    href: '/admin/payments' },

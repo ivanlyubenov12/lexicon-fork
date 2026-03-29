@@ -41,13 +41,13 @@ const FILTER_TABS: { key: FilterRole; label: string; icon: string }[] = [
   { key: 'all',       label: 'Всички',    icon: 'group' },
   { key: 'admin',     label: 'Админи',    icon: 'shield_person' },
   { key: 'moderator', label: 'Модератори', icon: 'school' },
-  { key: 'student',   label: 'Родители',  icon: 'family_restroom' },
+  { key: 'student',   label: 'Участници',  icon: 'family_restroom' },
 ]
 
 const ROLE_BADGE: Record<string, { label: string; color: string }> = {
   admin:     { label: 'Админ',     color: 'bg-purple-100 text-purple-700' },
   moderator: { label: 'Модератор', color: 'bg-indigo-100 text-indigo-700' },
-  student:   { label: 'Родител',   color: 'bg-teal-100 text-teal-700' },
+  student:   { label: 'Участник',   color: 'bg-teal-100 text-teal-700' },
 }
 
 function NameEditor({ userId, initialName }: { userId: string; initialName: string | null }) {
@@ -280,7 +280,7 @@ export default function ModeratorsBulkList({ moderators }: { moderators: Moderat
             className="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors"
           >
             <span className="material-symbols-outlined text-base">delete</span>
-            Изтрий {selected.size === 1 ? 'модератора' : `${selected.size} модератора`}
+            Изтрий {selected.size === 1 ? 'потребителя' : `${selected.size} потребители`}
           </button>
         </div>
       )}
@@ -295,7 +295,7 @@ export default function ModeratorsBulkList({ moderators }: { moderators: Moderat
               <span className="material-symbols-outlined text-red-500 text-xl">delete_forever</span>
             </div>
             <h3 className="font-bold text-gray-900 text-center mb-1">
-              {confirm.length === 1 ? 'Изтрий модератора?' : `Изтрий ${confirm.length} модератора?`}
+              {confirm.length === 1 ? 'Изтрий потребителя?' : `Изтрий ${confirm.length} потребители?`}
             </h3>
             <p className="text-sm text-gray-500 text-center mb-6">
               Всички класове, деца и отговори ще бъдат изтрити. Действието не може да се отмени.
