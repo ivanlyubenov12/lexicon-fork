@@ -97,15 +97,33 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   const studentList = studentsRes.data ?? []
   const studentMap = new Map(studentList.map(s => [s.id, s]))
 
-  // Question answers (all approved for this class)
-  const questionIds = (questionsRes.data ?? []).map(q => q.id)
+  // Collect all question/voice/poll IDs referenced in blocks (covers both system + custom questions)
+  const linkedQuestionIds = new Set<string>()
+  const linkedVoiceIds    = new Set<string>()
+  const linkedPollIds     = new Set<string>()
+  for (const b of initialBlocks) {
+    const cfg = b.config as Record<string, unknown>
+    if ((b.type === 'question' || b.type === 'photo_gallery') && cfg.questionId)
+      linkedQuestionIds.add(cfg.questionId as string)
+    if ((b.type === 'class_voice' || b.type === 'subjects_bar') && cfg.questionId)
+      linkedVoiceIds.add(cfg.questionId as string)
+    if (b.type === 'poll' && cfg.pollId) linkedPollIds.add(cfg.pollId as string)
+    if (b.type === 'polls_grid' && Array.isArray(cfg.pollIds))
+      for (const id of cfg.pollIds as string[]) linkedPollIds.add(id)
+  }
+  // Also include ALL class voice and poll IDs so they're available when blocks are reconfigured
+  for (const q of voiceQsRaw) linkedVoiceIds.add(q.id)
+  for (const p of pollsRes.data ?? []) linkedPollIds.add(p.id)
+
+  // Question answers — fetched by block-referenced IDs (works for system + custom questions)
   const questionData: LexiconData['questionData'] = {}
-  if (questionIds.length > 0) {
+  const allQuestionIds = [...linkedQuestionIds]
+  if (allQuestionIds.length > 0) {
     const [qTextsRes, answersRes] = await Promise.all([
-      admin.from('questions').select('id, text').in('id', questionIds),
+      admin.from('questions').select('id, text').in('id', allQuestionIds),
       admin.from('answers')
         .select('id, question_id, student_id, text_content, media_url, media_type')
-        .in('question_id', questionIds)
+        .in('question_id', allQuestionIds)
         .eq('status', 'approved'),
     ])
     for (const q of qTextsRes.data ?? []) {
@@ -126,17 +144,17 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     }
   }
 
-  // Voice answers (all for this class)
-  const voiceIds = voiceQsRaw.map(q => q.id)
+  // Voice answers — fetch question metadata by ID to cover system questions too
   const voiceData: LexiconData['voiceData'] = {}
-  if (voiceIds.length > 0) {
-    const voiceAnswersRes = await admin
-      .from('class_voice_answers')
-      .select('question_id, content')
-      .eq('class_id', classId)
-      .in('question_id', voiceIds)
-    for (const q of voiceQsRaw) {
-      const display = (q.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud'
+  const allVoiceIds = [...linkedVoiceIds]
+  if (allVoiceIds.length > 0) {
+    const [voiceQsAllRes, voiceAnswersRes] = await Promise.all([
+      admin.from('questions').select('id, text, voice_display, order_index').in('id', allVoiceIds),
+      admin.from('class_voice_answers').select('question_id, content').eq('class_id', classId).in('question_id', allVoiceIds),
+    ])
+    for (const q of voiceQsAllRes.data ?? []) {
+      const display = (q.voice_display as 'wordcloud' | 'barchart' | null)
+        ?? ((q.order_index ?? 99) <= 1 ? 'barchart' : 'wordcloud')
       const raw = (voiceAnswersRes.data ?? []).filter(a => a.question_id === q.id).map(a => a.content)
       const total = raw.length
       const freq: Record<string, number> = {}
@@ -155,15 +173,15 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   }
 
   // Poll data
-  const pollIds = (pollsRes.data ?? []).map(p => p.id)
   const pollData: LexiconData['pollData'] = {}
-  if (pollIds.length > 0) {
-    const votesRes = await admin
-      .from('class_poll_votes')
-      .select('poll_id, nominee_student_id')
-      .in('poll_id', pollIds)
-    for (const p of pollsRes.data ?? []) {
-      const pvotes = (votesRes.data ?? []).filter(v => v.poll_id === p.id)
+  const allPollIds = [...linkedPollIds]
+  if (allPollIds.length > 0) {
+    const [pollRowsRes, votesRes] = await Promise.all([
+      admin.from('class_polls').select('id, question').in('id', allPollIds),
+      admin.from('class_poll_votes').select('poll_id, nominee_student_id').in('poll_id', allPollIds),
+    ])
+    for (const p of pollRowsRes.data ?? []) {
+      const pvotes = (votesRes.data ?? []).filter((v: { poll_id: string; nominee_student_id: string }) => v.poll_id === p.id)
       const countMap: Record<string, number> = {}
       for (const v of pvotes) countMap[v.nominee_student_id] = (countMap[v.nominee_student_id] ?? 0) + 1
       const total = pvotes.length
@@ -180,11 +198,11 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     }
   }
 
-  // Teaser map (first question answers)
+  // Teaser map (first linked question answers)
   const teaserMap: Record<string, string> = {}
-  const firstQ = questionsRes.data?.[0]
-  if (firstQ && questionData[firstQ.id]) {
-    for (const a of questionData[firstQ.id].answers) {
+  const firstLinkedQId = allQuestionIds[0]
+  if (firstLinkedQId && questionData[firstLinkedQId]) {
+    for (const a of questionData[firstLinkedQId].answers) {
       if (a.text_content) teaserMap[a.student_id] = a.text_content
     }
   }
