@@ -161,7 +161,7 @@ export default function Dashboard({
         <div className="px-2 py-4">
           <Link href="/moderator" className="block group">
             <h1 className="text-indigo-900 text-xl font-bold tracking-tight group-hover:text-indigo-600 transition-colors" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Един неразделен клас
+              Малки спомени
             </h1>
           </Link>
           <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>

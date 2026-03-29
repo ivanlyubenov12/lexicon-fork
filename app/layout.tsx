@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Един неразделен клас',
+  title: 'Малки спомени',
   description: 'Дигитален спомен след края на учебната година',
 }
 

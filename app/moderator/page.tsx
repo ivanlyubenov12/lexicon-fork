@@ -48,7 +48,7 @@ export default async function ModeratorIndexPage() {
         <aside className="w-64 h-screen bg-[#f4f3f2] flex flex-col p-4 overflow-y-auto border-r border-black/5" style={{ fontFamily: 'Manrope, sans-serif' }}>
           <div className="px-2 py-4">
             <h1 className="text-indigo-900 text-xl font-bold tracking-tight" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Един неразделен клас
+              Малки спомени
             </h1>
             <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>
           </div>

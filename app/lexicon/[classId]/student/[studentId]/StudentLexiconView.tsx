@@ -256,7 +256,7 @@ export default function StudentLexiconView({
               href={resolvedBackHref}
               className="font-headline text-xl italic text-on-surface"
             >
-              {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Един неразделен клас'}
+              {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Малки спомени'}
             </Link>
             <div className="flex items-center gap-4">{prevNextNav}</div>
           </div>

@@ -3,7 +3,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = 'Един неразделен клас <noreply@resend.dev>'
+const FROM = 'Малки спомени <noreply@resend.dev>'
 const BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
@@ -17,7 +17,7 @@ export async function sendParentInviteEmail(to: string, studentName: string, inv
     subject: `Поканени сте да попълните профила на ${studentName}`,
     html: `
       <p>Здравейте,</p>
-      <p>Поканени сте да попълните профила на <strong>${studentName}</strong> в <em>Един неразделен клас</em>.</p>
+      <p>Поканени сте да попълните профила на <strong>${studentName}</strong> в <em>Малки спомени</em>.</p>
       <p><a href="${inviteUrl}" style="background:#4f46e5;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;">Влез и започни</a></p>
       <p style="color:#9ca3af;font-size:12px;">Линкът работи завинаги — можете да се върнете по всяко време.</p>
     `,
@@ -62,7 +62,7 @@ export async function sendReminderEmail(
       : `Напомняне: ${daysLeft} дни до края — профилът на ${studentName}`,
     html: `
       <p>Здравейте,</p>
-      <p>${urgency ? '<strong>Бързайте!</strong> О' : 'О'}стават само <strong>${daysLeft} ${daysLeft === 1 ? 'ден' : 'дни'}</strong> до крайния срок за попълване на <em>Един неразделен клас</em>.</p>
+      <p>${urgency ? '<strong>Бързайте!</strong> О' : 'О'}стават само <strong>${daysLeft} ${daysLeft === 1 ? 'ден' : 'дни'}</strong> до крайния срок за попълване на <em>Малки спомени</em>.</p>
       <p>Профилът на <strong>${studentName}</strong> все още не е напълно попълнен.</p>
       <p>
         <a href="${wizardUrl}" style="background:${urgency ? '#dc2626' : '#4f46e5'};color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:bold;">
@@ -86,7 +86,7 @@ export async function sendLexiconPublishedEmail(
       await resend.emails.send({
         from: FROM,
         to: [r.email],
-        subject: `„Един неразделен клас" на ${className} е готов!`,
+        subject: `„Малки спомени" на ${className} е готов!`,
         html: `
           <p>Здравейте,</p>
           <p>Дигиталният спомен на <strong>${className}</strong> е публикуван!</p>

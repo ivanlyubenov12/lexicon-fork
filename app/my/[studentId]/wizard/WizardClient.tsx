@@ -447,7 +447,7 @@ export default function WizardClient({
       {/* Top row: Brand + Exit button */}
       <div className="w-full max-w-md flex items-center justify-between mb-8">
         <p className="text-xs font-bold uppercase tracking-widest text-indigo-300">
-          Един неразделен клас
+          Малки спомени
         </p>
         {step.kind !== 'intro' && step.kind !== 'done' && (
           <button

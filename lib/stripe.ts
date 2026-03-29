@@ -54,7 +54,7 @@ export async function createCheckoutSession(
           unit_amount: cents,
           product_data: {
             name: label,
-            description: 'Един неразделен клас — дигитален спомен на класа',
+            description: 'Малки спомени — дигитален спомен на класа',
           },
         },
       },

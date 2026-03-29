@@ -55,7 +55,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, basePath, chil
               className="text-base md:text-2xl italic"
               style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}
             >
-              {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Един неразделен клас'}
+              {themeId === 'kindergarten' ? 'Нашата страхотна група' : 'Малки спомени'}
             </h1>
           </div>
         </div>

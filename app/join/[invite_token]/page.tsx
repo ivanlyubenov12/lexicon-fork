@@ -91,7 +91,7 @@ function JoinShell({
 
   return (
     <div className="min-h-screen bg-[#faf9f8] flex flex-col items-center justify-center px-6 py-16" style={{ fontFamily: 'Manrope, sans-serif' }}>
-      <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-8">Един неразделен клас</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-8">Малки спомени</p>
 
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-4">

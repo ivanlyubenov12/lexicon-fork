@@ -29,12 +29,20 @@
       "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app -path */auth/callback* -o -path */auth/*)",
       "Bash(curl -s -X POST \"https://jaekhawburxlnhpkqjoy.supabase.co/rest/v1/rpc/exec_sql\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZWtoYXdidXJ4bG5ocGtxam95Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDIxOTY2MiwiZXhwIjoyMDg5Nzk1NjYyfQ.ZMspKR3jlOC3u1WRDicLK5WSIfFhOB1e0ghsxMZIGBY\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphZWtoYXdidXJ4bG5ocGtxam95Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDIxOTY2MiwiZXhwIjoyMDg5Nzk1NjYyfQ.ZMspKR3jlOC3u1WRDicLK5WSIfFhOB1e0ghsxMZIGBY\" -H \"Content-Type: application/json\" -d '{\"\"query\"\": \"\"ALTER TABLE students ADD COLUMN IF NOT EXISTS questionnaire_submitted boolean NOT NULL DEFAULT false;\"\"}')",
       "Read(//Users/andreylyubenov/.config/supabase/**)",
-      "Bash(grep -n \"Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId]/question/[questionId]/AnswerForm.tsx)"
+      "Bash(grep -n \"Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId]/question/[questionId]/AnswerForm.tsx)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/students/)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/students/[studentId]/)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/student/)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/student/[studentId]/)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/student/[studentId]/)",
+      "Bash(grep -rn \"ЕДИН НЕРАЗДЕЛЕН КЛАС\\\\|един неразделен клас\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon --include=*.tsx --include=*.ts ! -path */node_modules/*)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/student/[studentId]",
-      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]"
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]",
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/students"
     ]
   }
 }

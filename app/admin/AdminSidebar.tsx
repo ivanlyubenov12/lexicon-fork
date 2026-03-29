@@ -30,7 +30,7 @@ export default function AdminSidebar() {
           className="text-indigo-900 text-xl font-bold tracking-tight"
           style={{ fontFamily: 'Noto Serif, serif' }}
         >
-          Един неразделен клас
+          Малки спомени
         </h1>
         <span className="inline-block mt-1 text-xs font-bold uppercase tracking-widest text-white bg-indigo-500 px-2 py-0.5 rounded">
           Admin

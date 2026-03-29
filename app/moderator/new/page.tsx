@@ -29,7 +29,7 @@ export default async function NewClassPage() {
         <Link href="/moderator" className="flex items-center gap-2">
           <span className="material-symbols-outlined text-indigo-600 text-xl">arrow_back</span>
           <span className="text-sm font-bold text-indigo-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-            Един неразделен клас
+            Малки спомени
           </span>
         </Link>
         <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full">
@@ -48,7 +48,7 @@ export default async function NewClassPage() {
                 className="text-indigo-900 text-xl font-bold tracking-tight group-hover:text-indigo-600 transition-colors"
                 style={{ fontFamily: 'Noto Serif, serif' }}
               >
-                Един неразделен клас
+                Малки спомени
               </h1>
             </Link>
             <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>

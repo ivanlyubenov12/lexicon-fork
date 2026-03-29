@@ -19,7 +19,7 @@ function Nav() {
           className="text-xl font-bold text-[#3632b7]"
           style={{ fontFamily: 'Noto Serif, serif' }}
         >
-          Един неразделен клас
+          Малки спомени
         </Link>
 
         <div className="hidden md:flex items-center space-x-10">
@@ -68,10 +68,10 @@ function Footer() {
             className="italic text-lg text-[#3632b7] font-bold"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
-            Един неразделен клас.
+            Малки спомени.
           </div>
           <p className="text-xs uppercase tracking-widest text-[#464555]/50 text-center md:text-left">
-            © {new Date().getFullYear()} Един неразделен клас. The Living Archive.
+            © {new Date().getFullYear()} Малки спомени. The Living Archive.
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">

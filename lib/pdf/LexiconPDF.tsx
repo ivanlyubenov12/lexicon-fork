@@ -411,7 +411,7 @@ function CoverPage({ data }: { data: PDFData }) {
       )}
 
       <View style={s.coverContent}>
-        <Text style={s.coverTagline}>Един неразделен клас</Text>
+        <Text style={s.coverTagline}>Малки спомени</Text>
 
         <Text style={s.coverTitle}>{classInfo.namePart}</Text>
 
@@ -456,7 +456,7 @@ function StudentPage({ student, classInfo, pageNum }: {
     <Page size="A4" style={s.page}>
       {/* Header */}
       <View style={s.studentHeader}>
-        <Text style={s.studentHeaderTitle}>Един неразделен клас · {classInfo.namePart}</Text>
+        <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
         <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
       </View>
 
@@ -615,7 +615,7 @@ export function LexiconPDF({ data }: { data: PDFData }) {
   return (
     <Document
       title={`${data.classInfo.namePart} — Лексикон`}
-      author="Един неразделен клас"
+      author="Малки спомени"
       subject={data.classInfo.school_year}
     >
       <CoverPage data={data} />

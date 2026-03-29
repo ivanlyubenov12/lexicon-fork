@@ -44,7 +44,7 @@ export default function AboutPage() {
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
             Защо направихме<br />
-            <em className="not-italic text-amber-500">Един неразделен клас</em>
+            <em className="not-italic text-amber-500">Малки спомени</em>
           </h1>
           <p className="text-[#464555]/80 text-lg leading-relaxed max-w-xl mx-auto">
             Идеята се роди от едно просто наблюдение: краят на 4. клас е моментът,
