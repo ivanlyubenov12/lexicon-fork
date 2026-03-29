@@ -69,60 +69,53 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
             <p className="text-stone-400 font-medium">Все още няма споделени събития.</p>
           </div>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {eventList.map((event, i) => {
               const rotation = ['rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'][i % 4]
               const hasPhoto = event.photos && event.photos.length > 0
               const eventComments = commentsByEvent[event.id] ?? []
 
               if (hasPhoto) {
+                const photoUrl = event.photos[0]
                 return (
-                  <React.Fragment key={event.id}>
-                    {event.photos.map((photoUrl: string, pi: number) => {
-                      const photoRotation = ['rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'][(i + pi) % 4]
-                      const isLast = pi === event.photos.length - 1
-                      return (
-                        <div key={`${event.id}-${pi}`} className="break-inside-avoid mb-6">
-                          <div className={`bg-white p-4 shadow-lg ${photoRotation} transition-transform hover:rotate-0`}>
-                            <img src={photoUrl} alt={event.title} className="w-full h-auto mb-4 object-cover" />
-                            <p className="italic text-[#1a1c1c]/80 text-sm" style={{ fontFamily: 'Noto Serif, serif' }}>
-                              „{event.title}"
-                            </p>
-                            {event.event_date && (
-                              <p className="text-xs text-stone-400 mt-1">
-                                {new Date(event.event_date).toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                              </p>
-                            )}
-                            {isLast && eventComments.length > 0 && (
-                              <div className="mt-4 pt-3 border-t border-gray-100 space-y-3">
-                                {eventComments.map(c => (
-                                  <div key={c.id} className="flex items-start gap-2.5">
-                                    {c.students?.photo_url ? (
-                                      <img src={c.students.photo_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 border border-gray-100" />
-                                    ) : (
-                                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-indigo-600">
-                                        {c.students?.first_name?.[0] ?? '?'}
-                                      </div>
-                                    )}
-                                    <div>
-                                      <p className="text-xs font-semibold text-gray-600">{c.students?.first_name} {c.students?.last_name}</p>
-                                      <p className="text-xs text-gray-500 leading-snug mt-0.5" style={{ fontFamily: 'Noto Serif, serif' }}>{c.comment_text}</p>
-                                    </div>
-                                  </div>
-                                ))}
+                  <div key={event.id}>
+                    <div className={`bg-white p-4 shadow-lg ${rotation} transition-transform hover:rotate-0`}>
+                      <img src={photoUrl} alt={event.title} className="w-full h-auto mb-4 object-cover" />
+                      <p className="italic text-[#1a1c1c]/80 text-sm" style={{ fontFamily: 'Noto Serif, serif' }}>
+                        „{event.title}"
+                      </p>
+                      {event.event_date && (
+                        <p className="text-xs text-stone-400 mt-1">
+                          {new Date(event.event_date).toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      )}
+                      {eventComments.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-gray-100 space-y-3">
+                          {eventComments.map(c => (
+                            <div key={c.id} className="flex items-start gap-2.5">
+                              {c.students?.photo_url ? (
+                                <img src={c.students.photo_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 border border-gray-100" />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-indigo-600">
+                                  {c.students?.first_name?.[0] ?? '?'}
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600">{c.students?.first_name} {c.students?.last_name}</p>
+                                <p className="text-xs text-gray-500 leading-snug mt-0.5" style={{ fontFamily: 'Noto Serif, serif' }}>{c.comment_text}</p>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ))}
                         </div>
-                      )
-                    })}
-                  </React.Fragment>
+                      )}
+                    </div>
+                  </div>
                 )
               }
 
               if (event.note) {
                 return (
-                  <div key={event.id} className="break-inside-avoid mb-6">
+                  <div key={event.id}>
                     <div className="bg-[#e2dfff] p-8 rounded-[2rem] text-[#3632b7]">
                       <span className="material-symbols-outlined text-4xl mb-4 block">format_quote</span>
                       <blockquote className="text-xl leading-relaxed mb-4" style={{ fontFamily: 'Noto Serif, serif' }}>„{event.note}"</blockquote>
@@ -138,7 +131,7 @@ export default async function PreviewMemoriesPage({ params }: { params: Promise<
               }
 
               return (
-                <div key={event.id} className="break-inside-avoid mb-6">
+                <div key={event.id}>
                   <div className="bg-[#ffddb8] p-6 rounded-[2rem]">
                     <span className="material-symbols-outlined text-[#855300] text-2xl mb-3 block">event</span>
                     <p className="font-bold text-[#2a1700] text-lg" style={{ fontFamily: 'Noto Serif, serif' }}>{event.title}</p>

@@ -478,7 +478,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
           <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
           <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {photoItems.map(event => (
             <div key={event.id} className="relative aspect-square overflow-hidden group" style={{ borderRadius: 'var(--lex-radius)' }}>
               <img
@@ -503,13 +503,13 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
         <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
         <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
       </div>
-      <div className={style === 'timeline' ? 'space-y-4' : 'columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6'}>
+      <div className={style === 'timeline' ? 'space-y-4' : 'grid grid-cols-3 gap-6'}>
         {items.map((event, i) => {
           const photo = event.photos?.[0]
           const rotation = ['rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'][i % 4]
           if (photo && style !== 'timeline') {
             return (
-              <div key={event.id} className="break-inside-avoid">
+              <div key={event.id}>
                 <div className={`p-4 shadow-lg ${rotation} transition-transform hover:rotate-0`} style={{ backgroundColor: 'var(--lex-surface)' }}>
                   <img src={photo} alt={event.title} className="w-full h-auto mb-4 object-cover" />
                   <p className="italic text-sm" style={{ fontFamily: 'Noto Serif, serif', color: 'color-mix(in srgb, var(--lex-text) 80%, transparent)' }}>„{event.title}"</p>
@@ -519,7 +519,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
           }
           if (event.note) {
             return (
-              <div key={event.id} className={style !== 'timeline' ? 'break-inside-avoid' : ''}>
+              <div key={event.id} className="">
                 <div className="p-8" style={{ backgroundColor: 'var(--lex-primary-light)', borderRadius: 'var(--lex-radius)', color: 'var(--lex-primary)' }}>
                   <span className="material-symbols-outlined text-4xl mb-4 block">format_quote</span>
                   <blockquote className="text-xl leading-relaxed mb-4" style={{ fontFamily: 'Noto Serif, serif' }}>
@@ -531,7 +531,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
             )
           }
           return (
-            <div key={event.id} className={style !== 'timeline' ? 'break-inside-avoid' : ''}>
+            <div key={event.id} className="">
               <div className="p-6" style={{ backgroundColor: 'var(--lex-secondary-light)', borderRadius: 'var(--lex-radius)' }}>
                 <span className="material-symbols-outlined text-2xl mb-3 block" style={{ color: 'var(--lex-secondary)' }}>event</span>
                 <p className="font-bold text-lg" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-text)' }}>{event.title}</p>

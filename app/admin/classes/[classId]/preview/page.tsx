@@ -20,7 +20,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
   const admin = createServiceRoleClient()
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id')
+    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id, theme_id, bg_pattern')
     .eq('id', classId)
     .single()
 
@@ -142,7 +142,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
         </span>
       </div>
       <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={basePath}>
+        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
           <LexiconBlocks blocks={blocks} data={lexiconData} basePath={basePath} />
         </LexiconShell>
       </div>

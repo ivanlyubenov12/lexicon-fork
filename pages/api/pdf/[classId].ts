@@ -1,8 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { generatePDFBuffer } from '@/lib/pdf/LexiconPDF'
-import type { PDFData, PDFStudent, PDFPoll, PDFAnswer } from '@/lib/pdf/types'
+import type { PDFData, PDFStudent, PDFPoll, PDFAnswer, PDFVoiceQuestion, PDFVoiceItem, PDFEventComment, PDFStudentEvent } from '@/lib/pdf/types'
 import QRCode from 'qrcode'
+import sharp from 'sharp'
+import { getBgPatternSvg } from '@/lib/pdf/bgPatternSvg'
 
 function cloudinaryVideoThumbnail(videoUrl: string): string {
   // https://res.cloudinary.com/{cloud}/video/upload/v.../file.mp4
@@ -23,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, superhero_image_url, superhero_prompt, plan')
+    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern')
     .eq('id', classId)
     .single()
 
@@ -52,20 +54,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: questions } = await admin
     .from('questions')
-    .select('id, text')
+    .select('id, text, type, voice_display, order_index')
     .eq('class_id', classId)
-    .in('type', ['personal', 'better_together', 'superhero'])
     .order('order_index')
 
-  const qMap = new Map((questions ?? []).map((q: any) => [q.id, q.text]))
+  const personalQuestions = (questions ?? []).filter((q: any) =>
+    ['personal', 'better_together', 'superhero'].includes(q.type)
+  )
+  const voiceQuestions = (questions ?? []).filter((q: any) =>
+    q.type === 'class_voice'
+  )
+  const qMap = new Map(personalQuestions.map((q: any) => [q.id, q.text]))
 
+  // ── Voice questions data ──────────────────────────────────────────────────
+  const voiceIds = voiceQuestions.map((q: any) => q.id)
+  const { data: voiceAnswers } = voiceIds.length > 0
+    ? await admin
+        .from('class_voice_answers')
+        .select('question_id, content')
+        .eq('class_id', classId)
+        .in('question_id', voiceIds)
+    : { data: [] }
+
+  const pdfVoiceQuestions: PDFVoiceQuestion[] = voiceQuestions.map((q: any) => {
+    const raw = (voiceAnswers ?? [])
+      .filter((a: any) => a.question_id === q.id)
+      .map((a: any) => a.content as string)
+    const total = raw.length
+    const freq: Record<string, number> = {}
+    for (const w of raw) {
+      const k = w.trim().toLowerCase()
+      freq[k] = (freq[k] ?? 0) + 1
+    }
+    const maxF = Math.max(...Object.values(freq), 1)
+    const items: PDFVoiceItem[] = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([k, n]) => ({
+        text: raw.find((w: string) => w.trim().toLowerCase() === k) ?? k,
+        size: (n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm') as 'lg' | 'md' | 'sm',
+        pct: total > 0 ? Math.round((n / total) * 100) : 0,
+      }))
+    const voiceDisplay = (q.voice_display as 'wordcloud' | 'barchart' | null)
+      ?? ((q.order_index ?? 99) <= 1 ? 'barchart' : 'wordcloud')
+    return { text: q.text, items, display: voiceDisplay }
+  }).filter((vq: PDFVoiceQuestion) => vq.items.length > 0)
+
+  // ── Personal answers ──────────────────────────────────────────────────────
   const { data: answers } = studentIds.length > 0
     ? await admin
         .from('answers')
         .select('student_id, question_id, text_content, media_url, media_type')
         .in('student_id', studentIds)
         .eq('status', 'approved')
-        .or('text_content.not.is.null,media_url.not.is.null')
     : { data: [] }
 
   const answersByStudent = new Map<string, any[]>()
@@ -96,37 +137,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     msgByStudent.set(m.recipient_student_id, list)
   }
 
+  // Fetch ALL video answers (any status) for QR generation — videos are fetched regardless
+  // of approval so the QR always appears under the student photo
+  const { data: allVideoAnswersRaw } = studentIds.length > 0
+    ? await admin
+        .from('answers')
+        .select('student_id, question_id, media_url')
+        .in('student_id', studentIds)
+        .eq('media_type', 'video')
+        .not('media_url', 'is', null)
+    : { data: [] }
+
   // Pre-generate QR codes for video answers
-  const allVideoAnswers = (answers ?? []).filter((a: any) => a.media_type === 'video' && a.media_url)
   const qrCache = new Map<string, Buffer>()
-  await Promise.all(allVideoAnswers.map(async (a: any) => {
+  await Promise.all((allVideoAnswersRaw ?? []).map(async (a: any) => {
     if (!qrCache.has(a.media_url)) {
       try {
-        const buf = await QRCode.toBuffer(a.media_url, { width: 120, margin: 1 })
+        const buf = await QRCode.toBuffer(a.media_url, { width: 150, margin: 1 })
         qrCache.set(a.media_url, buf)
       } catch { /* skip on error */ }
     }
   }))
 
-  const pdfStudents: PDFStudent[] = (students ?? []).map((s: any) => ({
-    id: s.id,
-    first_name: s.first_name,
-    last_name: s.last_name,
-    photo_url: s.photo_url ?? null,
-    answers: (answersByStudent.get(s.id) ?? []).map((a: any): PDFAnswer => ({
+  // Map student → list of {question_text, qr_png} for all their videos
+  const videoQrsByStudent = new Map<string, Array<{ question_text: string; qr_png: Buffer | null }>>()
+  for (const a of (allVideoAnswersRaw ?? []) as any[]) {
+    const list = videoQrsByStudent.get(a.student_id) ?? []
+    list.push({
       question_text: qMap.get(a.question_id) ?? '',
-      text_content: a.text_content ?? null,
-      media_url: a.media_url ?? null,
-      media_type: a.media_type ?? null,
-      video_thumbnail_url: a.media_type === 'video' && a.media_url
-        ? cloudinaryVideoThumbnail(a.media_url)
-        : null,
-      video_qr_png: a.media_type === 'video' && a.media_url
-        ? (qrCache.get(a.media_url) ?? null)
-        : null,
-    })),
-    messages: msgByStudent.get(s.id) ?? [],
-  }))
+      qr_png: qrCache.get(a.media_url) ?? null,
+    })
+    videoQrsByStudent.set(a.student_id, list)
+  }
+
+  // pdfStudents built after events/event_comments are fetched below
 
   const { data: polls } = await admin
     .from('class_polls')
@@ -145,6 +189,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const studentNameMap = new Map(
     (students ?? []).map((s: any) => [s.id, `${s.first_name} ${s.last_name}`]),
   )
+  const studentPhotoMap = new Map(
+    (students ?? []).map((s: any) => [s.id, s.photo_url ?? null])
+  )
 
   const pdfPolls: PDFPoll[] = (polls ?? []).map((poll: any) => {
     const pollVotes = (votes ?? []).filter((v: any) => v.poll_id === poll.id)
@@ -157,18 +204,93 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([id, n]) => ({
+        id,
         name: studentNameMap.get(id) ?? 'Непознат',
         votes: n,
         pct: total > 0 ? Math.round((n / total) * 100) : 0,
+        photo_url: studentPhotoMap.get(id) ?? null,
       }))
     return { question: poll.question, nominees, totalVotes: total }
   })
 
   const { data: events } = await admin
     .from('events')
-    .select('title, event_date, note')
+    .select('id, title, event_date, note, photos')
     .eq('class_id', classId)
     .order('order_index')
+
+  const eventIds = (events ?? []).map((e: any) => e.id)
+  const { data: eventComments } = eventIds.length > 0
+    ? await admin
+        .from('event_comments')
+        .select('event_id, comment_text, student_id, students(first_name, last_name, photo_url)')
+        .in('event_id', eventIds)
+    : { data: [] }
+
+  const eventsById = new Map((events ?? []).map((e: any) => [e.id, e]))
+
+  const commentsByEvent = new Map<string, PDFEventComment[]>()
+  const eventCommentsByStudent = new Map<string, PDFStudentEvent[]>()
+  for (const c of (eventComments ?? []) as any[]) {
+    // Group by event (for MemoriesPage)
+    const list = commentsByEvent.get(c.event_id) ?? []
+    list.push({
+      student_name: c.students
+        ? `${c.students.first_name} ${c.students.last_name}`
+        : 'Ученик',
+      student_photo_url: c.students?.photo_url ?? null,
+      text: c.comment_text,
+    })
+    commentsByEvent.set(c.event_id, list)
+
+    // Group by student (for StudentPage)
+    const ev = eventsById.get(c.event_id)
+    if (ev && c.student_id) {
+      const slist = eventCommentsByStudent.get(c.student_id) ?? []
+      slist.push({
+        event_title: ev.title,
+        event_date: ev.event_date ?? null,
+        event_photo_url: Array.isArray(ev.photos) && ev.photos.length > 0 ? ev.photos[0] : null,
+        comment_text: c.comment_text,
+      })
+      eventCommentsByStudent.set(c.student_id, slist)
+    }
+  }
+
+  const pdfStudents: PDFStudent[] = (students ?? []).map((s: any) => ({
+    id: s.id,
+    first_name: s.first_name,
+    last_name: s.last_name,
+    photo_url: s.photo_url ?? null,
+    answers: (answersByStudent.get(s.id) ?? [])
+      .filter((a: any) => (a.text_content || a.media_url) && qMap.has(a.question_id))
+      .map((a: any): PDFAnswer => ({
+        question_text: qMap.get(a.question_id) ?? '',
+        text_content: a.text_content ?? null,
+        media_url: a.media_url ?? null,
+        media_type: a.media_type ?? null,
+        video_thumbnail_url: a.media_type === 'video' && a.media_url
+          ? cloudinaryVideoThumbnail(a.media_url)
+          : null,
+        video_qr_png: a.media_type === 'video' && a.media_url
+          ? (qrCache.get(a.media_url) ?? null)
+          : null,
+      })),
+    video_qrs: videoQrsByStudent.get(s.id) ?? [],
+    messages: msgByStudent.get(s.id) ?? [],
+    event_comments: eventCommentsByStudent.get(s.id) ?? [],
+  }))
+
+  // Generate background pattern PNG for PDF
+  let bgPatternPng: Buffer | null = null
+  const bgSvg = getBgPatternSvg((cls as any).bg_pattern)
+  if (bgSvg) {
+    try {
+      bgPatternPng = await sharp(Buffer.from(bgSvg)).png().toBuffer()
+    } catch {
+      // Non-fatal — PDF renders without background
+    }
+  }
 
   const pdfData: PDFData = {
     classInfo: {
@@ -177,15 +299,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       schoolPart: schoolPart ?? null,
       school_year: cls.school_year,
       school_logo_url: cls.school_logo_url ?? null,
+      cover_image_url: (cls as any).cover_image_url ?? null,
       superhero_image_url: cls.superhero_image_url ?? null,
       superhero_prompt: cls.superhero_prompt ?? null,
     },
+    bg_pattern_png: bgPatternPng,
     students: pdfStudents,
     polls: pdfPolls,
+    voice_questions: pdfVoiceQuestions,
     events: (events ?? []).map((e: any) => ({
+      id: e.id,
       title: e.title,
       event_date: e.event_date ?? null,
       note: e.note ?? null,
+      photos: Array.isArray(e.photos) ? e.photos : [],
+      comments: commentsByEvent.get(e.id) ?? [],
     })),
   }
 

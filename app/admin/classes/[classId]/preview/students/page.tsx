@@ -14,7 +14,7 @@ export default async function AdminPreviewStudentsPage({ params }: { params: Pro
   if (!user || user.email !== process.env.ADMIN_EMAIL) redirect('/login')
 
   const admin = createServiceRoleClient()
-  const { data: classData } = await admin.from('classes').select('id, name, school_logo_url, template_id').eq('id', classId).single()
+  const { data: classData } = await admin.from('classes').select('id, name, school_logo_url, template_id, theme_id, bg_pattern').eq('id', classId).single()
   if (!classData) redirect('/admin/classes')
 
   const { data: students } = await admin.from('students').select('id, first_name, last_name, photo_url').eq('class_id', classId).order('last_name')
@@ -22,7 +22,7 @@ export default async function AdminPreviewStudentsPage({ params }: { params: Pro
   const basePath = `/admin/classes/${classId}/preview`
 
   return (
-    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.template_id} basePath={basePath}>
+    <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
       <section className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-2xl text-[#3632b7]" style={{ fontFamily: 'Noto Serif, serif' }}>Всички ученици</h3>

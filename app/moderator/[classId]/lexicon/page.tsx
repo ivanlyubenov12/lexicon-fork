@@ -9,7 +9,9 @@ import PollsEditor from '../polls/PollsEditor'
 import MessagesTable from '../messages/MessagesTable'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 import { applyTemplate } from '../template/actions'
+import { updateBgPattern } from './bgActions'
 import type { QuestionPreset } from '@/lib/templates/defaultSeed'
+import { BG_PATTERN_OPTIONS } from '@/lib/lexicon/bgPatterns'
 
 const TABS = [
   { key: 'template',   label: 'Шаблон',     icon: 'style' },
@@ -64,7 +66,7 @@ export default async function LexiconPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, template_id, layout')
+    .select('id, name, school_year, school_logo_url, template_id, bg_pattern, layout')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -269,6 +271,44 @@ export default async function LexiconPage({
                 </div>
               )
             })}
+            {/* ── Background pattern picker ─────────────────────────── */}
+            <div className="pt-6 border-t border-gray-100 mt-2">
+              <h2 className="text-base font-bold text-gray-900 mb-1">Фон на лексикона</h2>
+              <p className="text-sm text-gray-500 mb-4">Изборът важи както за уеб прегледа, така и за PDF-а.</p>
+              <div className="grid grid-cols-2 gap-3">
+                {BG_PATTERN_OPTIONS.map(opt => {
+                  const isActive = (classData.bg_pattern ?? 'school') === opt.id
+                  return (
+                    <form key={opt.id} action={updateBgPattern.bind(null, classId, opt.id)}>
+                      <button
+                        type="submit"
+                        className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${
+                          isActive ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
+                        }`}
+                      >
+                        {/* Preview swatch */}
+                        <div className={`h-16 w-full ${opt.previewClass} flex items-center justify-center`}>
+                          {opt.id === 'school' && <span className="text-2xl opacity-60">✏️📐📏</span>}
+                          {opt.id === 'kindergarten' && <span className="text-2xl opacity-60">🧸🌈🌻</span>}
+                          {opt.id === 'teens' && <span className="text-2xl opacity-60">🎓💻📐</span>}
+                          {opt.id === 'none' && <span className="text-lg opacity-30 font-medium text-gray-400">Аа</span>}
+                        </div>
+                        <div className="px-3 py-2.5">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="font-semibold text-sm text-gray-900">{opt.name}</span>
+                            {isActive && (
+                              <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Текущ</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 leading-snug">{opt.description}</p>
+                        </div>
+                      </button>
+                    </form>
+                  )
+                })}
+              </div>
+            </div>
+
             <div className="pt-2">
               <Link
                 href={`/moderator/${classId}/layout`}

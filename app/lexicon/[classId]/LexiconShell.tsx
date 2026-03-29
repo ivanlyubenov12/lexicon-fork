@@ -9,16 +9,24 @@ interface Props {
   classId: string
   logoUrl?: string | null
   themeId?: string | null
+  bgPattern?: string | null
   basePath?: string
   children: React.ReactNode
 }
 
-export default function LexiconShell({ classId, logoUrl, themeId, basePath, children }: Props) {
+export default function LexiconShell({ classId, logoUrl, themeId, bgPattern, basePath, children }: Props) {
   const theme = (themeId && themes[themeId]) ? themes[themeId] : defaultTheme
 
-  const showSchoolPattern = !themeId || themeId === 'primary' || themeId === 'classic'
-  const showKinderPattern = themeId === 'kindergarten'
-  const showTeensPattern  = themeId === 'teens'
+  // bgPattern overrides the auto-derived pattern from themeId
+  const effectivePattern = bgPattern !== undefined ? bgPattern : (
+    !themeId || themeId === 'primary' || themeId === 'classic' ? 'school' :
+    themeId === 'kindergarten' ? 'kindergarten' :
+    themeId === 'teens' ? 'teens' : 'none'
+  )
+
+  const showSchoolPattern = effectivePattern === 'school'
+  const showKinderPattern = effectivePattern === 'kindergarten'
+  const showTeensPattern  = effectivePattern === 'teens'
 
   return (
     <div

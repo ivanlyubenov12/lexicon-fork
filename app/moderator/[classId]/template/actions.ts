@@ -26,13 +26,27 @@ export async function applyTemplate(classId: string, preset: QuestionPreset) {
     admin.from('class_polls').delete().eq('class_id', classId),
   ])
 
+  // Read default theme + bg_pattern for this preset
+  const { data: templateDefault } = await admin
+    .from('template_defaults')
+    .select('theme_id, bg_pattern')
+    .eq('preset_id', preset)
+    .single()
+
   // Seed questions, polls and wired layout for chosen preset
   const { blocks } = await seedDefaultClass(classId, admin, preset)
 
   if (blocks.length > 0) {
     await admin
       .from('classes')
-      .update({ layout: blocks, template_id: preset })
+      .update({
+        layout: blocks,
+        template_id: preset,
+        ...(templateDefault ? {
+          theme_id: templateDefault.theme_id,
+          bg_pattern: templateDefault.bg_pattern,
+        } : {}),
+      })
       .eq('id', classId)
   }
 

@@ -14,7 +14,7 @@ export default async function LexiconLayout({
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, status, school_logo_url, template_id')
+    .select('id, status, school_logo_url, template_id, theme_id, bg_pattern')
     .eq('id', classId)
     .single()
 
@@ -24,7 +24,8 @@ export default async function LexiconLayout({
     <LexiconShell
       classId={classId}
       logoUrl={cls.school_logo_url}
-      themeId={cls.template_id}
+      themeId={cls.theme_id ?? cls.template_id}
+      bgPattern={cls.bg_pattern}
     >
       {children}
     </LexiconShell>
