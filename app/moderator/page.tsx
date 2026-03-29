@@ -143,7 +143,7 @@ export default async function ModeratorIndexPage() {
                   <div className="flex items-center justify-between pt-2 border-t border-gray-50">
                     <div className="flex items-center gap-1.5 text-sm text-slate-400">
                       <span className="material-symbols-outlined text-base">group</span>
-                      {count} {count === 1 ? 'ученик' : 'ученика'}
+                      {count} {count === 1 ? 'ученик' : 'ученици'}
                     </div>
                     <div className="flex items-center gap-1 text-xs font-semibold text-slate-400">
                       <span>{cls.school_year}</span>

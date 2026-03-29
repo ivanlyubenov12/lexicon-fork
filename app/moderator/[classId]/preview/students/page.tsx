@@ -38,7 +38,7 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
             Всички ученици
           </h3>
           <span className="text-[#855300] font-semibold text-sm tracking-widest uppercase">
-            {studentList.length} ученика
+            {studentList.length} ученици
           </span>
         </div>
         {studentList.length === 0 ? (
