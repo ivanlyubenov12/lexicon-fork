@@ -241,6 +241,13 @@ export default function Dashboard({
             <Icon name="picture_as_pdf" className="text-xl" />
             Изтегли PDF
           </a>
+          <Link
+            href="/moderator/profile"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+          >
+            <Icon name="manage_accounts" className="text-xl" />
+            Профил и плащания
+          </Link>
           <LogoutButton />
           <Link
             href={base}

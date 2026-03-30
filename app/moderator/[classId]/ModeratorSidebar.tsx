@@ -125,6 +125,15 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
           <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
           Изтегли PDF
         </a>
+        <Link
+          href="/moderator/profile"
+          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
+            active === null && false ? '' : 'text-slate-400 hover:bg-white/50'
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">manage_accounts</span>
+          Профил и плащания
+        </Link>
         <LogoutButton />
         <a
           href="mailto:support@lexicon.bg"
