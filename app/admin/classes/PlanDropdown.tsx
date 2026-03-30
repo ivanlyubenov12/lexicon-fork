@@ -12,7 +12,7 @@ export default function PlanDropdown({ classId, plan }: { classId: string; plan:
 
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as Plan
-    startTransition(() => updateClassPlan(classId, next))
+    startTransition(async () => { await updateClassPlan(classId, next) })
   }
 
   const meta = PLANS[current]
