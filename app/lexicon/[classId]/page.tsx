@@ -47,9 +47,20 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
     if (b.type === 'poll' && cfg.pollId) {
       linkedPollIds.add(cfg.pollId as string)
     }
-    if (b.type === 'polls_grid' && Array.isArray(cfg.pollIds)) {
-      for (const id of cfg.pollIds as string[]) linkedPollIds.add(id)
+    if (b.type === 'polls_grid') {
+      if (Array.isArray(cfg.pollIds) && cfg.pollIds.length > 0)
+        for (const id of cfg.pollIds as string[]) linkedPollIds.add(id)
+      else
+        linkedPollIds.add('__all__')
     }
+  }
+
+  // If any polls_grid block has no specific IDs, fetch all class polls
+  if (linkedPollIds.has('__all__')) {
+    linkedPollIds.delete('__all__')
+    const { data: allClassPolls } = await admin
+      .from('class_polls').select('id').eq('class_id', classId)
+    for (const p of allClassPolls ?? []) linkedPollIds.add(p.id)
   }
 
   // ── Students ───────────────────────────────────────────────────────────
