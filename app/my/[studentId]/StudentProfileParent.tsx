@@ -449,7 +449,7 @@ export default function StudentProfileParent({
             id="personal"
             icon="person"
             title="Лични въпроси"
-            description={`Въпроси за ${student.first_name} — разкажете за неговите/нейните интереси, мечти и любими моменти. Отговорите ще бъдат на личната страница в лексикона.`}
+            description="Отговорете на личните въпроси, за да оформите личната си страница"
             status={questionsSectionStatus(personalQuestions)}
             statusLabel={questionsSectionLabel(personalQuestions)}
             open={openSection === 'personal'}
