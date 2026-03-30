@@ -37,7 +37,7 @@ export default function JoinRegisterForm({ studentId, studentName, parentEmail, 
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-600 text-center">
-        Здравейте! Поканени сте да попълните профила на{' '}
+        Здравейте! Поканени сте да попълните въпросника на{' '}
         <span className="font-semibold text-gray-800">{studentName}</span>.
         Създайте профил с парола — ще можете да влизате по всяко време.
       </p>

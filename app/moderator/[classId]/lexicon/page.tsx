@@ -8,8 +8,7 @@ import QuestionsEditor from '../questions/QuestionsEditor'
 import PollsEditor from '../polls/PollsEditor'
 import MessagesTable from '../messages/MessagesTable'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
-import { applyTemplate } from '../template/actions'
-import TemplateApplyButton from './TemplateApplyButton'
+import TemplateAccordion from './TemplateAccordion'
 import { updateBgPattern } from './bgActions'
 import { updateTheme } from './themeActions'
 import type { QuestionPreset } from '@/lib/templates/defaultSeed'
@@ -249,56 +248,18 @@ export default async function LexiconPage({
             <p className="text-sm text-gray-500 mb-6">
               Шаблонът определя въпросника. Избраният шаблон може да се донастрои с цветова палитра и фон.
             </p>
-            {QUESTION_PRESETS.map(preset => {
-              const meta = PRESET_META[preset.id]
-              // A preset is "active" only when it matches AND hasn't been customised
-              const isActive = classData.template_id === preset.id && !(classData as any).is_customized
-              return (
-                <div key={preset.id} className={`bg-white border-2 rounded-2xl overflow-hidden transition-all ${
-                  isActive ? 'border-indigo-500 shadow-md' : 'border-gray-200'
-                }`}>
-                  {/* ── Template header ── */}
-                  <TemplateApplyButton
-                    action={applyTemplate.bind(null, classId, preset.id as QuestionPreset)}
-                    isActive={isActive}
-                    isCustomized={!!(classData as any).is_customized}
-                  >
-                    <span className="text-4xl leading-none mt-0.5">{meta.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-gray-900 text-base">{preset.label}</span>
-                        {isActive && (
-                          <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Текущ</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500 mb-3">{meta.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {meta.examples.map(ex => (
-                          <span key={ex} className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">{ex}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </TemplateApplyButton>
-
-                  {/* ── Footer ── */}
-                  <div className={`px-4 sm:px-6 py-3 flex items-center justify-between gap-2 ${
-                    isActive ? 'border-t border-indigo-100' : 'border-t border-gray-100'
-                  }`}>
-                    <span className="text-xs text-gray-400">
-                      {isActive ? 'Приложен към твоя лексикон' : 'Щракни върху картата, за да приложиш'}
-                    </span>
-                    <Link
-                      href={`/moderator/${classId}/preview`}
-                      target="_blank"
-                      className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-sm">visibility</span>
-                      Прегледай лексикона
-                    </Link>
-                  </div>
-                </div>
-              )
-            })}
+            <TemplateAccordion
+              classId={classId}
+              presets={QUESTION_PRESETS.map(p => ({
+                id: p.id,
+                label: p.label,
+                emoji: PRESET_META[p.id]?.emoji ?? '',
+                description: PRESET_META[p.id]?.description ?? '',
+                examples: PRESET_META[p.id]?.examples ?? [],
+              }))}
+              activePresetId={classData.template_id ?? null}
+              isCustomized={!!(classData as any).is_customized}
+            />
 
             {/* ── По поръчка — active when is_customized ── */}
             {(() => {
