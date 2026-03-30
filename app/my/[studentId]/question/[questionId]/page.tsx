@@ -80,6 +80,8 @@ export default async function AnswerQuestionPage({ params }: Props) {
       prevQuestionId={prevQuestionId}
       nextQuestionId={questions[currentIndex + 1]?.id ?? null}
       nextUnansweredId={nextUnansweredId}
+      questionNumber={currentIndex + 1}
+      totalQuestions={questions.length}
     />
   )
 }

@@ -26,6 +26,8 @@ interface Props {
   prevQuestionId: string | null
   nextQuestionId: string | null
   nextUnansweredId: string | null
+  questionNumber: number
+  totalQuestions: number
 }
 
 export default function AnswerForm({
@@ -35,6 +37,8 @@ export default function AnswerForm({
   prevQuestionId,
   nextQuestionId,
   nextUnansweredId,
+  questionNumber,
+  totalQuestions,
 }: Props) {
   const router = useRouter()
   const isVideo = question.type === 'video'
@@ -181,7 +185,7 @@ export default function AnswerForm({
               ) : (
                 <>
                   <span className="material-symbols-outlined text-xs">article</span>
-                  Въпрос {question.order_index}
+                  Въпрос {questionNumber} / {totalQuestions}
                 </>
               )}
             </span>
