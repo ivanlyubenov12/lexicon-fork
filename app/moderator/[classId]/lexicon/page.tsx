@@ -103,7 +103,7 @@ export default async function LexiconPage({
         .is('class_id', null).eq('is_system', true).eq('preset', preset).order('order_index'),
       admin.from('questions')
         .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured, poll_options, is_anonymous')
-        .eq('class_id', classId).eq('is_system', false).order('order_index'),
+        .eq('class_id', classId).order('order_index'),
     ])
     const normalise = (rows: any[] | null) => (rows ?? []).map(q => ({
       ...q,

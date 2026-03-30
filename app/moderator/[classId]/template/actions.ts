@@ -22,7 +22,7 @@ export async function applyTemplate(classId: string, preset: QuestionPreset) {
 
   // Clear existing questions and polls (safe — no student answers yet at this wizard step)
   await Promise.all([
-    admin.from('questions').delete().eq('class_id', classId).eq('is_system', false),
+    admin.from('questions').delete().eq('class_id', classId),
     admin.from('class_polls').delete().eq('class_id', classId),
   ])
 

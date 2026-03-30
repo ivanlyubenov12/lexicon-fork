@@ -12,7 +12,6 @@ export async function reseedDefaultQuestions(classId: string, preset = 'primary'
     .from('questions')
     .select('id', { count: 'exact', head: true })
     .eq('class_id', classId)
-    .eq('is_system', false)
 
   if (count && count > 0) return { error: null } // already seeded
 
