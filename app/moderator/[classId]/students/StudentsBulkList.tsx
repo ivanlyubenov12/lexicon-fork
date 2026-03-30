@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import StudentActions from './StudentActions'
 import { deleteStudents } from './actions'
+import { addStudentsBulk } from '../actions'
 
 export interface StudentRowData {
   id: string
@@ -30,11 +31,17 @@ export default function StudentsBulkList({
   students: StudentRowData[]
 }) {
   const router = useRouter()
+  type AddRow = { first_name: string; last_name: string; parent_email: string }
+  const emptyRow = (): AddRow => ({ first_name: '', last_name: '', parent_email: '' })
+  const initRows = () => Array.from({ length: Math.max(1, students.length) }, emptyRow)
+
   const [selected, setSelected]       = useState<Set<string>>(new Set())
   const [expanded, setExpanded]       = useState<Set<string>>(new Set())
   const [confirm, setConfirm]         = useState<string[] | null>(null)
   const [isPending, startTransition]  = useTransition()
   const [error, setError]             = useState<string | null>(null)
+  const [addRows, setAddRows]         = useState<AddRow[]>(initRows)
+  const [addError, setAddError]       = useState<string | null>(null)
 
   const allSelected = students.length > 0 && selected.size === students.length
 
@@ -77,6 +84,22 @@ export default function StudentsBulkList({
     a.download = 'деца-без-имейл.csv'
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  function updateAddRow(i: number, field: keyof AddRow, value: string) {
+    setAddRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
+  }
+
+  function handleAddSubmit() {
+    const valid = addRows.filter(r => r.first_name.trim())
+    if (valid.length === 0) return
+    setAddError(null)
+    startTransition(async () => {
+      const result = await addStudentsBulk(classId, addRows)
+      if (result.error) { setAddError(result.error); return }
+      setAddRows(initRows())
+      router.refresh()
+    })
   }
 
   function confirmDelete() {
@@ -271,6 +294,51 @@ export default function StudentsBulkList({
         })}
       </div>
 
+      {/* ── Add participants section ───────────────────────────────────── */}
+      <div className="mt-6 bg-white border border-dashed border-indigo-200 rounded-2xl p-5">
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4">Нови участници</p>
+        <div className="space-y-2">
+          {/* Header labels */}
+          <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 px-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Име <span className="text-red-400">*</span></span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Фамилия</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Имейл на родителя</span>
+          </div>
+          {addRows.map((row, i) => (
+            <div key={i} className="grid grid-cols-[1fr_1fr_1fr] gap-2">
+              <input
+                value={row.first_name}
+                onChange={e => updateAddRow(i, 'first_name', e.target.value)}
+                placeholder="Иван"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <input
+                value={row.last_name}
+                onChange={e => updateAddRow(i, 'last_name', e.target.value)}
+                placeholder="Петров"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <input
+                value={row.parent_email}
+                onChange={e => updateAddRow(i, 'parent_email', e.target.value)}
+                placeholder="roditel@example.com"
+                type="email"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+          ))}
+        </div>
+        {addError && <p className="text-xs text-red-500 mt-2">{addError}</p>}
+        <button
+          onClick={handleAddSubmit}
+          disabled={isPending || !addRows.some(r => r.first_name.trim())}
+          className="mt-4 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">person_add</span>
+          {isPending ? 'Запазване...' : 'Добави участник'}
+        </button>
+      </div>
+
       {/* ── Floating bulk action bar ───────────────────────────────────── */}
       {selected.size > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl">
@@ -287,7 +355,7 @@ export default function StudentsBulkList({
             className="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-1.5 rounded-xl transition-colors"
           >
             <span className="material-symbols-outlined text-base">delete</span>
-            Изтрий {selected.size === 1 ? 'детето' : `${selected.size} деца`}
+            Изтрий {selected.size === 1 ? 'участника' : `${selected.size} участника`}
           </button>
         </div>
       )}
@@ -302,7 +370,7 @@ export default function StudentsBulkList({
               <span className="material-symbols-outlined text-red-500 text-xl">delete_forever</span>
             </div>
             <h3 className="font-bold text-gray-900 text-center mb-1">
-              {confirm.length === 1 ? 'Изтрий детето?' : `Изтрий ${confirm.length} деца?`}
+              {confirm.length === 1 ? 'Изтрий участника?' : `Изтрий ${confirm.length} участника?`}
             </h3>
             <p className="text-sm text-gray-500 text-center mb-6">
               Всички отговори, послания и гласове ще бъдат изтрити. Действието не може да се отмени.

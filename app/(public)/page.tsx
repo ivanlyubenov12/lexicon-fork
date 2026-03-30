@@ -223,7 +223,7 @@ export default function HomePage() {
                   Модераторски панел с пълен достъп — от въпросите и анкетите до финалния лексикон. Одобряване на всяко съдържание преди публикуване.
                 </p>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 p-4 rounded-xl shrink-0">
+              <div className="flex items-center gap-2 bg-white/10 p-4 rounded-xl shrink-0 w-fit">
                 <span
                   className="material-symbols-outlined text-green-300"
                   style={{ fontVariationSettings: "'FILL' 1" }}

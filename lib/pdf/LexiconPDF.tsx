@@ -874,7 +874,7 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
               const winner = poll.nominees[0]
               const initials = winner.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
               return (
-                <Link key={i} src={`#s-${winner.id}`} style={{ textDecoration: 'none' }}>
+                <Link key={i} src={`#s-${winner.id}`} style={{ textDecoration: 'none', width: 80 }}>
                   <View style={s.pollWinnerCard}>
                     <View style={s.pollWinnerAvatar}>
                       {winner.photo_url ? (

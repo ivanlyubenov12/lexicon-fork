@@ -241,22 +241,24 @@ function PresetRow({
 
   if (editing) {
     return (
-      <div className="px-4 py-3">
-        {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
-        <QuestionEditForm
-          initial={{
-            text: question.text,
-            description: question.description ?? '',
-            type: question.type,
-            voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
-            is_featured: question.is_featured,
-            poll_options: question.poll_options ?? [],
-          }}
-          onSave={handleSave}
-          onCancel={() => setEditing(false)}
-          isPending={isPending}
-        />
-      </div>
+      <tr>
+        <td colSpan={5} className="px-4 py-3">
+          {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
+          <QuestionEditForm
+            initial={{
+              text: question.text,
+              description: question.description ?? '',
+              type: question.type,
+              voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
+              is_featured: question.is_featured,
+              poll_options: question.poll_options ?? [],
+            }}
+            onSave={handleSave}
+            onCancel={() => setEditing(false)}
+            isPending={isPending}
+          />
+        </td>
+      </tr>
     )
   }
 
@@ -383,6 +385,19 @@ export default function PresetQuestionsTab({
 
   return (
     <div>
+      {/* Toolbar */}
+      {!adding && (
+        <div className="flex justify-end px-4 py-3 border-b border-gray-50">
+          <button
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 text-xs text-white bg-indigo-600 hover:bg-indigo-700 font-semibold px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Добави въпрос
+          </button>
+        </div>
+      )}
+
       {TYPE_ORDER.map(type => {
         const group = questions.map((q, i) => ({ q, i })).filter(({ q }) => q.type === type)
         if (group.length === 0) return null
@@ -422,16 +437,6 @@ export default function PresetQuestionsTab({
             onCancel={() => { setAdding(false); setAddError(null) }}
             isPending={isPending}
           />
-        </div>
-      ) : (
-        <div className="px-4 py-3 border-t border-gray-50">
-          <button
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-indigo-600 font-semibold transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            Добави въпрос
-          </button>
         </div>
       )}
     </div>

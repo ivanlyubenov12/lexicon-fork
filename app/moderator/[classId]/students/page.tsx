@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import { unstable_noStore as noStore } from 'next/cache'
-import Link from 'next/link'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { sendAllInvites } from '../actions'
 import ModeratorSidebar from '../ModeratorSidebar'
@@ -112,27 +111,18 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
-            Покани и деца
+            Покани и участници
           </p>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <h1
-                className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
-                style={{ fontFamily: 'Noto Serif, serif' }}
-              >
-                Деца в класа
-              </h1>
-              <p className="text-sm text-gray-500 mt-2">
-                Управлявайте списъка с деца и изпращайте покани на родителите.
-              </p>
-            </div>
-            <Link
-              href={`/moderator/${classId}/students/new`}
-              className="self-start flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow transition-colors"
+          <div>
+            <h1
+              className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
+              style={{ fontFamily: 'Noto Serif, serif' }}
             >
-              <span className="material-symbols-outlined text-base">person_add</span>
-              Добави дете
-            </Link>
+              Участници
+            </h1>
+            <p className="text-sm text-gray-500 mt-2">
+              Управлявайте списъка с участници и изпращайте покани на родителите.
+            </p>
           </div>
 
           {/* Stats row */}
@@ -177,7 +167,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
               {missingCount !== null && missingCount > 0 && (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                   <span className="material-symbols-outlined text-base">person_add</span>
-                  Липсват още {missingCount} {missingCount === 1 ? 'дете' : 'деца'} за добавяне
+                  Липсват още {missingCount} {missingCount === 1 ? 'участник' : 'участника'} за добавяне
                 </div>
               )}
               {deadlineDays !== null && (
@@ -224,16 +214,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
         </div>
 
         {/* Student list */}
-        {studentList.length === 0 ? (
-          <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-gray-200 block mb-3">group</span>
-            <p className="text-gray-500 text-sm font-medium">Няма добавени деца</p>
-            <p className="text-gray-400 text-xs mt-1">
-              {expectedCount ? `Очаквани ${expectedCount} деца. ` : ''}Натиснете „Добави дете", за да започнете.
-            </p>
-          </div>
-        ) : (
-          <StudentsBulkList
+        <StudentsBulkList
             classId={classId}
             students={studentList.map((student): StudentRowData => {
               const approved = approvedCountsMap[student.id] ?? 0
@@ -259,7 +240,6 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
               }
             })}
           />
-        )}
       </main>
     </div>
   )

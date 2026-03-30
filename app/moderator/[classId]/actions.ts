@@ -207,6 +207,28 @@ export async function publishClass(classId: string): Promise<{ error: string | n
   return { error: null }
 }
 
+export async function addStudentsBulk(
+  classId: string,
+  students: { first_name: string; last_name: string; parent_email: string }[],
+): Promise<{ error: string | null; added: number }> {
+  const valid = students.filter(s => s.first_name.trim())
+  if (valid.length === 0) return { error: null, added: 0 }
+
+  const supabase = createServiceRoleClient()
+  const { error } = await supabase.from('students').insert(
+    valid.map(s => ({
+      class_id: classId,
+      first_name: s.first_name.trim(),
+      last_name: s.last_name.trim() || null,
+      parent_email: s.parent_email.trim() || null,
+    }))
+  )
+
+  if (error) return { error: 'Неуспешно добавяне. Опитайте отново.', added: 0 }
+  revalidatePath(`/moderator/${classId}/students`)
+  return { error: null, added: valid.length }
+}
+
 export async function addSingleStudent(
   classId: string,
   data: { first_name: string; last_name: string; parent_email: string }
