@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { key: 'payments',   icon: 'payments',        label: 'Плащания',    href: '/admin/payments' },
 ] as const
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ commit, builtAt }: { commit?: string; builtAt?: string }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
@@ -60,6 +60,14 @@ export default function AdminSidebar() {
           )
         })}
       </nav>
+
+      {/* Build info */}
+      {(commit || builtAt) && (
+        <div className="px-3 py-2 text-[10px] text-slate-400 leading-relaxed">
+          {commit && <div className="font-mono">{commit}</div>}
+          {builtAt && <div>{builtAt}</div>}
+        </div>
+      )}
 
       {/* Bottom */}
       <div className="pt-4 space-y-1">
