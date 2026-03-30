@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { updatePresetQuestion, addPresetQuestion, deletePresetQuestion, reorderPresetQuestions } from '../actions'
+import CollapsibleGroup from './CollapsibleGroup'
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
 
 interface PresetQuestion {
   id: string
@@ -23,6 +24,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   better_together: 'По-добри заедно',
   superhero: 'Супергерой',
   video: 'Видео въпрос',
+  photo: 'Снимка',
   survey: 'Анкета с отговори',
 }
 const TYPE_COLOR: Record<QuestionType, string> = {
@@ -31,8 +33,19 @@ const TYPE_COLOR: Record<QuestionType, string> = {
   better_together: 'bg-green-50 text-green-600',
   superhero: 'bg-purple-50 text-purple-600',
   video: 'bg-rose-50 text-rose-600',
+  photo: 'bg-teal-50 text-teal-600',
   survey: 'bg-indigo-50 text-indigo-600',
 }
+const TYPE_META: Record<QuestionType, { icon: string; color: string }> = {
+  personal:        { icon: 'person',              color: 'text-blue-500' },
+  video:           { icon: 'videocam',             color: 'text-rose-500' },
+  photo:           { icon: 'add_photo_alternate',  color: 'text-teal-500' },
+  class_voice:     { icon: 'record_voice_over',    color: 'text-amber-500' },
+  survey:          { icon: 'poll',                 color: 'text-indigo-500' },
+  better_together: { icon: 'diversity_3',          color: 'text-green-500' },
+  superhero:       { icon: 'auto_awesome',         color: 'text-purple-500' },
+}
+const TYPE_ORDER: QuestionType[] = ['personal', 'video', 'class_voice', 'survey', 'better_together', 'superhero']
 
 const EMPTY_FORM = {
   text: '',
@@ -369,21 +382,32 @@ export default function PresetQuestionsTab({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <tbody>
-          {questions.map((q, i) => (
-            <PresetRow
-              key={q.id}
-              question={q}
-              isFirst={i === 0}
-              isLast={i === questions.length - 1}
-              onMoveUp={() => handleMove(i, 'up')}
-              onMoveDown={() => handleMove(i, 'down')}
-            />
-          ))}
-        </tbody>
-      </table>
+    <div>
+      {TYPE_ORDER.map(type => {
+        const group = questions.map((q, i) => ({ q, i })).filter(({ q }) => q.type === type)
+        if (group.length === 0) return null
+        const meta = TYPE_META[type] ?? { icon: 'help', color: 'text-gray-400' }
+        return (
+          <CollapsibleGroup key={type} icon={meta.icon} color={meta.color} label={TYPE_LABELS[type]} count={group.length}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <tbody>
+                  {group.map(({ q, i }) => (
+                    <PresetRow
+                      key={q.id}
+                      question={q}
+                      isFirst={i === 0}
+                      isLast={i === questions.length - 1}
+                      onMoveUp={() => handleMove(i, 'up')}
+                      onMoveDown={() => handleMove(i, 'down')}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CollapsibleGroup>
+        )
+      })}
 
       {questions.length === 0 && !adding && (
         <p className="px-6 py-5 text-xs text-gray-400 italic">Няма въпроси в този шаблон.</p>
