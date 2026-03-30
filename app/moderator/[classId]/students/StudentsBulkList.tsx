@@ -33,14 +33,14 @@ export default function StudentsBulkList({
   const router = useRouter()
   type AddRow = { first_name: string; last_name: string; parent_email: string }
   const emptyRow = (): AddRow => ({ first_name: '', last_name: '', parent_email: '' })
-  const initRows = () => Array.from({ length: Math.max(1, students.length) }, emptyRow)
+  const rowCount = Math.max(1, students.length)
 
   const [selected, setSelected]       = useState<Set<string>>(new Set())
   const [expanded, setExpanded]       = useState<Set<string>>(new Set())
   const [confirm, setConfirm]         = useState<string[] | null>(null)
   const [isPending, startTransition]  = useTransition()
   const [error, setError]             = useState<string | null>(null)
-  const [addRows, setAddRows]         = useState<AddRow[]>(initRows)
+  const [addRows, setAddRows]         = useState<AddRow[]>([])
   const [addError, setAddError]       = useState<string | null>(null)
 
   const allSelected = students.length > 0 && selected.size === students.length
@@ -91,13 +91,14 @@ export default function StudentsBulkList({
   }
 
   function handleAddSubmit() {
-    const valid = addRows.filter(r => r.first_name.trim())
+    const allRows = Array.from({ length: rowCount }, (_, i) => addRows[i] ?? emptyRow())
+    const valid = allRows.filter(r => r.first_name.trim())
     if (valid.length === 0) return
     setAddError(null)
     startTransition(async () => {
-      const result = await addStudentsBulk(classId, addRows)
+      const result = await addStudentsBulk(classId, allRows)
       if (result.error) { setAddError(result.error); return }
-      setAddRows(initRows())
+      setAddRows([])
       router.refresh()
     })
   }
@@ -304,34 +305,37 @@ export default function StudentsBulkList({
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Фамилия</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Имейл на родителя</span>
           </div>
-          {addRows.map((row, i) => (
-            <div key={i} className="grid grid-cols-[1fr_1fr_1fr] gap-2">
-              <input
-                value={row.first_name}
-                onChange={e => updateAddRow(i, 'first_name', e.target.value)}
-                placeholder="Иван"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-              <input
-                value={row.last_name}
-                onChange={e => updateAddRow(i, 'last_name', e.target.value)}
-                placeholder="Петров"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-              <input
-                value={row.parent_email}
-                onChange={e => updateAddRow(i, 'parent_email', e.target.value)}
-                placeholder="roditel@example.com"
-                type="email"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-            </div>
-          ))}
+          {Array.from({ length: rowCount }, (_, i) => {
+            const row = addRows[i] ?? emptyRow()
+            return (
+              <div key={i} className="grid grid-cols-[1fr_1fr_1fr] gap-2">
+                <input
+                  value={row.first_name}
+                  onChange={e => updateAddRow(i, 'first_name', e.target.value)}
+                  placeholder="Иван"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+                <input
+                  value={row.last_name}
+                  onChange={e => updateAddRow(i, 'last_name', e.target.value)}
+                  placeholder="Петров"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+                <input
+                  value={row.parent_email}
+                  onChange={e => updateAddRow(i, 'parent_email', e.target.value)}
+                  placeholder="roditel@example.com"
+                  type="email"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+              </div>
+            )
+          })}
         </div>
         {addError && <p className="text-xs text-red-500 mt-2">{addError}</p>}
         <button
           onClick={handleAddSubmit}
-          disabled={isPending || !addRows.some(r => r.first_name.trim())}
+          disabled={isPending || !Array.from({ length: rowCount }, (_, i) => addRows[i] ?? emptyRow()).some(r => r.first_name.trim())}
           className="mt-4 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
         >
           <span className="material-symbols-outlined text-base">person_add</span>
