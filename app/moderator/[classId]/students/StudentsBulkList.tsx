@@ -87,7 +87,11 @@ export default function StudentsBulkList({
   }
 
   function updateAddRow(i: number, field: keyof AddRow, value: string) {
-    setAddRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
+    setAddRows(prev => {
+      const next = Array.from({ length: Math.max(prev.length, i + 1) }, (_, idx) => prev[idx] ?? emptyRow())
+      next[i] = { ...next[i], [field]: value }
+      return next
+    })
   }
 
   function handleAddSubmit() {
