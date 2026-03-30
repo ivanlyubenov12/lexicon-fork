@@ -474,7 +474,7 @@ export default function StudentProfileParent({
           <Section
             id="polls"
             icon="how_to_vote"
-            title="Анкети на класа"
+            title="Анкети"
             description="Изберете кой съученик пасва най-добре на всяко описание. Резултатите са анонимни — никой не знае кой кого е избрал."
             status={pollsStatus}
             statusLabel={pollsLabel}
@@ -549,7 +549,7 @@ export default function StudentProfileParent({
           <Section
             id="voice"
             icon="record_voice_over"
-            title="Анонимен глас на класа"
+            title="Анонимен глас"
             description="Споделете мисли и спомени за класа напълно анонимно. Никой — дори модераторът — не може да разбере кой какво е написал."
             status={voiceStatus}
             statusLabel={voiceStatus === 'done' ? 'Завършено' : 'Анонимно'}
@@ -578,7 +578,7 @@ export default function StudentProfileParent({
           <Section
             id="messages"
             icon="favorite"
-            title="Послания до съучениците"
+            title="Послания към другите"
             description={`Напишете лично пожелание от ${student.first_name} до останалите. Не е задължително да оставяте послание за всички в лексикона. Посланията ще се появят на личните им страници след одобрение от модератора.`}
             status={messagesStatus}
             statusLabel={messagesLabel}

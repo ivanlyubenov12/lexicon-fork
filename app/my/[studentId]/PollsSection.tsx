@@ -100,7 +100,7 @@ export default function PollsSection({ polls, classmates, voterStudentId, existi
               />
             ) : (
               <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white border-2 border-indigo-600 flex-shrink-0">
-                {selectedClassmate.first_name[0]}{selectedClassmate.last_name[0]}
+                {selectedClassmate.first_name?.[0] ?? ''}{selectedClassmate.last_name?.[0] ?? ''}
               </div>
             )}
             <div>
@@ -122,7 +122,7 @@ export default function PollsSection({ polls, classmates, voterStudentId, existi
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {classmates.map(cm => {
               const isSelected = selectedId === cm.id
-              const initials = `${cm.first_name[0]}${cm.last_name[0]}`.toUpperCase()
+              const initials = `${cm.first_name?.[0] ?? ''}${cm.last_name?.[0] ?? ''}`.toUpperCase()
               return (
                 <button
                   key={cm.id}

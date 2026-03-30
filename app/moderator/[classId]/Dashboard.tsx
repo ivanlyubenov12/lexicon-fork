@@ -523,7 +523,7 @@ export default function Dashboard({
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0">
-                        {student.first_name[0]}{student.last_name[0]}
+                        {student.first_name?.[0] ?? ''}{student.last_name?.[0] ?? ''}
                       </div>
                       <div>
                         <p className="font-bold text-gray-800 text-sm">{student.first_name} {student.last_name}</p>

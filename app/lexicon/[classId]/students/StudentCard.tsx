@@ -14,7 +14,7 @@ function cardRotation(id: string): string {
 }
 
 export default function StudentCard({ student, classId, basePath }: Props) {
-  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+  const initials = `${student.first_name?.[0] ?? ''}${student.last_name?.[0] ?? ''}`.toUpperCase()
   const base = basePath ?? `/lexicon/${classId}`
   const rotation = cardRotation(student.id)
 

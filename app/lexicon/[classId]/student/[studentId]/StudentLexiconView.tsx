@@ -213,7 +213,7 @@ export default function StudentLexiconView({
   // Slot 7 — Grid: everything else (in original question order)
   const gridItems = consumeAll()
 
-  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+  const initials = `${student.first_name?.[0] ?? ''}${student.last_name?.[0] ?? ''}`.toUpperCase()
 
   const prevNextNav = (
     <div className="flex items-center gap-4">

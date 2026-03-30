@@ -26,7 +26,7 @@ export default function NewMessageForm({ authorStudentId, recipient, existingMes
   const isApproved = existingMessage?.status === 'approved'
   const isPending = existingMessage?.status === 'pending'
 
-  const initials = `${recipient.first_name[0]}${recipient.last_name[0]}`.toUpperCase()
+  const initials = `${recipient.first_name?.[0] ?? ''}${recipient.last_name?.[0] ?? ''}`.toUpperCase()
 
   async function handleSubmit() {
     if (!text.trim()) return

@@ -131,7 +131,7 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
       {/* Magazine grid — alternating vertical offsets */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-14 gap-x-8">
         {preview.map((student, i) => {
-          const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+          const initials = `${student.first_name?.[0] ?? ''}${student.last_name?.[0] ?? ''}`.toUpperCase()
           const rotation = cardRotation(student.id)
           // columns 2 and 4 (index 1 and 3 in a row of 4) get a vertical offset
           const isOffset = i % 4 === 1 || i % 4 === 3
@@ -226,7 +226,7 @@ function QuestionBlock({ data, config }: { data: LexiconData; config: Record<str
 
 function AnswerCard({ answer }: { answer: QuestionAnswer }) {
   const s = answer.student
-  const initials = s ? `${s.first_name[0]}${s.last_name[0]}`.toUpperCase() : '?'
+  const initials = s ? `${s.first_name?.[0] ?? ''}${s.last_name?.[0] ?? ''}`.toUpperCase() : '?'
   return (
     <div className="p-5" style={{ backgroundColor: 'var(--lex-surface)', borderRadius: 'var(--lex-radius)' }}>
       {answer.media_url && (answer.media_type?.startsWith('image') ?? true) && (
@@ -246,7 +246,7 @@ function AnswerCard({ answer }: { answer: QuestionAnswer }) {
             }
           </div>
           <span className="text-xs font-semibold" style={{ color: 'var(--lex-muted)' }}>
-            {s.first_name} {s.last_name[0]}.
+            {s.first_name}{s.last_name?.[0] ? ` ${s.last_name[0]}.` : ''}
           </span>
         </div>
       )}
