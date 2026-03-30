@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions, toggleFeaturedQuestion, reseedDefaultQuestions } from './actions'
+import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions, toggleFeaturedQuestion, reseedDefaultQuestions, bulkDeleteQuestions } from './actions'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 
 type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
@@ -207,6 +207,9 @@ function QuestionCard({
   onFeaturedChange,
   onUpdate,
   onDelete,
+  selectMode,
+  isSelected,
+  onToggleSelect,
 }: {
   question: Question
   classId: string
@@ -218,6 +221,9 @@ function QuestionCard({
   onFeaturedChange: (id: string, val: boolean) => void
   onUpdate: (id: string, partial: Partial<Question>) => void
   onDelete: (id: string) => void
+  selectMode: boolean
+  isSelected: boolean
+  onToggleSelect: (id: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -290,22 +296,41 @@ function QuestionCard({
   }
 
   return (
-    <div className="group bg-white border border-gray-100 rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow">
+    <div
+      className={`group bg-white border rounded-2xl px-6 py-5 shadow-sm transition-all ${
+        selectMode
+          ? isSelected
+            ? 'border-indigo-400 bg-indigo-50 cursor-pointer'
+            : 'border-gray-200 hover:border-indigo-200 cursor-pointer'
+          : 'border-gray-100 hover:shadow-md'
+      }`}
+      onClick={selectMode ? () => onToggleSelect(question.id) : undefined}
+    >
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       <div className="flex items-start gap-4">
 
-        {/* Drag / reorder handle */}
+        {/* Checkbox (select mode) or reorder arrows */}
         <div className="flex-shrink-0 pt-1 flex flex-col gap-0.5">
-          <button
-            onClick={onMoveUp}
-            disabled={isFirst || isPending}
-            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
-          >▲</button>
-          <button
-            onClick={onMoveDown}
-            disabled={isLast || isPending}
-            className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
-          >▼</button>
+          {selectMode ? (
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'
+            }`}>
+              {isSelected && <span className="material-symbols-outlined text-white" style={{ fontSize: 14 }}>check</span>}
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={onMoveUp}
+                disabled={isFirst || isPending}
+                className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
+              >▲</button>
+              <button
+                onClick={onMoveDown}
+                disabled={isLast || isPending}
+                className="text-gray-300 hover:text-gray-500 disabled:opacity-20 leading-none text-xs"
+              >▼</button>
+            </>
+          )}
         </div>
 
         {/* Content */}
@@ -363,22 +388,24 @@ function QuestionCard({
 
         </div>
 
-        {/* Actions — appear on hover */}
-        <div className="flex-shrink-0 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
-          <button
-            onClick={() => setEditing(true)}
-            className="text-xs text-gray-400 hover:text-indigo-600 transition-colors font-medium"
-          >
-            Редактирай
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isPending}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
-          >
-            Изтрий
-          </button>
-        </div>
+        {/* Actions — appear on hover, hidden in select mode */}
+        {!selectMode && (
+          <div className="flex-shrink-0 flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
+            <button
+              onClick={() => setEditing(true)}
+              className="text-xs text-gray-400 hover:text-indigo-600 transition-colors font-medium"
+            >
+              Редактирай
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
+            >
+              Изтрий
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -403,6 +430,41 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
   const [reseeding, setReseeding] = useState(false)
   const [reseedError, setReseedError] = useState<string | null>(null)
   const [selectedPreset, setSelectedPreset] = useState<string>(QUESTION_PRESETS[0].id)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  function toggleSelectMode() {
+    setSelectMode(s => !s)
+    setSelected(new Set())
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === customQuestions.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(customQuestions.map(q => q.id)))
+    }
+  }
+
+  function handleBulkDelete() {
+    if (selected.size === 0) return
+    if (!confirm(`Изтриване на ${selected.size} въпрос${selected.size === 1 ? '' : 'а'}?`)) return
+    const ids = Array.from(selected)
+    setCustomQuestions(prev => prev.filter(q => !ids.includes(q.id)))
+    setSelected(new Set())
+    setSelectMode(false)
+    startTransition(async () => {
+      await bulkDeleteQuestions(classId, ids)
+    })
+  }
 
   function handleReseed(preset = selectedPreset) {
     setReseeding(true)
@@ -514,15 +576,32 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
           </p>
         </div>
 
-        {!adding && (
-          <button
-            onClick={() => setAdding(true)}
-            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-indigo-300 hover:text-indigo-700 shadow-sm transition-colors"
-          >
-            <span className="material-symbols-outlined text-base">add</span>
-            Нов въпрос
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {customQuestions.length > 0 && (
+            <button
+              onClick={toggleSelectMode}
+              className={`flex items-center gap-2 border text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors ${
+                selectMode
+                  ? 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:text-indigo-700'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">
+                {selectMode ? 'close' : 'checklist'}
+              </span>
+              {selectMode ? 'Отказ' : 'Избери'}
+            </button>
+          )}
+          {!adding && !selectMode && (
+            <button
+              onClick={() => setAdding(true)}
+              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-indigo-300 hover:text-indigo-700 shadow-sm transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">add</span>
+              Нов въпрос
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Question count info ────────────────────────────────────── */}
@@ -552,6 +631,40 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
           </span>
         </div>
       </div>
+
+      {/* ── Bulk action bar ────────────────────────────────────────── */}
+      {selectMode && (
+        <div className="mb-6 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-2xl px-5 py-3">
+          <button
+            onClick={toggleSelectAll}
+            className="flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900 transition-colors"
+          >
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              selected.size === customQuestions.length && customQuestions.length > 0
+                ? 'bg-indigo-600 border-indigo-600'
+                : 'border-indigo-400 bg-white'
+            }`}>
+              {selected.size === customQuestions.length && customQuestions.length > 0 && (
+                <span className="material-symbols-outlined text-white" style={{ fontSize: 14 }}>check</span>
+              )}
+            </div>
+            {selected.size === customQuestions.length && customQuestions.length > 0 ? 'Премахни избора' : 'Избери всички'}
+          </button>
+          <span className="text-sm text-indigo-600 flex-1">
+            {selected.size > 0 ? `${selected.size} избран${selected.size === 1 ? '' : 'и'}` : 'Натисни върху въпрос за избор'}
+          </span>
+          {selected.size > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isPending}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-base">delete</span>
+              Изтрий {selected.size}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Add / Archive panel ────────────────────────────────────── */}
       {adding && (
@@ -700,6 +813,9 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
               onDelete={(id) =>
                 setCustomQuestions(prev => prev.filter(q => q.id !== id))
               }
+              selectMode={selectMode}
+              isSelected={selected.has(q.id)}
+              onToggleSelect={toggleSelect}
             />
           ))}
         </div>

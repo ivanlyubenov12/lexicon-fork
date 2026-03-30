@@ -21,7 +21,7 @@ export async function updateBgPattern(classId: string, patternId: string) {
 
   await admin
     .from('classes')
-    .update({ bg_pattern: patternId })
+    .update({ bg_pattern: patternId, is_customized: true })
     .eq('id', classId)
 
   revalidatePath(`/moderator/${classId}/lexicon`)

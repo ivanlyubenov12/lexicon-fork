@@ -6,6 +6,7 @@ import Link from 'next/link'
 import ShowcaseToggle from './ShowcaseToggle'
 import PublishToggle from './PublishToggle'
 import DeleteClassButton from './DeleteClassButton'
+import PlanDropdown from './PlanDropdown'
 
 const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   draft:       { label: 'Чернова',      color: 'bg-gray-100 text-gray-500' },
@@ -20,7 +21,7 @@ export default async function AdminClassesPage() {
 
   const { data: classes, error: classesError } = await admin
     .from('classes')
-    .select('id, name, school_year, status, showcase_order, created_at, moderator_id')
+    .select('id, name, school_year, status, showcase_order, created_at, moderator_id, plan')
     .order('created_at', { ascending: false })
 
   if (classesError) console.error('[admin/classes] query error:', classesError.message)
@@ -59,9 +60,9 @@ export default async function AdminClassesPage() {
       <div className="mb-10">
         <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Администрация</p>
         <h1 className="text-4xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-          Класове
+          Лексикони
         </h1>
-        <p className="text-sm text-gray-500 mt-2">{(classes ?? []).length} класа общо</p>
+        <p className="text-sm text-gray-500 mt-2">{(classes ?? []).length} лексикона общо</p>
       </div>
 
       {/* Showcase slots */}
@@ -110,6 +111,7 @@ export default async function AdminClassesPage() {
               <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Модератор</th>
               <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Статус</th>
               <th className="text-center px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Деца</th>
+              <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">План</th>
               <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wider text-gray-400">Showcase</th>
               <th className="px-6 py-3"></th>
             </tr>
@@ -134,6 +136,9 @@ export default async function AdminClassesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center font-semibold text-gray-700">{studentCount}</td>
+                  <td className="px-6 py-4">
+                    <PlanDropdown classId={cls.id} plan={cls.plan} />
+                  </td>
                   <td className="px-6 py-4">
                     <ShowcaseToggle
                       classId={cls.id}
@@ -167,8 +172,8 @@ export default async function AdminClassesPage() {
         </div>
         {(classes ?? []).length === 0 && (
           <div className="px-6 py-16 text-center text-gray-400">
-            <span className="material-symbols-outlined text-4xl block mb-2 text-gray-200">school</span>
-            Все още няма класове.
+            <span className="material-symbols-outlined text-4xl block mb-2 text-gray-200">auto_stories</span>
+            Все още няма лексикони.
           </div>
         )}
       </div>

@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import LogoutButton from '@/app/moderator/[classId]/LogoutButton'
 import MobileMenuWrapper from '@/app/moderator/[classId]/MobileMenuWrapper'
+import PlanRibbon from '@/components/PlanRibbon'
+import { normalisePlan, PLANS } from '@/lib/plans'
 
 const MEMBER_PLURALS: Record<string, string> = {
   'ученик':  'ученика',
@@ -34,7 +36,7 @@ export default async function ModeratorIndexPage() {
 
   const { data: classes } = await admin
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, member_label, created_at')
+    .select('id, name, school_year, status, school_logo_url, member_label, plan, created_at')
     .eq('moderator_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -79,6 +81,13 @@ export default async function ModeratorIndexPage() {
           <div className="flex-1" />
 
           <div className="pt-4 space-y-2">
+            <Link
+              href="/moderator/profile"
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-white/60 transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-xl">manage_accounts</span>
+              Профил и плащания
+            </Link>
             <LogoutButton />
           </div>
         </aside>
@@ -131,8 +140,9 @@ export default async function ModeratorIndexPage() {
                 <Link
                   key={cls.id}
                   href={`/moderator/${cls.id}`}
-                  className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-6 flex flex-col gap-4"
+                  className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-6 flex flex-col gap-4 relative overflow-hidden"
                 >
+                  <PlanRibbon plan={cls.plan} />
                   <div className="flex items-start justify-between">
                     {cls.school_logo_url ? (
                       <img src={cls.school_logo_url} alt="Лого" className="w-12 h-12 rounded-xl object-contain bg-gray-50 border border-gray-100 p-1" />

@@ -13,15 +13,18 @@ export async function updateTheme(classId: string, themeId: string) {
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id')
+    .select('id, template_id')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
   if (!cls) redirect('/moderator')
 
+  // If the chosen theme matches the template's natural theme, clear it (revert to default)
+  const effectiveThemeId = themeId === (cls as any).template_id ? null : themeId
+
   await admin
     .from('classes')
-    .update({ theme_id: themeId })
+    .update({ theme_id: effectiveThemeId, is_customized: true })
     .eq('id', classId)
 
   revalidatePath(`/moderator/${classId}/lexicon`)

@@ -60,6 +60,7 @@ export async function createQuestion(
     return { error: 'Грешка при създаване на въпроса.' }
   }
 
+  await supabase.from('classes').update({ is_customized: true }).eq('id', classId)
   revalidatePath(`/moderator/${classId}/questions`)
   return { error: null }
 }
@@ -97,9 +98,10 @@ export async function updateQuestion(
 
   if (error) {
     console.error('[updateQuestion]', error.message)
-    return { error: 'Грешка при запазване на въпроса.' }
+    return { error: error.message }
   }
 
+  await supabase.from('classes').update({ is_customized: true }).eq('id', classId)
   revalidatePath(`/moderator/${classId}/questions`)
   return { error: null }
 }
@@ -110,17 +112,22 @@ export async function deleteQuestion(
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
 
+  // Delete dependent rows first (no ON DELETE CASCADE on question_id FK)
+  await supabase.from('answers').delete().eq('question_id', questionId)
+  await supabase.from('class_voice_answers').delete().eq('question_id', questionId)
+
   const { error } = await supabase
     .from('questions')
     .delete()
     .eq('id', questionId)
-    .eq('class_id', classId) // safety: only delete own questions
+    .eq('class_id', classId)
 
   if (error) {
     console.error('[deleteQuestion]', error.message)
     return { error: 'Грешка при изтриване на въпроса.' }
   }
 
+  await supabase.from('classes').update({ is_customized: true }).eq('id', classId)
   revalidatePath(`/moderator/${classId}/questions`)
   return { error: null }
 }
@@ -141,6 +148,31 @@ export async function toggleFeaturedQuestion(
   if (error) {
     console.error('[toggleFeaturedQuestion]', error.message)
     return { error: 'Грешка при запазване.' }
+  }
+
+  revalidatePath(`/moderator/${classId}/questions`)
+  return { error: null }
+}
+
+export async function bulkDeleteQuestions(
+  classId: string,
+  ids: string[]
+): Promise<{ error: string | null }> {
+  if (ids.length === 0) return { error: null }
+  const supabase = createServiceRoleClient()
+
+  await supabase.from('answers').delete().in('question_id', ids)
+  await supabase.from('class_voice_answers').delete().in('question_id', ids)
+
+  const { error } = await supabase
+    .from('questions')
+    .delete()
+    .in('id', ids)
+    .eq('class_id', classId)
+
+  if (error) {
+    console.error('[bulkDeleteQuestions]', error.message)
+    return { error: 'Грешка при изтриване на въпросите.' }
   }
 
   revalidatePath(`/moderator/${classId}/questions`)

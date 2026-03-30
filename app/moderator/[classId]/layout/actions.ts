@@ -24,7 +24,7 @@ export async function saveLayout(
 
   if (!cls) return { error: 'Нямате достъп до този клас.' }
 
-  const update: Record<string, unknown> = { layout: blocks }
+  const update: Record<string, unknown> = { layout: blocks, is_customized: true }
   if (templateId !== undefined) update.template_id = templateId
 
   const { error } = await admin

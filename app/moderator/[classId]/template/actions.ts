@@ -42,6 +42,7 @@ export async function applyTemplate(classId: string, preset: QuestionPreset) {
       .update({
         layout: blocks,
         template_id: preset,
+        is_customized: false,
         ...(templateDefault ? {
           theme_id: templateDefault.theme_id,
           bg_pattern: templateDefault.bg_pattern,

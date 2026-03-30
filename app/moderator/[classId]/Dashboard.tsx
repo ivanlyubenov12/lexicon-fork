@@ -7,6 +7,7 @@ import { updateClassInfo, setDeadline } from './actions'
 import ModeratorWizard from './ModeratorWizard'
 import DateInput from '@/components/DateInput'
 import LogoutButton from './LogoutButton'
+import { normalisePlan, PLANS } from '@/lib/plans'
 
 interface Contribution {
   id: string
@@ -20,7 +21,7 @@ interface Contribution {
 }
 
 interface Props {
-  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null }
+  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null; plan?: string | null }
   moderatorEmail: string | null
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null; questionnaire_submitted: boolean }>
@@ -164,7 +165,18 @@ export default function Dashboard({
               Малки спомени
             </h1>
           </Link>
-          <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Admin Panel</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-xs text-slate-400 uppercase tracking-widest">Admin Panel</p>
+            {(() => {
+              const plan = normalisePlan(classData.plan)
+              const meta = PLANS[plan]
+              return (
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
+                  {meta.label}
+                </span>
+              )
+            })()}
+          </div>
         </div>
 
         {/* Profile */}
@@ -236,6 +248,13 @@ export default function Dashboard({
           >
             <Icon name="help" className="text-xl" />
             Помощен център
+          </Link>
+          <Link
+            href="/moderator"
+            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
+          >
+            <Icon name="grid_view" className="text-xl" />
+            Моите лексикони
           </Link>
           <Link
             href={`${base}/finalize`}

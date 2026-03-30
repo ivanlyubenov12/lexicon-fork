@@ -14,6 +14,20 @@ async function assertAdmin() {
   }
 }
 
+// ── Plan ─────────────────────────────────────────────────────────────────────
+
+export async function updateClassPlan(classId: string, plan: string): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+  const { error } = await admin
+    .from('classes')
+    .update({ plan })
+    .eq('id', classId)
+  if (error) return { error: 'Грешка при запазване.' }
+  revalidatePath('/admin/classes')
+  return { error: null }
+}
+
 // ── Publish / Unpublish ───────────────────────────────────────────────────────
 
 export async function adminUnpublishClass(classId: string): Promise<{ error: string | null }> {

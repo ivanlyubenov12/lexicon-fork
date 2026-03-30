@@ -9,6 +9,7 @@ import PollsEditor from '../polls/PollsEditor'
 import MessagesTable from '../messages/MessagesTable'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 import { applyTemplate } from '../template/actions'
+import TemplateApplyButton from './TemplateApplyButton'
 import { updateBgPattern } from './bgActions'
 import { updateTheme } from './themeActions'
 import type { QuestionPreset } from '@/lib/templates/defaultSeed'
@@ -78,7 +79,7 @@ export default async function LexiconPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, template_id, theme_id, bg_pattern, layout')
+    .select('id, name, school_year, school_logo_url, template_id, theme_id, bg_pattern, layout, is_customized')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -242,41 +243,45 @@ export default async function LexiconPage({
 
         {/* ── Шаблон ──────────────────────────────────────────────────────── */}
         {tab === 'template' && (
-          <div className="max-w-2xl space-y-4">
+          <div className="space-y-4">
             <p className="text-sm text-gray-500 mb-6">
-              Шаблонът определя въпросника и оформлението на лексикона.
+              Шаблонът определя въпросника. Избраният шаблон може да се донастрои с цветова палитра и фон.
             </p>
             {QUESTION_PRESETS.map(preset => {
               const meta = PRESET_META[preset.id]
-              const isActive = classData.template_id === preset.id
+              // A preset is "active" only when it matches AND hasn't been customised
+              const isActive = classData.template_id === preset.id && !(classData as any).is_customized
               return (
                 <div key={preset.id} className={`bg-white border-2 rounded-2xl overflow-hidden transition-all ${
-                  isActive ? 'border-indigo-500 shadow-sm' : 'border-gray-200'
+                  isActive ? 'border-indigo-500 shadow-md' : 'border-gray-200'
                 }`}>
-                  <form action={applyTemplate.bind(null, classId, preset.id as QuestionPreset)}>
-                    <button
-                      type="submit"
-                      className="w-full text-left p-4 sm:p-6 flex items-start gap-4 sm:gap-5 hover:bg-gray-50 transition-colors group"
-                    >
-                      <span className="text-4xl leading-none mt-0.5">{meta.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-gray-900 text-base">{preset.label}</span>
-                          {isActive && (
-                            <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Текущ</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500 mb-3">{meta.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {meta.examples.map(ex => (
-                            <span key={ex} className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">{ex}</span>
-                          ))}
-                        </div>
+                  {/* ── Template header ── */}
+                  <TemplateApplyButton
+                    action={applyTemplate.bind(null, classId, preset.id as QuestionPreset)}
+                    isActive={isActive}
+                    isCustomized={!!(classData as any).is_customized}
+                  >
+                    <span className="text-4xl leading-none mt-0.5">{meta.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-900 text-base">{preset.label}</span>
+                        {isActive && (
+                          <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Текущ</span>
+                        )}
                       </div>
-                      <span className="material-symbols-outlined text-gray-300 group-hover:text-indigo-500 transition-colors mt-1 flex-shrink-0">arrow_forward</span>
-                    </button>
-                  </form>
-                  <div className="border-t border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
+                      <p className="text-sm text-gray-500 mb-3">{meta.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {meta.examples.map(ex => (
+                          <span key={ex} className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">{ex}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </TemplateApplyButton>
+
+                  {/* ── Footer ── */}
+                  <div className={`px-4 sm:px-6 py-3 flex items-center justify-between gap-2 ${
+                    isActive ? 'border-t border-indigo-100' : 'border-t border-gray-100'
+                  }`}>
                     <span className="text-xs text-gray-400">
                       {isActive ? 'Приложен към твоя лексикон' : 'Щракни върху картата, за да приложиш'}
                     </span>
@@ -292,86 +297,114 @@ export default async function LexiconPage({
                 </div>
               )
             })}
-            {/* ── Цветова палитра ───────────────────────────────────── */}
-            <div className="pt-6 border-t border-gray-100 mt-2">
-              <h2 className="text-base font-bold text-gray-900 mb-1">Цветова палитра</h2>
-              <p className="text-sm text-gray-500 mb-4">Избери визуален стил на лексикона.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {Object.values(themes).map(theme => {
-                  const isActive = (classData.theme_id ?? 'classic') === theme.id
-                  const primary = (theme.vars as Record<string, string>)['--lex-primary']
-                  const bg = (theme.vars as Record<string, string>)['--lex-bg']
-                  const accent = (theme.vars as Record<string, string>)['--lex-accent']
-                  return (
-                    <form key={theme.id} action={updateTheme.bind(null, classId, theme.id)}>
-                      <button
-                        type="submit"
-                        className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${
-                          isActive ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
-                        }`}
-                      >
-                        {/* Color swatch */}
-                        <div
-                          className="h-14 w-full flex items-end px-3 pb-2 gap-1.5"
-                          style={{ backgroundColor: bg }}
-                        >
-                          <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: primary }} />
-                          <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
-                          <div className="flex-1 h-2 rounded-full opacity-20" style={{ backgroundColor: primary }} />
-                        </div>
-                        <div className="px-3 py-2.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-sm text-gray-900">{theme.name}</span>
-                            {isActive && (
-                              <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Текущ</span>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    </form>
-                  )
-                })}
-              </div>
-            </div>
 
-            {/* ── Background pattern picker ─────────────────────────── */}
-            <div className="pt-6 border-t border-gray-100 mt-2">
-              <h2 className="text-base font-bold text-gray-900 mb-1">Фон на лексикона</h2>
-              <p className="text-sm text-gray-500 mb-4">Изборът важи както за уеб прегледа, така и за PDF-а.</p>
-              <div className="grid grid-cols-2 gap-3">
-                {BG_PATTERN_OPTIONS.map(opt => {
-                  const isActive = (classData.bg_pattern ?? 'school') === opt.id
-                  return (
-                    <form key={opt.id} action={updateBgPattern.bind(null, classId, opt.id)}>
-                      <button
-                        type="submit"
-                        className={`w-full text-left rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${
-                          isActive ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
-                        }`}
+            {/* ── По поръчка — active when is_customized ── */}
+            {(() => {
+              const isCustomActive = !!(classData as any).is_customized
+              const activeThemeId  = classData.theme_id ?? 'classic'
+              const activeBgId     = classData.bg_pattern ?? 'school'
+              return (
+                <div className={`bg-white border-2 rounded-2xl overflow-hidden transition-all ${
+                  isCustomActive ? 'border-indigo-500 shadow-md' : 'border-dashed border-gray-200'
+                }`}>
+                  <div className="p-4 sm:p-6 flex items-start gap-4 sm:gap-5">
+                    <span className="text-4xl leading-none mt-0.5">✏️</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-900 text-base">По поръчка</span>
+                        {isCustomActive && (
+                          <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Текущ</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {isCustomActive
+                          ? `Базиран на „${PRESET_META[classData.template_id ?? 'primary']?.emoji} ${QUESTION_PRESETS.find(p => p.id === classData.template_id)?.label ?? classData.template_id}" с персонализирани промени.`
+                          : 'Направи промяна в цветовата палитра, фона, въпросника или наредбата на блоковете — шаблонът автоматично ще стане „По поръчка".'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Customisation pickers — shown when active */}
+                  {isCustomActive && (
+                    <div className="border-t border-indigo-100 bg-indigo-50/40 px-4 sm:px-6 py-5 space-y-6">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">Цветова палитра</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                          {Object.values(themes).map(theme => {
+                            const sel     = activeThemeId === theme.id
+                            const primary = (theme.vars as Record<string, string>)['--lex-primary']
+                            const bg      = (theme.vars as Record<string, string>)['--lex-bg']
+                            const accent  = (theme.vars as Record<string, string>)['--lex-accent']
+                            return (
+                              <form key={theme.id} action={updateTheme.bind(null, classId, theme.id)}>
+                                <button type="submit" title={theme.name}
+                                  className={`w-full rounded-xl border-2 overflow-hidden transition-all hover:shadow-md ${
+                                    sel ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
+                                  }`}
+                                >
+                                  <div className="h-10 w-full flex items-end px-2 pb-1.5 gap-1" style={{ backgroundColor: bg }}>
+                                    <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: primary }} />
+                                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
+                                    <div className="flex-1 h-1.5 rounded-full opacity-20" style={{ backgroundColor: primary }} />
+                                  </div>
+                                  <div className="px-2 py-1.5 text-center">
+                                    <span className="text-xs font-semibold text-gray-700">{theme.name}</span>
+                                  </div>
+                                </button>
+                              </form>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">Фон</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {BG_PATTERN_OPTIONS.map(opt => {
+                            const sel = activeBgId === opt.id
+                            return (
+                              <form key={opt.id} action={updateBgPattern.bind(null, classId, opt.id)}>
+                                <button type="submit" title={opt.name}
+                                  className={`w-full rounded-xl border-2 overflow-hidden transition-all hover:shadow-md ${
+                                    sel ? 'border-indigo-500 shadow-sm' : 'border-gray-200 hover:border-indigo-300'
+                                  }`}
+                                >
+                                  <div className={`h-10 w-full ${opt.previewClass} flex items-center justify-center`}>
+                                    {opt.id === 'school'       && <span className="text-base opacity-70">✏️📐</span>}
+                                    {opt.id === 'kindergarten' && <span className="text-base opacity-70">🧸🌈</span>}
+                                    {opt.id === 'teens'        && <span className="text-base opacity-70">🎓💻</span>}
+                                    {opt.id === 'levski'       && <span className="text-base opacity-70">⚽⭐</span>}
+                                    {opt.id === 'none'         && <span className="text-sm opacity-30 font-medium text-gray-400">Аа</span>}
+                                  </div>
+                                  <div className="px-2 py-1.5 text-center">
+                                    <span className="text-xs font-semibold text-gray-700">{opt.name}</span>
+                                  </div>
+                                </button>
+                              </form>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`px-4 sm:px-6 py-3 flex items-center justify-between gap-2 ${
+                    isCustomActive ? 'border-t border-indigo-100' : 'border-t border-gray-100'
+                  }`}>
+                    <span className="text-xs text-gray-400">
+                      {isCustomActive ? 'Персонализиран шаблон' : 'Промени нещо, за да активираш'}
+                    </span>
+                    {isCustomActive && (
+                      <Link href={`/moderator/${classId}/preview`} target="_blank"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                       >
-                        {/* Preview swatch */}
-                        <div className={`h-16 w-full ${opt.previewClass} flex items-center justify-center`}>
-                          {opt.id === 'school' && <span className="text-2xl opacity-60">✏️📐📏</span>}
-                          {opt.id === 'kindergarten' && <span className="text-2xl opacity-60">🧸🌈🌻</span>}
-                          {opt.id === 'teens' && <span className="text-2xl opacity-60">🎓💻📐</span>}
-                          {opt.id === 'levski' && <span className="text-2xl opacity-60">⚽🏆⭐</span>}
-                          {opt.id === 'none' && <span className="text-lg opacity-30 font-medium text-gray-400">Аа</span>}
-                        </div>
-                        <div className="px-3 py-2.5">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="font-semibold text-sm text-gray-900">{opt.name}</span>
-                            {isActive && (
-                              <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">Текущ</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-400 leading-snug">{opt.description}</p>
-                        </div>
-                      </button>
-                    </form>
-                  )
-                })}
-              </div>
-            </div>
+                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        Прегледай лексикона
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )}
 
