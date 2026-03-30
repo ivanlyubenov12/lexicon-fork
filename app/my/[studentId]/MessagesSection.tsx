@@ -98,7 +98,7 @@ function ClassmateMessageCard({
             onChange={e => setText(e.target.value)}
             placeholder={`Напишете послание до ${classmate.first_name}…`}
             maxLength={300}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white"
           />
           {sent ? (
             <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium py-1">

@@ -278,7 +278,7 @@ export default function AnswerForm({
                 maxLength={question.max_length ?? undefined}
                 placeholder="Напишете отговора тук..."
                 disabled={isLocked || !editing}
-                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
+                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
               />
               {editing && (
                 <div className="absolute bottom-3 right-3 flex items-center gap-3">

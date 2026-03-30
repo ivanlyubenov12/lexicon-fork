@@ -121,7 +121,7 @@ export default function NewMessageForm({ authorStudentId, recipient, existingMes
               onChange={(e) => setText(e.target.value)}
               placeholder={`Напишете нещо топло за ${recipient.first_name}…`}
               maxLength={300}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white shadow-sm"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white shadow-sm"
             />
             <div className="flex justify-between mt-1.5">
               <span className={`text-xs ${text.length >= 270 ? 'text-amber-500' : 'text-gray-400'}`}>
