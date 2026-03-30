@@ -1337,7 +1337,7 @@ function ClosingPage({ data }: { data: PDFData }) {
       {/* Colophon */}
       <View style={{ position: 'absolute', bottom: 28, left: 0, right: 0, alignItems: 'center', gap: 4 }}>
         <Text style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', letterSpacing: 1 }}>
-          © {year} · malki-spomeni.bg
+          © {year} · mini-memories.com
         </Text>
       </View>
     </Page>
