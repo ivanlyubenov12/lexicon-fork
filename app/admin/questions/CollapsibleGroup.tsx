@@ -8,7 +8,7 @@ export default function CollapsibleGroup({
   label,
   count,
   children,
-  defaultOpen = true,
+  defaultOpen = false,
 }: {
   icon: string
   color: string
