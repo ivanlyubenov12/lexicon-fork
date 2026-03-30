@@ -54,7 +54,7 @@ export default async function AdminQuestionsPage({
 
   const tabs = [
     ...QUESTION_PRESETS.map(p => ({ id: p.id, label: p.label })),
-    { id: 'archive', label: 'Архив' },
+    { id: 'archive', label: 'Банка с въпроси' },
   ]
 
   return (
@@ -69,19 +69,22 @@ export default async function AdminQuestionsPage({
         </p>
       </div>
 
-      {/* Tab strip */}
-      <div className="flex gap-1 mb-6 bg-gray-100 rounded-2xl p-1 w-fit">
-        {tabs.map(t => (
-          <a
-            key={t.id}
-            href={`?tab=${t.id}`}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-              tab === t.id ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t.label}
-          </a>
-        ))}
+      {/* Tab strip + add button */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 w-fit">
+          {tabs.map(t => (
+            <a
+              key={t.id}
+              href={`?tab=${t.id}`}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                tab === t.id ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </a>
+          ))}
+        </div>
+        {tab === 'archive' && <AddQuestionForm nextOrder={maxArchiveOrder + 1} />}
       </div>
 
       {/* ── Archive tab ──────────────────────────────────────────────── */}
@@ -121,7 +124,6 @@ export default async function AdminQuestionsPage({
             )
           })}
 
-          <AddQuestionForm nextOrder={maxArchiveOrder + 1} />
         </div>
       )}
 
