@@ -95,7 +95,7 @@ function QuestionForm({
           value={form.description}
           onChange={(e) => set('description', e.target.value)}
           rows={2}
-          placeholder="Допълнително обяснение за родителя..."
+          placeholder="Допълнително обяснение на въпроса..."
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none text-gray-500"
         />
       </div>
