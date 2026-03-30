@@ -33,14 +33,12 @@ export default function StudentsBulkList({
   const router = useRouter()
   type AddRow = { first_name: string; last_name: string; parent_email: string }
   const emptyRow = (): AddRow => ({ first_name: '', last_name: '', parent_email: '' })
-  const rowCount = Math.max(1, students.length)
-
   const [selected, setSelected]       = useState<Set<string>>(new Set())
   const [expanded, setExpanded]       = useState<Set<string>>(new Set())
   const [confirm, setConfirm]         = useState<string[] | null>(null)
   const [isPending, startTransition]  = useTransition()
   const [error, setError]             = useState<string | null>(null)
-  const [addRows, setAddRows]         = useState<AddRow[]>([])
+  const [addRows, setAddRows]         = useState<AddRow[]>([emptyRow()])
   const [addError, setAddError]       = useState<string | null>(null)
 
   const allSelected = students.length > 0 && selected.size === students.length
@@ -88,21 +86,23 @@ export default function StudentsBulkList({
 
   function updateAddRow(i: number, field: keyof AddRow, value: string) {
     setAddRows(prev => {
-      const next = Array.from({ length: Math.max(prev.length, i + 1) }, (_, idx) => prev[idx] ?? emptyRow())
-      next[i] = { ...next[i], [field]: value }
+      const next = prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r)
+      // Auto-add a new empty row when the last row gets a first_name
+      if (field === 'first_name' && value.trim() && i === next.length - 1) {
+        next.push(emptyRow())
+      }
       return next
     })
   }
 
   function handleAddSubmit() {
-    const allRows = Array.from({ length: rowCount }, (_, i) => addRows[i] ?? emptyRow())
-    const valid = allRows.filter(r => r.first_name.trim())
+    const valid = addRows.filter(r => r.first_name.trim())
     if (valid.length === 0) return
     setAddError(null)
     startTransition(async () => {
-      const result = await addStudentsBulk(classId, allRows)
+      const result = await addStudentsBulk(classId, valid)
       if (result.error) { setAddError(result.error); return }
-      setAddRows([])
+      setAddRows([emptyRow()])
       router.refresh()
     })
   }
@@ -309,9 +309,7 @@ export default function StudentsBulkList({
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Фамилия</span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Имейл на родителя</span>
           </div>
-          {Array.from({ length: rowCount }, (_, i) => {
-            const row = addRows[i] ?? emptyRow()
-            return (
+          {addRows.map((row, i) => (
               <div key={i} className="grid grid-cols-[1fr_1fr_1fr] gap-2">
                 <input
                   value={row.first_name}
@@ -333,13 +331,12 @@ export default function StudentsBulkList({
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 />
               </div>
-            )
-          })}
+          ))}
         </div>
         {addError && <p className="text-xs text-red-500 mt-2">{addError}</p>}
         <button
           onClick={handleAddSubmit}
-          disabled={isPending || !Array.from({ length: rowCount }, (_, i) => addRows[i] ?? emptyRow()).some(r => r.first_name.trim())}
+          disabled={isPending || !addRows.some(r => r.first_name.trim())}
           className="mt-4 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
         >
           <span className="material-symbols-outlined text-base">person_add</span>
