@@ -210,8 +210,8 @@ export default function HomePage() {
             </div>
 
             {/* Card 3 — brand indigo */}
-            <div className="md:col-span-5 bg-[#3632b7] text-white p-10 rounded-3xl shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 min-h-[280px]">
-              <div className="space-y-4">
+            <div className="md:col-span-12 bg-[#3632b7] text-white p-10 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-8 hover:scale-[1.005] transition-all duration-300">
+              <div className="space-y-4 max-w-xl">
                 <span className="material-symbols-outlined text-4xl">admin_panel_settings</span>
                 <h3
                   className="text-2xl font-bold"
@@ -220,10 +220,10 @@ export default function HomePage() {
                   Пълен Контрол
                 </h3>
                 <p className="text-[#c4c0f0] leading-relaxed">
-                  Модераторски панел за класния ръководител. Одобряване на всяко съдържание преди публикуване.
+                  Модераторски панел с пълен достъп — от въпросите и анкетите до финалния лексикон. Одобряване на всяко съдържание преди публикуване.
                 </p>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 p-4 rounded-xl mt-6">
+              <div className="flex items-center gap-2 bg-white/10 p-4 rounded-xl shrink-0">
                 <span
                   className="material-symbols-outlined text-green-300"
                   style={{ fontVariationSettings: "'FILL' 1" }}
