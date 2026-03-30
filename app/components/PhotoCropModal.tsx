@@ -16,9 +16,13 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> 
   })
 
   const canvas = document.createElement('canvas')
-  // Output at 2× for retina clarity
-  const outputW = pixelCrop.width * 2
-  const outputH = pixelCrop.height * 2
+  // Output at 2× for retina clarity, capped at 1000px to stay under Vercel's 4.5MB request limit
+  const MAX_DIM = 1000
+  const rawW = pixelCrop.width * 2
+  const rawH = pixelCrop.height * 2
+  const scale = Math.min(1, MAX_DIM / Math.max(rawW, rawH))
+  const outputW = Math.round(rawW * scale)
+  const outputH = Math.round(rawH * scale)
   canvas.width  = outputW
   canvas.height = outputH
 
@@ -30,7 +34,7 @@ async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> 
   )
 
   return new Promise((resolve, reject) =>
-    canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas is empty')), 'image/jpeg', 0.9)
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('Canvas is empty')), 'image/jpeg', 0.85)
   )
 }
 
