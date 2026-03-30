@@ -43,13 +43,13 @@ export default async function EditStudentPage({ params }: Props) {
       <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
-            Деца в класа
+            Участници
           </p>
           <h1
             className="text-3xl font-bold text-gray-900"
             style={{ fontFamily: 'Noto Serif, serif' }}
           >
-            Редактирай дете
+            Редактирай участник
           </h1>
           <p className="text-sm text-gray-500 mt-2">
             {student.first_name} {student.last_name}

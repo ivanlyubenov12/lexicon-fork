@@ -81,7 +81,7 @@ export default function EditStudentForm({ classId, student, photoUrl }: Props) {
     router.push(`/moderator/${classId}/students`)
   }
 
-  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+  const initials = `${student.first_name[0] ?? ''}${student.last_name?.[0] ?? ''}`.toUpperCase()
 
   return (
     <div className="max-w-md space-y-6">
@@ -177,11 +177,10 @@ export default function EditStudentForm({ classId, student, photoUrl }: Props) {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-              Фамилия <span className="text-red-400">*</span>
+              Фамилия
             </label>
             <input
               type="text"
-              required
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
