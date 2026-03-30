@@ -184,8 +184,9 @@ export async function updateSystemQuestion(
 
 export async function addSystemQuestion(data: {
   text: string
-  type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
+  type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
   order_index: number
+  poll_options?: string[] | null
 }): Promise<{ error: string | null }> {
   await assertAdmin()
   const admin = createServiceRoleClient()
@@ -198,6 +199,8 @@ export async function addSystemQuestion(data: {
     allows_media: data.type === 'video' || data.type === 'photo',
     order_index: data.order_index,
     class_id: null,
+    poll_options: data.poll_options ?? null,
+    voice_display: data.type === 'survey' ? 'barchart' : null,
   })
 
   if (error) return { error: 'Грешка при добавяне.' }
@@ -224,7 +227,7 @@ export async function deleteSystemQuestion(id: string): Promise<{ error: string 
 
 // ── Preset questionnaire questions ─────────────────────────────────────────────
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
 
 export async function updatePresetQuestion(
   id: string,
@@ -234,6 +237,7 @@ export async function updatePresetQuestion(
     type: QuestionType
     voice_display: 'wordcloud' | 'barchart' | null
     is_featured: boolean
+    poll_options?: string[] | null
   }
 ): Promise<{ error: string | null }> {
   await assertAdmin()
@@ -247,8 +251,9 @@ export async function updatePresetQuestion(
       type: data.type,
       allows_text: data.type !== 'video',
       allows_media: data.type === 'video',
-      voice_display: data.voice_display,
+      voice_display: data.type === 'survey' ? 'barchart' : data.voice_display,
       is_featured: data.is_featured,
+      poll_options: data.poll_options ?? null,
     })
     .eq('id', id)
     .eq('is_system', true)
@@ -268,6 +273,7 @@ export async function addPresetQuestion(data: {
   voice_display: 'wordcloud' | 'barchart' | null
   is_featured: boolean
   order_index: number
+  poll_options?: string[] | null
 }): Promise<{ error: string | null }> {
   await assertAdmin()
   const admin = createServiceRoleClient()
@@ -280,10 +286,11 @@ export async function addPresetQuestion(data: {
     preset: data.preset,
     allows_text: data.type !== 'video',
     allows_media: data.type === 'video' || data.type === 'photo',
-    voice_display: data.voice_display,
+    voice_display: data.type === 'survey' ? 'barchart' : data.voice_display,
     is_featured: data.is_featured,
     order_index: data.order_index,
     class_id: null,
+    poll_options: data.poll_options ?? null,
   })
 
   if (error) return { error: 'Грешка при добавяне.' }

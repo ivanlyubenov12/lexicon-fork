@@ -12,6 +12,7 @@ const TYPE_GROUPS = [
   { type: 'video',           label: 'Видео въпроси',         icon: 'videocam',          color: 'text-rose-500' },
   { type: 'photo',           label: 'Въпроси — снимка',      icon: 'add_photo_alternate', color: 'text-teal-500' },
   { type: 'class_voice',     label: 'Анонимни въпроси',      icon: 'record_voice_over', color: 'text-amber-500' },
+  { type: 'survey',          label: 'Анкети с отговори',     icon: 'poll',              color: 'text-indigo-500' },
   { type: 'better_together', label: 'По-добри заедно',       icon: 'diversity_3',       color: 'text-green-500' },
   { type: 'superhero',       label: 'Супергерой',            icon: 'auto_awesome',      color: 'text-purple-500' },
 ]
@@ -37,7 +38,7 @@ export default async function AdminQuestionsPage({
   // ── Preset questions ───────────────────────────────────────────────────
   const { data: allPresetQs } = await admin
     .from('questions')
-    .select('id, text, description, type, allows_media, order_index, voice_display, is_featured, preset')
+    .select('id, text, description, type, allows_media, order_index, voice_display, is_featured, preset, poll_options')
     .is('class_id', null)
     .eq('is_system', true)
     .not('preset', 'is', null)
@@ -140,11 +141,12 @@ export default async function AdminQuestionsPage({
               id: q.id,
               text: q.text,
               description: (q as { description?: string | null }).description ?? null,
-              type: q.type as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video',
+              type: q.type as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey',
               allows_media: (q as { allows_media?: boolean }).allows_media ?? false,
               order_index: q.order_index,
               voice_display: (q as { voice_display?: string | null }).voice_display ?? null,
               is_featured: (q as { is_featured?: boolean }).is_featured ?? false,
+              poll_options: (q as { poll_options?: string[] | null }).poll_options ?? null,
             }))}
           />
         </div>

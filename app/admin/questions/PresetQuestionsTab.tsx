@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { updatePresetQuestion, addPresetQuestion, deletePresetQuestion, reorderPresetQuestions } from '../actions'
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video'
+type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey'
 
 interface PresetQuestion {
   id: string
@@ -14,6 +14,7 @@ interface PresetQuestion {
   order_index: number
   voice_display: string | null
   is_featured: boolean
+  poll_options: string[] | null
 }
 
 const TYPE_LABELS: Record<QuestionType, string> = {
@@ -22,6 +23,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   better_together: 'По-добри заедно',
   superhero: 'Супергерой',
   video: 'Видео въпрос',
+  survey: 'Анкета с отговори',
 }
 const TYPE_COLOR: Record<QuestionType, string> = {
   personal: 'bg-blue-50 text-blue-600',
@@ -29,6 +31,7 @@ const TYPE_COLOR: Record<QuestionType, string> = {
   better_together: 'bg-green-50 text-green-600',
   superhero: 'bg-purple-50 text-purple-600',
   video: 'bg-rose-50 text-rose-600',
+  survey: 'bg-indigo-50 text-indigo-600',
 }
 
 const EMPTY_FORM = {
@@ -37,6 +40,7 @@ const EMPTY_FORM = {
   type: 'personal' as QuestionType,
   voice_display: 'wordcloud' as 'wordcloud' | 'barchart',
   is_featured: false,
+  poll_options: [] as string[],
 }
 
 // ─── Inline edit form ──────────────────────────────────────────────────────────
@@ -127,6 +131,44 @@ function QuestionEditForm({
         </div>
       )}
 
+      {form.type === 'survey' && (
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</label>
+          {form.poll_options.map((opt, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={opt}
+                onChange={e => {
+                  const next = [...form.poll_options]
+                  next[i] = e.target.value
+                  set('poll_options', next)
+                }}
+                placeholder={`Отговор ${i + 1}`}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              {form.poll_options.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => set('poll_options', form.poll_options.filter((_, j) => j !== i))}
+                  className="text-gray-400 hover:text-red-500 px-1"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => set('poll_options', [...form.poll_options, ''])}
+            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Добави отговор
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-1">
         <button
           onClick={() => onSave(form)}
@@ -170,6 +212,7 @@ function PresetRow({
         type: form.type,
         voice_display: form.type === 'class_voice' ? form.voice_display : null,
         is_featured: form.is_featured,
+        poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
       })
       if (result.error) setError(result.error)
       else { setEditing(false); setError(null) }
@@ -194,6 +237,7 @@ function PresetRow({
             type: question.type,
             voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
             is_featured: question.is_featured,
+            poll_options: question.poll_options ?? [],
           }}
           onSave={handleSave}
           onCancel={() => setEditing(false)}
@@ -292,6 +336,7 @@ export default function PresetQuestionsTab({
         voice_display: form.type === 'class_voice' ? form.voice_display : null,
         is_featured: form.is_featured,
         order_index: nextIndex,
+        poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
       })
       if (result.error) setAddError(result.error)
       else {
@@ -306,6 +351,7 @@ export default function PresetQuestionsTab({
           order_index: nextIndex,
           voice_display: form.type === 'class_voice' ? form.voice_display : null,
           is_featured: form.is_featured,
+          poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
         }])
       }
     })

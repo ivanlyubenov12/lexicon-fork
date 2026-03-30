@@ -8,26 +8,41 @@ const TYPES = [
   { value: 'video',           label: 'Видео' },
   { value: 'photo',           label: 'Снимка' },
   { value: 'class_voice',     label: 'Анонимен' },
+  { value: 'survey',          label: 'Анкета с отговори' },
   { value: 'better_together', label: 'По-добри заедно' },
   { value: 'superhero',       label: 'Супергерой' },
 ] as const
 
+type TypeValue = typeof TYPES[number]['value']
+
 export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
-  const [type, setType] = useState<typeof TYPES[number]['value']>('personal')
+  const [type, setType] = useState<TypeValue>('personal')
   const [order, setOrder] = useState(nextOrder)
+  const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit() {
     if (!text.trim()) return
+    const options = type === 'survey' ? pollOptions.filter(o => o.trim()) : null
+    if (type === 'survey' && (!options || options.length < 2)) {
+      setError('Добави поне 2 отговора за анкетата.')
+      return
+    }
     startTransition(async () => {
-      const result = await addSystemQuestion({ text: text.trim(), type, order_index: order })
+      const result = await addSystemQuestion({
+        text: text.trim(),
+        type,
+        order_index: order,
+        poll_options: options,
+      })
       if (result.error) { setError(result.error); return }
       setText('')
       setType('personal')
       setOrder(order + 1)
+      setPollOptions(['', ''])
       setOpen(false)
       setError(null)
     })
@@ -59,7 +74,7 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       <div className="flex gap-3">
         <select
           value={type}
-          onChange={(e) => setType(e.target.value as typeof type)}
+          onChange={(e) => setType(e.target.value as TypeValue)}
           className="border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
         >
           {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -73,6 +88,45 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
           min={1}
         />
       </div>
+
+      {type === 'survey' && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</p>
+          {pollOptions.map((opt, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={opt}
+                onChange={e => {
+                  const next = [...pollOptions]
+                  next[i] = e.target.value
+                  setPollOptions(next)
+                }}
+                placeholder={`Отговор ${i + 1}`}
+                className="flex-1 border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              {pollOptions.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                  className="text-gray-400 hover:text-red-500 px-2"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPollOptions([...pollOptions, ''])}
+            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Добави отговор
+          </button>
+        </div>
+      )}
+
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <button
