@@ -532,6 +532,7 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    justifyContent: 'center',
   },
   pollWinnerCard: {
     backgroundColor: C.indigoLight,
