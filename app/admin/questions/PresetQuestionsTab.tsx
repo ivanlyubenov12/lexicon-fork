@@ -428,7 +428,7 @@ export default function PresetQuestionsTab({
         <p className="px-6 py-5 text-xs text-gray-400 italic">Няма въпроси в този шаблон.</p>
       )}
 
-      {adding ? (
+      {adding && (
         <div className="px-4 pb-4 pt-2">
           {addError && <p className="text-red-500 text-xs mb-2">{addError}</p>}
           <QuestionEditForm
