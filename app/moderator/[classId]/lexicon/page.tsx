@@ -99,10 +99,10 @@ export default async function LexiconPage({
     const preset = classData.template_id ?? 'primary'
     const [sysRes, cusRes] = await Promise.all([
       admin.from('questions')
-        .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured')
+        .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured, poll_options, is_anonymous')
         .is('class_id', null).eq('is_system', true).eq('preset', preset).order('order_index'),
       admin.from('questions')
-        .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured')
+        .select('id, text, type, allows_text, allows_media, max_length, order_index, description, voice_display, is_featured, poll_options, is_anonymous')
         .eq('class_id', classId).eq('is_system', false).order('order_index'),
     ])
     const normalise = (rows: any[] | null) => (rows ?? []).map(q => ({
@@ -111,6 +111,8 @@ export default async function LexiconPage({
       voice_display: q.voice_display ?? null,
       is_featured: q.is_featured ?? false,
       max_length: q.max_length ?? null,
+      poll_options: q.poll_options ?? null,
+      is_anonymous: q.is_anonymous ?? true,
     }))
     systemQuestions = normalise(sysRes.data)
 
