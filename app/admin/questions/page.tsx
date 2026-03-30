@@ -6,6 +6,7 @@ import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 import QuestionRow from './QuestionRow'
 import AddQuestionForm from './AddQuestionForm'
 import PresetQuestionsTab from './PresetQuestionsTab'
+import CollapsibleGroup from './CollapsibleGroup'
 
 const TYPE_GROUPS = [
   { type: 'personal',        label: 'Въпроси за мен',        icon: 'person',            color: 'text-blue-500' },
@@ -93,34 +94,29 @@ export default async function AdminQuestionsPage({
           {TYPE_GROUPS.map(({ type, label, icon, color }) => {
             const typeQuestions = (archiveQuestions ?? []).filter(q => q.type === type)
             return (
-              <div key={type} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-50 bg-gray-50/30">
-                  <span className={`material-symbols-outlined ${color}`} style={{ fontSize: 18 }}>{icon}</span>
-                  <h2 className="font-bold text-gray-800 text-sm">{label}</h2>
-                  <span className="ml-auto text-xs text-gray-400">{typeQuestions.length} въпроса</span>
-                </div>
+              <CollapsibleGroup key={type} icon={icon} color={color} label={label} count={typeQuestions.length}>
                 {typeQuestions.length > 0 ? (
                   <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {typeQuestions.map((q) => (
-                        <QuestionRow
-                          key={q.id}
-                          id={q.id}
-                          text={q.text}
-                          type={q.type}
-                          orderIndex={q.order_index}
-                          voiceDisplay={(q as { voice_display?: string }).voice_display ?? null}
-                          allowsMedia={(q as { allows_media?: boolean }).allows_media ?? false}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {typeQuestions.map((q) => (
+                          <QuestionRow
+                            key={q.id}
+                            id={q.id}
+                            text={q.text}
+                            type={q.type}
+                            orderIndex={q.order_index}
+                            voiceDisplay={(q as { voice_display?: string }).voice_display ?? null}
+                            allowsMedia={(q as { allows_media?: boolean }).allows_media ?? false}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
                   <p className="px-6 py-5 text-xs text-gray-400 italic">Няма въпроси от този тип.</p>
                 )}
-              </div>
+              </CollapsibleGroup>
             )
           })}
 
