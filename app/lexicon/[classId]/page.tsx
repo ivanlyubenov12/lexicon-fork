@@ -48,14 +48,10 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
       linkedPollIds.add(cfg.pollId as string)
     }
     if (b.type === 'polls_grid') {
-      if (Array.isArray(cfg.pollIds) && cfg.pollIds.length > 0)
-        for (const id of cfg.pollIds as string[]) linkedPollIds.add(id)
-      else
-        linkedPollIds.add('__all__')
+      linkedPollIds.add('__all__')
     }
   }
 
-  // If any polls_grid block has no specific IDs, fetch all class polls
   if (linkedPollIds.has('__all__')) {
     linkedPollIds.delete('__all__')
     const { data: allClassPolls } = await admin

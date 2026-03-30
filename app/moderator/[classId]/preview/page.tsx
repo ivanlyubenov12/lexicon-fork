@@ -53,14 +53,11 @@ export default async function ModeratorPreviewPage({
     if (b.type === 'poll' && cfg.pollId)
       linkedPollIds.add(cfg.pollId as string)
     if (b.type === 'polls_grid') {
-      if (Array.isArray(cfg.pollIds) && cfg.pollIds.length > 0)
-        for (const id of cfg.pollIds as string[]) linkedPollIds.add(id)
-      else
-        linkedPollIds.add('__all__') // sentinel: fetch all class polls
+      linkedPollIds.add('__all__') // always load all class polls for polls_grid
     }
   }
 
-  // If any polls_grid block has no specific IDs, fetch all class polls
+  // polls_grid always loads all class polls (layout config may have stale IDs)
   if (linkedPollIds.has('__all__')) {
     linkedPollIds.delete('__all__')
     const { data: allClassPolls } = await admin
