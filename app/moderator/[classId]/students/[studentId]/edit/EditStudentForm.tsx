@@ -8,6 +8,7 @@ import PhotoCropModal from '@/app/components/PhotoCropModal'
 interface Props {
   classId: string
   photoUrl: string | null
+  registeredEmail: string | null
   student: {
     id: string
     first_name: string
@@ -16,11 +17,11 @@ interface Props {
   }
 }
 
-export default function EditStudentForm({ classId, student, photoUrl }: Props) {
+export default function EditStudentForm({ classId, student, photoUrl, registeredEmail }: Props) {
   const router = useRouter()
   const [firstName, setFirstName] = useState(student.first_name)
   const [lastName, setLastName]   = useState(student.last_name)
-  const [parentEmail, setParentEmail] = useState(student.parent_email ?? '')
+  const [parentEmail, setParentEmail] = useState(registeredEmail ?? student.parent_email ?? '')
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
@@ -189,7 +190,7 @@ export default function EditStudentForm({ classId, student, photoUrl }: Props) {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-              Имейл на родителя
+              Имейл
             </label>
             <input
               type="email"

@@ -19,12 +19,19 @@ export default async function EditStudentPage({ params }: Props) {
 
   const { data: student, error } = await supabase
     .from('students')
-    .select('id, first_name, last_name, parent_email, photo_url')
+    .select('id, first_name, last_name, parent_email, photo_url, parent_user_id, invite_accepted_at')
     .eq('id', studentId)
     .eq('class_id', classId)
     .single()
 
   if (error || !student) redirect(`/moderator/${classId}/students`)
+
+  // If magic link accepted, show registered email
+  let registeredEmail: string | null = null
+  if (student.invite_accepted_at && student.parent_user_id) {
+    const { data: userData } = await supabase.auth.admin.getUserById(student.parent_user_id)
+    registeredEmail = userData?.user?.email ?? null
+  }
 
   const [namePart] = classData?.name?.includes(' — ')
     ? classData.name.split(' — ')
@@ -56,7 +63,7 @@ export default async function EditStudentPage({ params }: Props) {
           </p>
         </div>
 
-        <EditStudentForm classId={classId} student={student} photoUrl={student.photo_url ?? null} />
+        <EditStudentForm classId={classId} student={student} photoUrl={student.photo_url ?? null} registeredEmail={registeredEmail} />
       </main>
     </div>
   )
