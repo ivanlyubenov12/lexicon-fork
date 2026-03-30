@@ -425,8 +425,8 @@ export default function StudentProfileParent({
         <Section
           id="photo"
           icon="photo_camera"
-          title="Снимка на детето"
-          description={`Снимката ще украси личната страница на ${student.first_name} в лексикона. Може да качите портретна снимка или любима снимка на детето.`}
+          title="Снимка"
+          description="Снимката ще украси личната страница в лексикона. Може да направите снимка, или да изберете от галерията си."
           status={photoStatus}
           statusLabel={student.photo_url ? 'Качена' : 'Липсва'}
           open={openSection === 'photo'}
