@@ -219,7 +219,7 @@ export async function addStudentsBulk(
     valid.map(s => ({
       class_id: classId,
       first_name: s.first_name.trim(),
-      last_name: s.last_name.trim() || null,
+      last_name: s.last_name.trim() || '',
       parent_email: s.parent_email.trim() || null,
     }))
   )
