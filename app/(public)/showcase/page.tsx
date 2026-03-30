@@ -105,9 +105,7 @@ export default async function ShowcasePage() {
                 ? cls.name.split(' — ')
                 : [cls.name, null]
               const count = studentCountMap[cls.id] ?? 0
-              const teaser = cls.superhero_prompt
-                ? `„${cls.superhero_prompt.slice(0, 90)}${cls.superhero_prompt.length > 90 ? '…' : ''}"`
-                : '„Разгледайте профилите на децата и техните истории."'
+              const teaser = '„Разгледайте профилите на децата и техните истории."'
 
               return (
                 <Link
@@ -179,7 +177,7 @@ export default async function ShowcasePage() {
               { icon: 'person',            label: 'Профил на всяко дете' },
               { icon: 'mail',              label: 'Послания от съучениците' },
               { icon: 'record_voice_over', label: 'Гласът на класа' },
-              { icon: 'auto_awesome',      label: 'AI супергерой' },
+              // { icon: 'auto_awesome', label: 'AI супергерой' }, // hidden
             ].map(({ icon, label }) => (
               <div
                 key={label}

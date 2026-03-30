@@ -234,35 +234,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Card 4 — wide with photo grid */}
-            <div className="md:col-span-7 bg-white p-10 rounded-3xl shadow-sm border border-[#eeeeed] flex flex-col md:flex-row gap-8 items-center overflow-hidden hover:-translate-y-1 transition-all duration-300">
-              <div className="flex-1 space-y-4">
-                <span className="material-symbols-outlined text-4xl text-[#3632b7]">photo_library</span>
-                <h3
-                  className="text-2xl font-bold text-[#3632b7]"
-                  style={{ fontFamily: 'Noto Serif, serif' }}
-                >
-                  AI Супергерой
-                </h3>
-                <p className="text-[#464555]/80">
-                  Децата описват учителката си като супергерой — AI рисува нейния образ и го вплита в лексикона.
-                </p>
-              </div>
-              <div className="flex-shrink-0 w-48">
-                <div className="grid grid-cols-2 gap-2 transform rotate-3 scale-90">
-                  {[
-                    'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&q=80',
-                    'https://images.unsplash.com/photo-1543165796-5426273eaab3?w=200&q=80',
-                    'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200&q=80',
-                    'https://images.unsplash.com/photo-1472162072942-cd5147eb3902?w=200&q=80',
-                  ].map((src, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-[#eeeeed]">
-                      <img src={src} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Card 4 — AI Superhero (hidden) */}
           </div>
         </div>
       </section>
@@ -338,7 +310,7 @@ export default function HomePage() {
                   'Дигитален лексикон онлайн',
                   'Профили с текст и аудио',
                   'Послания между съученици',
-                  'AI Супергерой образ',
+                  // 'AI Супергерой образ', // hidden
                   'Модераторски панел',
                   'Достъп завинаги',
                 ].map((f) => (

@@ -612,18 +612,7 @@ export default function Dashboard({
               ))
             )}
 
-            {/* Superhero link */}
-            <Link href={`${base}/superhero`}
-              className="bg-white border border-gray-100 rounded-2xl p-5 flex items-center justify-between group hover:bg-indigo-600 hover:border-indigo-600 transition-all duration-300 cursor-pointer">
-              <div className="flex items-center gap-3">
-                <Icon name="auto_awesome" className="text-indigo-500 group-hover:text-white text-xl" />
-                <div>
-                  <p className="text-sm font-bold text-gray-800 group-hover:text-white">Супергерой</p>
-                  <p className="text-xs text-slate-400 group-hover:text-indigo-200">AI образ на класната</p>
-                </div>
-              </div>
-              <Icon name="arrow_forward" className="text-slate-300 group-hover:text-white text-base" />
-            </Link>
+            {/* Superhero link — hidden */}
           </div>
         </div>
       </main>
