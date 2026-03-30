@@ -138,7 +138,7 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
       return (
         <ClassVoiceConfig
           cfg={cfg}
-          assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display !== 'barchart') }}
+          assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display !== 'barchart' && q.type !== 'survey') }}
           classId={classId}
           defaultDisplay="wordcloud"
           set={set}
@@ -149,7 +149,7 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
       return (
         <ClassVoiceConfig
           cfg={cfg}
-          assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display === 'barchart') }}
+          assets={{ ...assets, voiceQuestions: assets.voiceQuestions.filter(q => q.voice_display === 'barchart' || q.type === 'survey') }}
           classId={classId}
           defaultDisplay="barchart"
           set={set}

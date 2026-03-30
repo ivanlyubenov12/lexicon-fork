@@ -43,12 +43,12 @@ export default async function MyChildPage({ params }: Props) {
   // Only fetch questions the moderator explicitly added to this class
   const { data: allClassQuestions } = await admin
     .from('questions')
-    .select('id, text, order_index, allows_text, allows_media, type')
+    .select('id, text, order_index, allows_text, allows_media, type, poll_options')
     .eq('class_id', student.class_id)
     .order('order_index')
 
   const personalQuestions = (allClassQuestions ?? []).filter(q => q.type === 'personal')
-  const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'class_voice')
+  const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'class_voice' || q.type === 'survey')
   const classQuestions = (allClassQuestions ?? []).filter(q =>
     ['superhero', 'better_together', 'video'].includes(q.type)
   )

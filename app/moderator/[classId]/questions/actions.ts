@@ -32,12 +32,13 @@ export async function createQuestion(
   data: {
     text: string
     description?: string | null
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
+    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null
     order_index: number
     voice_display?: 'wordcloud' | 'barchart'
+    poll_options?: string[] | null
   }
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
@@ -52,7 +53,8 @@ export async function createQuestion(
     allows_media: data.allows_media,
     max_length: data.max_length,
     order_index: data.order_index,
-    voice_display: data.voice_display ?? 'wordcloud',
+    voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
+    poll_options: data.poll_options ?? null,
   })
 
   if (error) {
@@ -71,12 +73,13 @@ export async function updateQuestion(
   data: {
     text: string
     description?: string | null
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo'
+    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null
     order_index: number
     voice_display?: 'wordcloud' | 'barchart'
+    poll_options?: string[] | null
   }
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
@@ -91,7 +94,8 @@ export async function updateQuestion(
       allows_media: data.allows_media,
       max_length: data.max_length,
       order_index: data.order_index,
-      voice_display: data.voice_display ?? 'wordcloud',
+      voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
+      poll_options: data.poll_options ?? null,
     })
     .eq('id', questionId)
     .eq('class_id', classId) // safety: only update own questions
