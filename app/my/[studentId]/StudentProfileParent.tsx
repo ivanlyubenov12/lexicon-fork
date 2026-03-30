@@ -135,20 +135,20 @@ function Section({
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left"
+        className="w-full flex items-start gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left"
       >
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${iconColors[accentColor]}`}>
           <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-800 text-sm leading-tight">{title}</p>
+          <div className="mt-1.5">
+            <StatusChip status={status} label={statusLabel} />
+          </div>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <StatusChip status={status} label={statusLabel} />
-          <span className={`material-symbols-outlined text-gray-400 text-base transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-            expand_more
-          </span>
-        </div>
+        <span className={`material-symbols-outlined text-gray-400 text-base transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`}>
+          expand_more
+        </span>
       </button>
 
       {open && (
