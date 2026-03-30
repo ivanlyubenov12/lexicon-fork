@@ -43,7 +43,7 @@ export default async function MyChildPage({ params }: Props) {
   // Only fetch questions the moderator explicitly added to this class
   const { data: allClassQuestions } = await admin
     .from('questions')
-    .select('id, text, order_index, allows_text, allows_media, type, poll_options')
+    .select('id, text, order_index, allows_text, allows_media, type, poll_options, is_anonymous')
     .eq('class_id', student.class_id)
     .order('order_index')
 
@@ -91,6 +91,22 @@ export default async function MyChildPage({ params }: Props) {
     existingVotes[v.poll_id] = v.nominee_student_id
   }
 
+  // Existing answers for non-anonymous survey questions (to pre-populate selection)
+  const nonAnonSurveyIds = (allClassQuestions ?? [])
+    .filter(q => q.type === 'survey' && q.is_anonymous === false)
+    .map(q => q.id)
+  const existingSurveyAnswers: Record<string, string> = {}
+  if (nonAnonSurveyIds.length > 0) {
+    const { data: surveyAnswers } = await admin
+      .from('class_voice_answers')
+      .select('question_id, content')
+      .eq('student_id', studentId)
+      .in('question_id', nonAnonSurveyIds)
+    for (const a of surveyAnswers ?? []) {
+      existingSurveyAnswers[a.question_id] = a.content
+    }
+  }
+
   // Events (memories) for this class
   const { data: eventsData } = await admin
     .from('events')
@@ -127,10 +143,12 @@ export default async function MyChildPage({ params }: Props) {
       classVoiceQuestions={classVoiceQuestions ?? []}
       answers={answers ?? []}
       classId={student.class_id}
+      studentId={studentId}
       classmates={classmates ?? []}
       sentMessages={sentMessages ?? []}
       polls={polls ?? []}
       existingVotes={existingVotes}
+      existingSurveyAnswers={existingSurveyAnswers}
       events={events}
       moderatorName={moderatorName}
       deadline={classData?.deadline ?? null}

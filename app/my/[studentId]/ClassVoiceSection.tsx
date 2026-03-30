@@ -8,28 +8,36 @@ interface Question {
   text: string
   order_index: number
   poll_options?: string[] | null
+  is_anonymous?: boolean
 }
 
 interface Props {
   classId: string
+  studentId: string
   questions: Question[]
+  initialAnswers?: Record<string, string>
   onFinalize?: () => void
 }
 
 function VoiceQuestionCard({
   classId,
+  studentId,
   question,
   submitted,
+  initialSelected,
   onSubmitted,
 }: {
   classId: string
+  studentId: string
   question: Question
   submitted: boolean
+  initialSelected?: string
   onSubmitted: () => void
 }) {
   const isSurvey = Array.isArray(question.poll_options) && question.poll_options.length > 0
+  const isAnonymous = question.is_anonymous !== false // default true
   const [text, setText] = useState('')
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(initialSelected ?? null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,17 +46,25 @@ function VoiceQuestionCard({
     if (!value?.trim()) return
     setError(null)
     setSubmitting(true)
-    const result = await submitClassVoiceAnswer(classId, question.id, value.trim())
+    const result = await submitClassVoiceAnswer(
+      classId,
+      question.id,
+      value.trim(),
+      isAnonymous ? undefined : studentId
+    )
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
     } else {
-      if (typeof window !== 'undefined') {
+      if (isAnonymous && typeof window !== 'undefined') {
         localStorage.setItem(`class_voice_${classId}_${question.id}`, '1')
       }
       onSubmitted()
     }
   }
+
+  // For non-anonymous: show current selection even after submit (can change)
+  const showSelected = !isAnonymous && selected
 
   return (
     <div className="bg-[#faf9f8] rounded-2xl p-5 space-y-3">
@@ -56,7 +72,7 @@ function VoiceQuestionCard({
         {question.text}
       </p>
 
-      {submitted ? (
+      {submitted && isAnonymous ? (
         <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium py-2">
           <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />
           Изпратено анонимно ✓
@@ -77,8 +93,19 @@ function VoiceQuestionCard({
               {opt}
             </button>
           ))}
+
+          {/* Show saved answer badge for non-anonymous */}
+          {!isAnonymous && showSelected && submitted && (
+            <div className="flex items-center gap-2 text-sm text-indigo-600 font-medium py-1">
+              <span className="w-2 h-2 bg-indigo-400 rounded-full flex-shrink-0" />
+              Твоят глас: <span className="font-bold">{selected}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-gray-400">Анонимен отговор</span>
+            <span className="text-xs text-gray-400">
+              {isAnonymous ? 'Анонимен отговор' : 'Гласът ти ще се вижда в профила ти'}
+            </span>
             <div className="flex items-center gap-3">
               {error && <span className="text-xs text-red-500">{error}</span>}
               <button
@@ -86,7 +113,7 @@ function VoiceQuestionCard({
                 disabled={submitting || !selected}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
               >
-                {submitting ? 'Изпращане...' : 'Изпрати'}
+                {submitting ? 'Изпращане...' : submitted && !isAnonymous ? 'Промени' : 'Изпрати'}
               </button>
             </div>
           </div>
@@ -120,7 +147,7 @@ function VoiceQuestionCard({
   )
 }
 
-export default function ClassVoiceSection({ classId, questions, onFinalize }: Props) {
+export default function ClassVoiceSection({ classId, studentId, questions, initialAnswers = {}, onFinalize }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set())
 
@@ -128,12 +155,20 @@ export default function ClassVoiceSection({ classId, questions, onFinalize }: Pr
     if (typeof window === 'undefined') return
     const initial = new Set<string>()
     for (const q of questions) {
-      if (localStorage.getItem(`class_voice_${classId}_${q.id}`)) {
-        initial.add(q.id)
+      const isAnonymous = q.is_anonymous !== false
+      if (isAnonymous) {
+        if (localStorage.getItem(`class_voice_${classId}_${q.id}`)) {
+          initial.add(q.id)
+        }
+      } else {
+        // Non-anonymous: submitted if we have an initial answer from server
+        if (initialAnswers[q.id]) {
+          initial.add(q.id)
+        }
       }
     }
     setSubmittedIds(initial)
-  }, [classId, questions])
+  }, [classId, questions, initialAnswers])
 
   if (questions.length === 0) return null
 
@@ -151,8 +186,10 @@ export default function ClassVoiceSection({ classId, questions, onFinalize }: Pr
       <VoiceQuestionCard
         key={question.id}
         classId={classId}
+        studentId={studentId}
         question={question}
         submitted={submittedIds.has(question.id)}
+        initialSelected={initialAnswers[question.id]}
         onSubmitted={() => setSubmittedIds(prev => new Set([...prev, question.id]))}
       />
 

@@ -30,12 +30,14 @@ interface Props {
   personalQuestions: Question[]
   classQuestions: Question[]
   answers: Array<{ question_id: string; status: string }>
-  classVoiceQuestions: Array<{ id: string; text: string; order_index: number }>
+  classVoiceQuestions: Array<{ id: string; text: string; order_index: number; poll_options?: string[] | null; is_anonymous?: boolean }>
   classId: string
+  studentId: string
   classmates: Array<{ id: string; first_name: string; last_name: string; photo_url: string | null }>
   sentMessages: Array<{ recipient_student_id: string; status: string; content: string }>
   polls: Array<{ id: string; question: string; order_index: number }>
   existingVotes: Record<string, string>
+  existingSurveyAnswers: Record<string, string>
   moderatorName: string | null
   deadline: string | null
   events: Array<{
@@ -174,10 +176,12 @@ export default function StudentProfileParent({
   classVoiceQuestions,
   answers,
   classId,
+  studentId,
   classmates,
   sentMessages,
   polls,
   existingVotes,
+  existingSurveyAnswers,
   moderatorName,
   deadline,
   events,
@@ -555,7 +559,9 @@ export default function StudentProfileParent({
           >
             <ClassVoiceSection
               classId={classId}
+              studentId={studentId}
               questions={classVoiceQuestions}
+              initialAnswers={existingSurveyAnswers}
               onFinalize={() => {
                 const allDone = classVoiceQuestions.every(q =>
                   typeof window !== 'undefined' && !!localStorage.getItem(`class_voice_${classId}_${q.id}`)

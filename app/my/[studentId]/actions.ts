@@ -6,16 +6,29 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 export async function submitClassVoiceAnswer(
   classId: string,
   questionId: string,
-  content: string
+  content: string,
+  studentId?: string
 ): Promise<{ error: string | null }> {
   if (!content.trim()) return { error: 'Отговорът не може да е празен.' }
 
   const admin = createServiceRoleClient()
-  const { error } = await admin
-    .from('class_voice_answers')
-    .insert({ class_id: classId, question_id: questionId, content: content.trim() })
 
-  if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+  if (studentId) {
+    // Non-anonymous: upsert so student can change their answer
+    const { error } = await admin
+      .from('class_voice_answers')
+      .upsert(
+        { class_id: classId, question_id: questionId, content: content.trim(), student_id: studentId },
+        { onConflict: 'question_id,student_id' }
+      )
+    if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+  } else {
+    const { error } = await admin
+      .from('class_voice_answers')
+      .insert({ class_id: classId, question_id: questionId, content: content.trim() })
+    if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
+  }
+
   return { error: null }
 }
 

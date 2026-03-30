@@ -87,7 +87,7 @@ export default async function ClassVoicePage() {
             <p className="text-sm text-gray-500">Няма активни въпроси в момента.</p>
           </div>
         ) : (
-          <ClassVoiceSection classId={student.class_id} questions={voiceQuestions} />
+          <ClassVoiceSection classId={student.class_id} studentId={student.id} questions={voiceQuestions} />
         )}
 
       </div>

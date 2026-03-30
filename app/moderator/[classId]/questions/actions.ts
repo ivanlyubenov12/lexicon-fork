@@ -39,6 +39,7 @@ export async function createQuestion(
     order_index: number
     voice_display?: 'wordcloud' | 'barchart'
     poll_options?: string[] | null
+    is_anonymous?: boolean
   }
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
@@ -55,6 +56,7 @@ export async function createQuestion(
     order_index: data.order_index,
     voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
     poll_options: data.poll_options ?? null,
+    is_anonymous: data.is_anonymous ?? true,
   })
 
   if (error) {
@@ -80,6 +82,7 @@ export async function updateQuestion(
     order_index: number
     voice_display?: 'wordcloud' | 'barchart'
     poll_options?: string[] | null
+    is_anonymous?: boolean
   }
 ): Promise<{ error: string | null }> {
   const supabase = createServiceRoleClient()
@@ -96,6 +99,7 @@ export async function updateQuestion(
       order_index: data.order_index,
       voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
       poll_options: data.poll_options ?? null,
+      is_anonymous: data.is_anonymous ?? true,
     })
     .eq('id', questionId)
     .eq('class_id', classId) // safety: only update own questions

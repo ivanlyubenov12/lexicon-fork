@@ -18,6 +18,7 @@ interface Question {
   voice_display: 'wordcloud' | 'barchart' | null
   is_featured: boolean
   poll_options: string[] | null
+  is_anonymous: boolean
 }
 
 interface Props {
@@ -49,6 +50,7 @@ const EMPTY_FORM = {
   max_length: '',
   voice_display: 'wordcloud' as 'wordcloud' | 'barchart',
   poll_options: [] as string[],
+  is_anonymous: true,
 }
 
 // ─── Form ─────────────────────────────────────────────────────────────────────
@@ -216,6 +218,30 @@ function QuestionForm({
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-2">Резултатите ще се показват като бар диаграма.</p>
+          {/* Anonymous toggle */}
+          <div className="flex items-center justify-between mt-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Анонимна анкета</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {form.is_anonymous
+                  ? 'Гласовете не се свързват с имена'
+                  : 'Гласът се вижда в личната страница на всеки'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => set('is_anonymous', !form.is_anonymous)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                form.is_anonymous ? 'bg-indigo-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  form.is_anonymous ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       )}
 
@@ -294,6 +320,7 @@ function QuestionCard({
         order_index: question.order_index,
         voice_display: form.voice_display,
         poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+        is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
       })
       if (result.error) {
         setError(result.error)
@@ -306,6 +333,7 @@ function QuestionCard({
           max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
           voice_display: form.voice_display,
           poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+          is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
         })
         setEditing(false)
         setError(null)
@@ -334,6 +362,7 @@ function QuestionCard({
             max_length: question.max_length?.toString() ?? '',
             voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
             poll_options: question.poll_options ?? [],
+            is_anonymous: question.is_anonymous,
           }}
           onSave={handleSave}
           onCancel={() => setEditing(false)}
@@ -543,6 +572,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
         order_index: nextIndex,
         voice_display: form.voice_display,
         poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+        is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
       })
 
       if (result.error) {
@@ -563,6 +593,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             voice_display: form.type === 'survey' ? 'barchart' : form.voice_display,
             is_featured: false,
             poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+            is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
           },
         ])
       }

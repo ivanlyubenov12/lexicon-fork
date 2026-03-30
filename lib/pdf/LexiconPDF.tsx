@@ -1292,6 +1292,58 @@ function StudentsGridPage({ students, classInfo, isFirst, totalCount, bgPng }: {
   )
 }
 
+// ─── Closing / Credits Page ──────────────────────────────────────────────────
+
+function ClosingPage({ data }: { data: PDFData }) {
+  const { classInfo } = data
+  const year = classInfo.school_year?.split('/')[0] ?? new Date().getFullYear().toString()
+  return (
+    <Page size="A4" style={s.coverPage}>
+      <View style={s.coverTopBar} />
+      <View style={s.coverBottomBar} />
+
+      <View style={s.coverContent}>
+        {/* School logo */}
+        {classInfo.school_logo_url && (
+          <View style={{ marginBottom: 28, alignItems: 'center' }}>
+            <Image
+              src={classInfo.school_logo_url}
+              style={{ width: 56, height: 56, objectFit: 'contain' }}
+            />
+          </View>
+        )}
+
+        <Text style={s.coverTagline}>Малки спомени</Text>
+        <Text style={s.coverTitle}>{classInfo.namePart}</Text>
+        {classInfo.schoolPart && (
+          <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8, textAlign: 'center' }}>
+            {classInfo.schoolPart}
+          </Text>
+        )}
+        <Text style={s.coverYear}>{classInfo.school_year}</Text>
+
+        <View style={s.coverDivider} />
+
+        <Text style={{ ...s.coverQuote, fontSize: 9 }}>
+          Тази книга е създадена с помощта на платформата Малки спомени.{'\n'}
+          Тя пази спомените на {data.students.length} {
+            (data.preset === 'friends' || data.preset === 'sports' || data.preset === 'kindergarten')
+              ? 'участника'
+              : 'ученика'
+          } от учебната {classInfo.school_year} година.
+        </Text>
+      </View>
+
+      {/* Colophon */}
+      <View style={{ position: 'absolute', bottom: 28, left: 0, right: 0, alignItems: 'center', gap: 4 }}>
+        <Text style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', letterSpacing: 1 }}>
+          © {year} · malki-spomeni.bg
+        </Text>
+      </View>
+    </Page>
+  )
+}
+
 // ─── Main Document ───────────────────────────────────────────────────────────
 
 export function LexiconPDF({ data }: { data: PDFData }) {
@@ -1344,6 +1396,8 @@ export function LexiconPDF({ data }: { data: PDFData }) {
       {data.events.length > 0 ? (
         <MemoriesPage events={data.events} classInfo={data.classInfo} startPageNum={eventPageNum} bgPng={data.bg_pattern_png} />
       ) : null}
+
+      <ClosingPage data={data} />
     </Document>
   )
 }
