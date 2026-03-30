@@ -372,10 +372,7 @@ function SubjectsBarBlock({ data, config }: { data: LexiconData; config: Record<
 }
 
 function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
-  const pollIds = (config.pollIds as string[] | undefined) ?? Object.keys(data.pollData)
-  const allPolls = pollIds
-    .filter(id => !!data.pollData[id])
-    .map(id => ({ id, ...data.pollData[id] }))
+  const allPolls = Object.entries(data.pollData).map(([id, p]) => ({ id, ...p }))
   const hasAnyVotes = allPolls.some(p => p.nominees && p.nominees.length > 0)
 
   if (allPolls.length === 0) return <PlaceholderBlock icon="emoji_events" text="Все още няма анкети" color="secondary" />
