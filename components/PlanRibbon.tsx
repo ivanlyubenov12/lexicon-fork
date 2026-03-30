@@ -2,6 +2,7 @@ import { normalisePlan, PLANS } from '@/lib/plans'
 
 export default function PlanRibbon({ plan }: { plan: string | null | undefined }) {
   const p = normalisePlan(plan)
+  if (p === 'free') return null
   const meta = PLANS[p]
   return (
     <div className="absolute top-0 right-0 overflow-hidden w-20 h-20 pointer-events-none">
