@@ -468,7 +468,7 @@ export default function StudentProfileParent({
             onToggle={() => toggle('memories')}
             accentColor="teal"
           >
-            <MemoriesSection studentId={student.id} events={events} onFinalize={() => toggle('memories')} />
+            <MemoriesSection studentId={student.id} events={events} />
           </Section>
         )}
 

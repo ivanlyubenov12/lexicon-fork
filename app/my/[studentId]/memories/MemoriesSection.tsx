@@ -1,204 +1,53 @@
-'use client'
-
-import { useState, useTransition } from 'react'
-import { addEventComment, deleteEventComment } from './actions'
-
-interface EventComment {
-  id: string
-  comment_text: string
-  created_at: string
-}
+import Link from 'next/link'
 
 interface Event {
   id: string
   title: string
   event_date: string | null
   photos: string[]
-  myComment: EventComment | null
+  myComment: { id: string; comment_text: string; created_at: string } | null
 }
 
 interface Props {
   studentId: string
   events: Event[]
-  onFinalize?: () => void
 }
 
-export default function MemoriesSection({ studentId, events, onFinalize }: Props) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-
+export default function MemoriesSection({ studentId, events }: Props) {
   if (events.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <span className="material-symbols-outlined text-4xl text-gray-300 block mb-3">photo_album</span>
-        <p className="text-gray-400 text-sm">Учителят все още не е добавил спомени.</p>
+      <div className="text-center py-6 text-sm text-gray-400">
+        Няма добавени събития.
       </div>
     )
   }
 
-  const event = events[currentIndex]
-  const commentedCount = events.filter(e => e.myComment).length
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between text-xs text-gray-400">
-        <span>{currentIndex + 1} от {events.length}</span>
-        {commentedCount > 0 && (
-          <span className="text-emerald-600 font-medium">{commentedCount} / {events.length} коментара</span>
-        )}
-      </div>
+    <div className="divide-y divide-gray-100">
+      {events.map((event, i) => {
+        const hasComment = !!event.myComment
+        const dotColor = hasComment ? 'bg-green-500' : 'bg-gray-200 group-hover:bg-indigo-300'
 
-      <EventCommentCard key={event.id} event={event} studentId={studentId} />
-
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
-          disabled={currentIndex === 0}
-          className="flex-none px-5 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
-        >
-          ← Назад
-        </button>
-        {currentIndex < events.length - 1 ? (
-          <button
-            onClick={() => setCurrentIndex(i => i + 1)}
-            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
+        return (
+          <Link
+            key={event.id}
+            href={`/my/${studentId}/event/${event.id}`}
+            className="flex items-center gap-3 px-5 py-3.5 hover:bg-indigo-50 transition-colors group"
           >
-            Напред →
-          </button>
-        ) : (
-          <button
-            onClick={onFinalize}
-            className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm"
-          >
-            Финализирай секцията ✓
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function EventCommentCard({ event, studentId }: { event: Event; studentId: string }) {
-  const [comment, setComment] = useState(event.myComment?.comment_text ?? '')
-  const [saved, setSaved] = useState(!!event.myComment)
-  const [savedId, setSavedId] = useState(event.myComment?.id ?? null)
-  const [editing, setEditing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-
-  const photo = event.photos?.[0] ?? null
-
-  function handleSave() {
-    setError(null)
-    startTransition(async () => {
-      // If already saved, delete first then re-add
-      if (savedId) {
-        await deleteEventComment(savedId, studentId)
-        setSavedId(null)
-      }
-      const result = await addEventComment(event.id, studentId, comment)
-      if (result.error) {
-        setError(result.error)
-      } else {
-        setSaved(true)
-        setEditing(false)
-      }
-    })
-  }
-
-  function handleDelete() {
-    if (!savedId) return
-    setError(null)
-    startTransition(async () => {
-      const result = await deleteEventComment(savedId, studentId)
-      if (result.error) {
-        setError(result.error)
-      } else {
-        setSaved(false)
-        setSavedId(null)
-        setComment('')
-        setEditing(false)
-      }
-    })
-  }
-
-  return (
-    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-      {/* Full-width photo */}
-      {photo ? (
-        <img src={photo} alt={event.title} className="w-full aspect-video object-cover" />
-      ) : (
-        <div className="w-full aspect-video bg-indigo-50 flex items-center justify-center">
-          <span className="material-symbols-outlined text-indigo-300 text-4xl">event</span>
-        </div>
-      )}
-
-      <div className="p-4">
-        {/* Info */}
-        <div className="min-w-0 mb-3">
-          <p className="font-semibold text-gray-800 text-sm">{event.title}</p>
-          {event.event_date && (
-            <p className="text-xs text-gray-400 mt-0.5">
-              {new Date(event.event_date).toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          )}
-
-          {/* Comment display / form */}
-          <div className="mt-3">
-            {saved && !editing ? (
-              <div className="bg-indigo-50 rounded-xl px-3 py-2.5">
-                <p className="text-sm text-indigo-800 leading-snug" style={{ fontFamily: 'Noto Serif, serif' }}>
-                  „{comment}"
-                </p>
-                <div className="flex gap-3 mt-2">
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors"
-                  >
-                    Редактирай
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={isPending}
-                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    Изтрий
-                  </button>
-                </div>
-              </div>
+            <span className="text-xs font-bold text-gray-300 w-5 text-center flex-shrink-0">{i + 1}</span>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
+            <span className="material-symbols-outlined text-sm text-gray-300 group-hover:text-indigo-400 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>photo_album</span>
+            <span className="flex-1 text-sm text-gray-700 group-hover:text-indigo-800 leading-snug truncate">
+              {event.title}
+            </span>
+            {hasComment ? (
+              <span className="text-xs text-green-600 font-medium flex-shrink-0">✓</span>
             ) : (
-              <div className="space-y-2">
-                <textarea
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  rows={2}
-                  maxLength={300}
-                  placeholder="Напиши коментар към тази снимка..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
-                />
-                {error && <p className="text-red-500 text-xs">{error}</p>}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={isPending || !comment.trim()}
-                    className="bg-indigo-600 text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                  >
-                    {isPending ? 'Запазване...' : 'Запази'}
-                  </button>
-                  {(saved || editing) && (
-                    <button
-                      onClick={() => { setEditing(false); setComment(event.myComment?.comment_text ?? '') }}
-                      disabled={isPending}
-                      className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
-                    >
-                      Отказ
-                    </button>
-                  )}
-                </div>
-              </div>
+              <span className="material-symbols-outlined text-gray-300 group-hover:text-indigo-400 text-base">arrow_forward</span>
             )}
-          </div>
-        </div>
-      </div>
+          </Link>
+        )
+      })}
     </div>
   )
 }
