@@ -934,7 +934,7 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
       {/* Page footer */}
       <View style={s.pageFooter}>
         <Text style={s.pageFooterText} />
-        <Text style={s.pageFooterText}>1</Text>
+        <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
       </View>
       <BgImage png={data.bg_pattern_png} />
     </Page>
@@ -943,10 +943,9 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-function StudentPage({ student, classInfo, pageNum, bgPng }: {
+function StudentPage({ student, classInfo, bgPng }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
-  pageNum: number
   bgPng?: Buffer | null
 }) {
   const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
@@ -976,15 +975,20 @@ function StudentPage({ student, classInfo, pageNum, bgPng }: {
           {/* QR codes for video answers */}
           {videoQrs.map((v, i) => (
             <View key={i} style={{ marginTop: 12, alignItems: 'center' }}>
-              <Image
-                src={`data:image/png;base64,${v.qr_png!.toString('base64')}`}
-                style={{ width: 120, height: 120 }}
-              />
               {v.question_text ? (
-                <Text style={{ fontSize: 6, color: C.muted, textAlign: 'center', marginTop: 4, lineHeight: 1.4 }}>
-                  {truncate(v.question_text, 40)}
+                <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.indigo, textAlign: 'center', marginBottom: 5, lineHeight: 1.4 }}>
+                  {truncate(v.question_text, 50)}
                 </Text>
               ) : null}
+              <Link src={v.url}>
+                <Image
+                  src={`data:image/png;base64,${v.qr_png!.toString('base64')}`}
+                  style={{ width: 80, height: 80 }}
+                />
+              </Link>
+              <Text style={{ fontSize: 6, color: C.muted, textAlign: 'center', marginTop: 4, fontStyle: 'italic', lineHeight: 1.4 }}>
+                Сканирай кода, за да видиш посланието
+              </Text>
             </View>
           ))}
         </View>
@@ -1091,7 +1095,7 @@ function StudentPage({ student, classInfo, pageNum, bgPng }: {
       {/* Page footer */}
       <View style={s.pageFooter}>
         <Text style={s.pageFooterText} />
-        <Text style={s.pageFooterText}>{pageNum}</Text>
+        <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
       </View>
       <BgImage png={bgPng} />
     </Page>
@@ -1100,10 +1104,9 @@ function StudentPage({ student, classInfo, pageNum, bgPng }: {
 
 // ─── Polls Page ──────────────────────────────────────────────────────────────
 
-function PollsPage({ polls, classInfo, pageNum, bgPng }: {
+function PollsPage({ polls, classInfo, bgPng }: {
   polls: PDFPoll[]
   classInfo: PDFData['classInfo']
-  pageNum: number
   bgPng?: Buffer | null
 }) {
   if (polls.length === 0) return null
@@ -1138,7 +1141,7 @@ function PollsPage({ polls, classInfo, pageNum, bgPng }: {
 
       <View style={s.pageFooter}>
         <Text style={s.pageFooterText} />
-        <Text style={s.pageFooterText}>{pageNum}</Text>
+        <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
       </View>
       <BgImage png={bgPng} />
     </Page>
@@ -1147,10 +1150,9 @@ function PollsPage({ polls, classInfo, pageNum, bgPng }: {
 
 // ─── Memories Page ───────────────────────────────────────────────────────────
 
-function MemoriesPage({ events, classInfo, startPageNum, bgPng }: {
+function MemoriesPage({ events, classInfo, bgPng }: {
   events: PDFEvent[]
   classInfo: PDFData['classInfo']
-  startPageNum: number
   bgPng?: Buffer | null
 }) {
   if (events.length === 0) return null
@@ -1206,8 +1208,8 @@ function MemoriesPage({ events, classInfo, startPageNum, bgPng }: {
               {/* Photos — 3 per row */}
               {photos.length > 0 && (
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                  {photos.map((url, pi) => (
-                    <Image key={pi} src={url} style={{ width: 170, height: 118, borderRadius: 4, objectFit: 'cover' }} />
+                  {photos.filter(url => url && url !== 'undefined').map((url, pi) => (
+                    <Image key={pi} src={url} style={{ width: 170, height: 118, borderRadius: 4, objectFit: 'cover', objectPosition: 'center center' }} />
                   ))}
                 </View>
               )}
@@ -1233,7 +1235,7 @@ function MemoriesPage({ events, classInfo, startPageNum, bgPng }: {
 
             <View style={s.pageFooter}>
               <Text style={s.pageFooterText} />
-              <Text style={s.pageFooterText}>{startPageNum + idx}</Text>
+              <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
             </View>
             <BgImage png={bgPng} />
           </Page>
@@ -1247,19 +1249,33 @@ function MemoriesPage({ events, classInfo, startPageNum, bgPng }: {
 
 const CARDS_PER_PAGE = 25 // 5 cols × 5 rows
 
-function StudentsGridPage({ students, classInfo, isFirst, totalCount, bgPng }: {
+function StudentsGridPage({ students, classInfo, isFirst, totalCount, memberLabel, preset, bgPng }: {
   students: PDFStudent[]
   classInfo: PDFData['classInfo']
   isFirst: boolean
   totalCount: number
+  memberLabel?: string | null
+  preset?: string | null
   bgPng?: Buffer | null
 }) {
+  const gridTitle = memberLabel
+    || (preset === 'kindergarten' ? 'Всички деца'
+      : preset === 'sports' ? 'Всички играчи'
+      : preset === 'friends' ? 'Всички участници'
+      : 'Всички ученици')
+  const gridCount = memberLabel
+    ? `${totalCount} УЧАСТНИЦИ`
+    : (preset === 'kindergarten' ? `${totalCount} ДЕЦА`
+      : preset === 'sports' ? `${totalCount} ИГРАЧИ`
+      : preset === 'friends' ? `${totalCount} УЧАСТНИЦИ`
+      : `${totalCount} УЧЕНИЦИ`)
+
   return (
     <Page size="A4" style={{ ...s.page, padding: 28 }}>
       {isFirst && (
         <View style={s.studentsGridHeader}>
-          <Text style={s.studentsGridTitle}>Всички ученици</Text>
-          <Text style={s.studentsGridCount}>{totalCount} УЧЕНИЦИ</Text>
+          <Text style={s.studentsGridTitle}>{gridTitle}</Text>
+          <Text style={s.studentsGridCount}>{gridCount}</Text>
         </View>
       )}
       <View style={s.studentsGridWrap}>
@@ -1289,6 +1305,10 @@ function StudentsGridPage({ students, classInfo, isFirst, totalCount, bgPng }: {
             </Link>
           )
         })}
+      </View>
+      <View style={s.pageFooter}>
+        <Text style={s.pageFooterText} />
+        <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
       </View>
       <BgImage png={bgPng} />
     </Page>
@@ -1350,10 +1370,6 @@ function ClosingPage({ data }: { data: PDFData }) {
 // ─── Main Document ───────────────────────────────────────────────────────────
 
 export function LexiconPDF({ data }: { data: PDFData }) {
-  const gridPageCount = Math.ceil(data.students.length / CARDS_PER_PAGE) || 1
-  const pollPageNum = data.students.length + 2 + gridPageCount + 1
-  const eventPageNum = pollPageNum + (data.polls.length > 0 ? 1 : 0)
-
   // Chunk students into pages of CARDS_PER_PAGE for the grid
   const gridChunks: PDFStudent[][] = []
   for (let i = 0; i < data.students.length; i += CARDS_PER_PAGE) {
@@ -1378,26 +1394,27 @@ export function LexiconPDF({ data }: { data: PDFData }) {
           classInfo={data.classInfo}
           isFirst={ci === 0}
           totalCount={data.students.length}
+          memberLabel={data.memberLabel}
+          preset={data.preset}
           bgPng={data.bg_pattern_png}
         />
       ))}
 
-      {data.students.map((student, idx) => (
+      {data.students.map((student) => (
         <StudentPage
           key={student.id}
           student={student}
           classInfo={data.classInfo}
-          pageNum={idx + 2 + gridPageCount + 1}
           bgPng={data.bg_pattern_png}
         />
       ))}
 
       {data.polls.length > 0 ? (
-        <PollsPage polls={data.polls} classInfo={data.classInfo} pageNum={pollPageNum} bgPng={data.bg_pattern_png} />
+        <PollsPage polls={data.polls} classInfo={data.classInfo} bgPng={data.bg_pattern_png} />
       ) : null}
 
       {data.events.length > 0 ? (
-        <MemoriesPage events={data.events} classInfo={data.classInfo} startPageNum={eventPageNum} bgPng={data.bg_pattern_png} />
+        <MemoriesPage events={data.events} classInfo={data.classInfo} bgPng={data.bg_pattern_png} />
       ) : null}
 
       <ClosingPage data={data} />

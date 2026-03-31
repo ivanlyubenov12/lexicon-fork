@@ -21,7 +21,7 @@ export interface PDFStudent {
   last_name: string
   photo_url: string | null
   answers: PDFAnswer[]
-  video_qrs: Array<{ question_text: string; qr_png: Buffer | null }>
+  video_qrs: Array<{ question_text: string; qr_png: Buffer | null; url: string }>
   messages: Array<{
     content: string
     author_name: string
@@ -75,6 +75,7 @@ export interface PDFData {
   bg_pattern_png?: Buffer | null
   preset?: string | null
   starsLabel?: string | null
+  memberLabel?: string | null
   classInfo: {
     name: string
     namePart: string

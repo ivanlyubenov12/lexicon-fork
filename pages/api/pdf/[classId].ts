@@ -6,6 +6,11 @@ import QRCode from 'qrcode'
 import sharp from 'sharp'
 import { getBgPatternSvg } from '@/lib/pdf/bgPatternSvg'
 
+function safeUrl(url: string | null | undefined): string | null {
+  if (!url || url === 'undefined' || url === 'null') return null
+  return url
+}
+
 function cloudinaryVideoThumbnail(videoUrl: string): string {
   // https://res.cloudinary.com/{cloud}/video/upload/v.../file.mp4
   // → https://res.cloudinary.com/{cloud}/video/upload/w_400,h_300,c_fill,so_2/v.../file.jpg
@@ -25,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, stars_label')
+    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, stars_label, member_label')
     .eq('id', classId)
     .single()
 
@@ -159,13 +164,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }))
 
-  // Map student → list of {question_text, qr_png} for all their videos
-  const videoQrsByStudent = new Map<string, Array<{ question_text: string; qr_png: Buffer | null }>>()
+  // Map student → list of {question_text, qr_png, url} for all their videos
+  const videoQrsByStudent = new Map<string, Array<{ question_text: string; qr_png: Buffer | null; url: string }>>()
   for (const a of (allVideoAnswersRaw ?? []) as any[]) {
     const list = videoQrsByStudent.get(a.student_id) ?? []
     list.push({
       question_text: qMap.get(a.question_id) ?? '',
       qr_png: qrCache.get(a.media_url) ?? null,
+      url: a.media_url,
     })
     videoQrsByStudent.set(a.student_id, list)
   }
@@ -261,7 +267,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     id: s.id,
     first_name: s.first_name,
     last_name: s.last_name,
-    photo_url: s.photo_url ?? null,
+    photo_url: safeUrl(s.photo_url),
     answers: (answersByStudent.get(s.id) ?? [])
       .filter((a: any) => (a.text_content || a.media_url) && qMap.has(a.question_id))
       .map((a: any): PDFAnswer => ({
@@ -295,6 +301,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const pdfData: PDFData = {
     preset: (cls as any).template_id ?? null,
     starsLabel: (cls as any).stars_label ?? null,
+    memberLabel: (cls as any).member_label ?? null,
     classInfo: {
       name: cls.name,
       namePart,
