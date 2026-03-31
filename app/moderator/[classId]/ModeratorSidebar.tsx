@@ -18,6 +18,7 @@ type ActiveNav =
   | 'finalize'
   | 'seed'
   | 'preview'
+  | 'pdf'
   | null
 
 interface Props {
@@ -122,14 +123,17 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
           <span className="material-symbols-outlined text-xl">science</span>
           Тест данни
         </Link>
-        <a
-          href={`/api/pdf/${classId}`}
-          download
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+        <Link
+          href={`${base}/pdf`}
+          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
+            active === 'pdf'
+              ? 'bg-white text-indigo-700 font-semibold shadow-sm'
+              : 'text-slate-400 hover:bg-white/50'
+          }`}
         >
           <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
-          Изтегли PDF
-        </a>
+          PDF Builder
+        </Link>
         <Link
           href="/moderator/profile"
           className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${

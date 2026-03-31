@@ -701,7 +701,7 @@ function BgImage({ png }: { png: Buffer | null | undefined }) {
 
 // ─── Cover Page ─────────────────────────────────────────────────────────────
 
-function CoverPage({ data }: { data: PDFData }) {
+export function CoverPage({ data }: { data: PDFData }) {
   const { classInfo } = data
   return (
     <Page size="A4" style={s.coverPage}>
@@ -754,7 +754,7 @@ function CoverPage({ data }: { data: PDFData }) {
 
 const VOICE_COLORS = [C.indigo, '#e11d48', '#d97706', '#059669', '#7c3aed', '#0891b2', '#be185d', '#15803d']
 
-function ClassOverviewPage({ data }: { data: PDFData }) {
+export function ClassOverviewPage({ data }: { data: PDFData }) {
   const { classInfo, polls, voice_questions, events } = data
   const heroSrc = classInfo.cover_image_url ?? classInfo.superhero_image_url
 
@@ -943,7 +943,7 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-function StudentPage({ student, classInfo, bgPng }: {
+export function StudentPage({ student, classInfo, bgPng }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
@@ -1104,7 +1104,7 @@ function StudentPage({ student, classInfo, bgPng }: {
 
 // ─── Polls Page ──────────────────────────────────────────────────────────────
 
-function PollsPage({ polls, classInfo, bgPng }: {
+export function PollsPage({ polls, classInfo, bgPng }: {
   polls: PDFPoll[]
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
@@ -1150,7 +1150,7 @@ function PollsPage({ polls, classInfo, bgPng }: {
 
 // ─── Memories Page ───────────────────────────────────────────────────────────
 
-function MemoriesPage({ events, classInfo, bgPng }: {
+export function MemoriesPage({ events, classInfo, bgPng }: {
   events: PDFEvent[]
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
@@ -1249,7 +1249,7 @@ function MemoriesPage({ events, classInfo, bgPng }: {
 
 const CARDS_PER_PAGE = 25 // 5 cols × 5 rows
 
-function StudentsGridPage({ students, classInfo, isFirst, totalCount, memberLabel, preset, bgPng }: {
+export function StudentsGridPage({ students, classInfo, isFirst, totalCount, memberLabel, preset, bgPng }: {
   students: PDFStudent[]
   classInfo: PDFData['classInfo']
   isFirst: boolean
@@ -1317,7 +1317,7 @@ function StudentsGridPage({ students, classInfo, isFirst, totalCount, memberLabe
 
 // ─── Closing / Credits Page ──────────────────────────────────────────────────
 
-function ClosingPage({ data }: { data: PDFData }) {
+export function ClosingPage({ data }: { data: PDFData }) {
   const { classInfo } = data
   const year = classInfo.school_year?.split('/')[0] ?? new Date().getFullYear().toString()
   return (

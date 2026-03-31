@@ -105,7 +105,13 @@
       "Bash(cp -r app/login \"app/\\(auth\\)/login\")",
       "Bash(cp -r app/register \"app/\\(auth\\)/register\")",
       "Bash(cp -r app/forgot-password \"app/\\(auth\\)/forgot-password\")",
-      "Bash(cp -r app/reset-password \"app/\\(auth\\)/reset-password\")"
+      "Bash(cp -r app/reset-password \"app/\\(auth\\)/reset-password\")",
+      "Bash(grep -r \"dnd-kit\\\\|DndContext\\\\|useSortable\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon --include=*.ts --include=*.tsx -l)",
+      "Bash(grep -n \"dynamic\\\\|PdfPreview\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/*/pdf/PdfBuilderClient.tsx)",
+      "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/*/pdf/)",
+      "Bash(grep -A 10 \"PDF Builder\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/ModeratorSidebar.tsx)",
+      "Bash(ls app/moderator/[classId]/pdf/)",
+      "Bash(ls app/api/pdf/preview-data/[classId]/)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",
@@ -114,7 +120,8 @@
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/students",
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview",
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/my/[studentId]/voice",
-      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]"
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]",
+      "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/api/pdf/preview-data"
     ]
   }
 }
