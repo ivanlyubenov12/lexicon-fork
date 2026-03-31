@@ -657,15 +657,15 @@ function BlockVisual({ block, assets, linked, memberLabel, memoriesLabel, starsL
         <div className="space-y-4 pt-4">
           <div className="flex justify-between items-end px-1">
             <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>{memberLabel || 'Учениците'}</h2>
-            <span className="text-xs uppercase tracking-widest text-gray-400">{memberLabel || 'ученици'}</span>
+            <span className="text-xs uppercase tracking-widest text-gray-400">{memberLabel || 'ученици'} →</span>
           </div>
-          <div className="flex gap-5 overflow-x-auto pb-3 hide-scrollbar">
-            {[0, 1, 2, 3, 4].map(i => (
-              <div key={i} className="flex flex-col items-center gap-2 min-w-[80px]" style={{ opacity: 1 - i * 0.15 }}>
-                <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-white">
-                  <span className="material-symbols-outlined text-gray-300 text-xl">person</span>
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-x-3 gap-y-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5" style={{ opacity: 1 - i * 0.07 }}>
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+                  <span className="material-symbols-outlined text-gray-300 text-base">person</span>
                 </div>
-                <div className="w-12 h-2 bg-gray-200 rounded-full" />
+                <div className="w-8 h-1.5 bg-gray-200 rounded-full" />
               </div>
             ))}
           </div>
