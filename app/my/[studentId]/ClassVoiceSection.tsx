@@ -50,15 +50,12 @@ function VoiceQuestionCard({
       classId,
       question.id,
       value.trim(),
-      isAnonymous ? undefined : studentId
+      studentId
     )
     setSubmitting(false)
     if (result.error) {
       setError(result.error)
     } else {
-      if (isAnonymous && typeof window !== 'undefined') {
-        localStorage.setItem(`class_voice_${classId}_${question.id}`, '1')
-      }
       onSubmitted()
     }
   }
