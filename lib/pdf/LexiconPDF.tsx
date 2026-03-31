@@ -4,6 +4,8 @@ import {
   StyleSheet, Font, renderToBuffer,
 } from '@react-pdf/renderer'
 import type { PDFData, PDFStudent, PDFPoll, PDFEvent, PDFEventComment, PDFAnswer, PDFVoiceQuestion } from './types'
+import type { PDFTheme, PageOptions, CoverOptions, OverviewOptions, StudentOptions, MemoriesOptions } from './builder-types'
+import { DEFAULT_THEME } from './builder-types'
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 
@@ -701,15 +703,17 @@ function BgImage({ png }: { png: Buffer | null | undefined }) {
 
 // ─── Cover Page ─────────────────────────────────────────────────────────────
 
-export function CoverPage({ data }: { data: PDFData }) {
+export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDFTheme; options?: PageOptions }) {
   const { classInfo } = data
+  const t = theme ?? DEFAULT_THEME
+  const opts = (options ?? {}) as CoverOptions
   return (
-    <Page size="A4" style={s.coverPage}>
-      <View style={s.coverTopBar} />
-      <View style={s.coverBottomBar} />
+    <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
+      <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
+      <View style={[s.coverBottomBar, { backgroundColor: t.accentColor }]} />
 
       {/* School logo */}
-      {classInfo.school_logo_url && (
+      {opts.showLogo !== false && classInfo.school_logo_url && (
         <View style={{ marginBottom: 28, alignItems: 'center' }}>
           <Image
             src={classInfo.school_logo_url}
@@ -719,7 +723,7 @@ export function CoverPage({ data }: { data: PDFData }) {
       )}
 
       <View style={s.coverContent}>
-        <Text style={s.coverTagline}>Малки спомени</Text>
+        <Text style={[s.coverTagline, { color: t.accentColor }]}>Малки спомени</Text>
 
         <Text style={s.coverTitle}>{classInfo.namePart}</Text>
 
@@ -729,11 +733,11 @@ export function CoverPage({ data }: { data: PDFData }) {
           </Text>
         )}
 
-        <Text style={s.coverYear}>{classInfo.school_year}</Text>
+        <Text style={[s.coverYear, { color: t.accentColor }]}>{classInfo.school_year}</Text>
 
         <View style={s.coverDivider} />
 
-        {classInfo.superhero_prompt && (
+        {opts.showQuote !== false && classInfo.superhero_prompt && (
           <Text style={s.coverQuote}>
             „{truncate(classInfo.superhero_prompt, 200)}"
           </Text>
@@ -754,8 +758,10 @@ export function CoverPage({ data }: { data: PDFData }) {
 
 const VOICE_COLORS = [C.indigo, '#e11d48', '#d97706', '#059669', '#7c3aed', '#0891b2', '#be185d', '#15803d']
 
-export function ClassOverviewPage({ data }: { data: PDFData }) {
+export function ClassOverviewPage({ data, theme, options }: { data: PDFData; theme?: PDFTheme; options?: PageOptions }) {
   const { classInfo, polls, voice_questions, events } = data
+  const t = theme ?? DEFAULT_THEME
+  const opts = (options ?? {}) as OverviewOptions
   const heroSrc = classInfo.cover_image_url ?? classInfo.superhero_image_url
 
   return (
@@ -783,7 +789,7 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
       </View>
 
       {/* Voice questions — barcharts paired side-by-side, wordclouds full-width */}
-      {(() => {
+      {opts.showVoice !== false && (() => {
         const barcharts = voice_questions.filter(vq => vq.display === 'barchart')
         const wordclouds = voice_questions.filter(vq => vq.display === 'wordcloud')
 
@@ -795,7 +801,7 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
 
         const renderBarCol = (vq: typeof barcharts[0]) => (
           <View style={s.barchartCol}>
-            <Text style={s.barchartColTitle}>{vq.text}</Text>
+            <Text style={[s.barchartColTitle, { color: t.accentColor }]}>{vq.text}</Text>
             {vq.items.slice(0, 4).map((item, j) => {
               const maxPct = vq.items[0]?.pct ?? 1
               const relW = maxPct > 0 ? Math.round((item.pct / maxPct) * 100) : 0
@@ -832,7 +838,7 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
               }
               const renderWcCol = (vq: typeof wordclouds[0]) => (
                 <View style={{ flex: 1 }}>
-                  <Text style={s.overviewSectionLabel}>{vq.text}</Text>
+                  <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>{vq.text}</Text>
                   <View style={s.wordcloudWrap}>
                     {vq.items.map((item, j) => (
                       <Text key={j} style={{
@@ -862,9 +868,9 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
       })()}
 
       {/* Polls grid — winners */}
-      {polls.length > 0 && (
+      {opts.showPolls !== false && polls.length > 0 && (
         <View style={s.overviewSection}>
-          <Text style={s.overviewSectionLabel}>
+          <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>
             {data.starsLabel
               ? data.starsLabel
               : data.preset === 'sports' ? 'Звездите на отбора'
@@ -896,9 +902,9 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
       )}
 
       {/* Events strip */}
-      {events.length > 0 && (
+      {opts.showEvents !== false && events.length > 0 && (
         <View style={s.overviewSection}>
-          <Text style={s.overviewSectionLabel}>Нашите събития</Text>
+          <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>Нашите събития</Text>
           <View style={s.eventsStrip}>
             {events.slice(0, 5).map((ev, i) => {
               const photo = ev.photos[0]
@@ -943,18 +949,22 @@ export function ClassOverviewPage({ data }: { data: PDFData }) {
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-export function StudentPage({ student, classInfo, bgPng }: {
+export function StudentPage({ student, classInfo, bgPng, theme, options }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
+  theme?: PDFTheme
+  options?: PageOptions
 }) {
   const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
   const videoQrs = student.video_qrs.filter(v => v.qr_png)
+  const t = theme ?? DEFAULT_THEME
+  const opts = (options ?? {}) as StudentOptions
 
   return (
     <Page size="A4" style={s.page}>
       {/* Header — id used as internal PDF link anchor from students grid */}
-      <View id={`s-${student.id}`} style={s.studentHeader}>
+      <View id={`s-${student.id}`} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
         <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
         <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
       </View>
@@ -962,36 +972,38 @@ export function StudentPage({ student, classInfo, bgPng }: {
       {/* Body */}
       <View style={s.studentBody}>
         {/* Photo column */}
-        <View style={s.photoCol}>
-          <View style={s.photoFrame}>
-            {student.photo_url ? (
-              <Image src={student.photo_url} style={s.photoImage} />
-            ) : (
-              <Text style={s.photoInitials}>{initials}</Text>
-            )}
-          </View>
-          <View style={{ height: 3, backgroundColor: C.gold, borderRadius: 2, marginTop: 8, width: 40 }} />
-
-          {/* QR codes for video answers */}
-          {videoQrs.map((v, i) => (
-            <View key={i} style={{ marginTop: 12, alignItems: 'center' }}>
-              {v.question_text ? (
-                <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.indigo, textAlign: 'center', marginBottom: 5, lineHeight: 1.4 }}>
-                  {truncate(v.question_text, 50)}
-                </Text>
-              ) : null}
-              <Link src={v.url}>
-                <Image
-                  src={`data:image/png;base64,${v.qr_png!.toString('base64')}`}
-                  style={{ width: 80, height: 80 }}
-                />
-              </Link>
-              <Text style={{ fontSize: 6, color: C.muted, textAlign: 'center', marginTop: 4, fontStyle: 'italic', lineHeight: 1.4 }}>
-                Сканирай кода, за да видиш посланието
-              </Text>
+        {opts.showPhoto !== false && (
+          <View style={s.photoCol}>
+            <View style={s.photoFrame}>
+              {student.photo_url ? (
+                <Image src={student.photo_url} style={s.photoImage} />
+              ) : (
+                <Text style={s.photoInitials}>{initials}</Text>
+              )}
             </View>
-          ))}
-        </View>
+            <View style={{ height: 3, backgroundColor: C.gold, borderRadius: 2, marginTop: 8, width: 40 }} />
+
+            {/* QR codes for video answers */}
+            {opts.showQRCodes !== false && videoQrs.map((v, i) => (
+              <View key={i} style={{ marginTop: 12, alignItems: 'center' }}>
+                {v.question_text ? (
+                  <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.indigo, textAlign: 'center', marginBottom: 5, lineHeight: 1.4 }}>
+                    {truncate(v.question_text, 50)}
+                  </Text>
+                ) : null}
+                <Link src={v.url}>
+                  <Image
+                    src={`data:image/png;base64,${v.qr_png!.toString('base64')}`}
+                    style={{ width: 80, height: 80 }}
+                  />
+                </Link>
+                <Text style={{ fontSize: 6, color: C.muted, textAlign: 'center', marginTop: 4, fontStyle: 'italic', lineHeight: 1.4 }}>
+                  Сканирай кода, за да видиш посланието
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Info column */}
         <View style={s.infoCol}>
@@ -1045,7 +1057,7 @@ export function StudentPage({ student, classInfo, bgPng }: {
       </View>
 
       {/* Event comments — "Моите спомени с класа" */}
-      {student.event_comments.length > 0 && (
+      {opts.showEventComments !== false && student.event_comments.length > 0 && (
         <View style={{ paddingHorizontal: 28, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.border }}>
           <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.gold, letterSpacing: 1.2,
             textTransform: 'uppercase', marginBottom: 8 }}>
@@ -1078,7 +1090,7 @@ export function StudentPage({ student, classInfo, bgPng }: {
       )}
 
       {/* Messages section */}
-      {student.messages.length > 0 && (
+      {opts.showMessages !== false && student.messages.length > 0 && (
         <View style={s.messagesSection}>
           <Text style={s.messagesTitle}>Послания от съучениците</Text>
           <View style={s.messagesGrid}>
@@ -1104,15 +1116,17 @@ export function StudentPage({ student, classInfo, bgPng }: {
 
 // ─── Polls Page ──────────────────────────────────────────────────────────────
 
-export function PollsPage({ polls, classInfo, bgPng }: {
+export function PollsPage({ polls, classInfo, bgPng, theme }: {
   polls: PDFPoll[]
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
+  theme?: PDFTheme
 }) {
+  const t = theme ?? DEFAULT_THEME
   if (polls.length === 0) return null
   return (
     <Page size="A4" style={{ ...s.page, ...s.sectionPage }}>
-      <View style={s.sectionHeader}>
+      <View style={[s.sectionHeader, { backgroundColor: t.accentColor }]}>
         <Text style={s.sectionHeaderLabel}>Гласуване на класа</Text>
         <Text style={s.sectionHeaderTitle}>Анкети</Text>
       </View>
@@ -1150,11 +1164,15 @@ export function PollsPage({ polls, classInfo, bgPng }: {
 
 // ─── Memories Page ───────────────────────────────────────────────────────────
 
-export function MemoriesPage({ events, classInfo, bgPng }: {
+export function MemoriesPage({ events, classInfo, bgPng, theme, options }: {
   events: PDFEvent[]
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
+  theme?: PDFTheme
+  options?: PageOptions
 }) {
+  const t = theme ?? DEFAULT_THEME
+  const opts = (options ?? {}) as MemoriesOptions
   if (events.length === 0) return null
   return (
     <>
@@ -1186,11 +1204,11 @@ export function MemoriesPage({ events, classInfo, bgPng }: {
 
         return (
           <Page key={ev.id} size="A4" style={{ ...s.page, ...s.sectionPage }}>
-            {/* Compact golden header */}
-            <View style={{ backgroundColor: '#a0722a', paddingHorizontal: 36, paddingVertical: 18 }}>
+            {/* Compact header — themed */}
+            <View style={{ backgroundColor: t.accentColor, paddingHorizontal: 36, paddingVertical: 18 }}>
               <Text style={s.sectionHeaderLabel}>Нашите спомени</Text>
               <Text style={{ ...s.sectionHeaderTitle, fontSize: 20 }}>{truncate(ev.title, 60)}</Text>
-              {ev.event_date && (
+              {opts.showDate !== false && ev.event_date && (
                 <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
                   {formatDate(ev.event_date)}
                 </Text>
@@ -1199,14 +1217,14 @@ export function MemoriesPage({ events, classInfo, bgPng }: {
 
             <View style={{ padding: 24 }}>
               {/* Note */}
-              {ev.note && (
+              {opts.showNote !== false && ev.note && (
                 <Text style={{ ...s.eventNote, marginBottom: 12 }}>
                   {truncate(ev.note, 300)}
                 </Text>
               )}
 
               {/* Photos — 3 per row */}
-              {photos.length > 0 && (
+              {opts.showPhotos !== false && photos.length > 0 && (
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                   {photos.filter(url => url && url !== 'undefined').map((url, pi) => (
                     <Image key={pi} src={url} style={{ width: 170, height: 118, borderRadius: 4, objectFit: 'cover', objectPosition: 'center center' }} />
@@ -1215,9 +1233,9 @@ export function MemoriesPage({ events, classInfo, bgPng }: {
               )}
 
               {/* Comments — 2-column grid */}
-              {comments.length > 0 && (
+              {opts.showComments !== false && comments.length > 0 && (
                 <>
-                  <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: '#a0722a', letterSpacing: 1.5,
+                  <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: t.accentColor, letterSpacing: 1.5,
                     textTransform: 'uppercase', marginBottom: 8 }}>
                     Коментари от класа
                   </Text>
@@ -1317,13 +1335,14 @@ export function StudentsGridPage({ students, classInfo, isFirst, totalCount, mem
 
 // ─── Closing / Credits Page ──────────────────────────────────────────────────
 
-export function ClosingPage({ data }: { data: PDFData }) {
+export function ClosingPage({ data, theme }: { data: PDFData; theme?: PDFTheme }) {
   const { classInfo } = data
+  const t = theme ?? DEFAULT_THEME
   const year = classInfo.school_year?.split('/')[0] ?? new Date().getFullYear().toString()
   return (
-    <Page size="A4" style={s.coverPage}>
-      <View style={s.coverTopBar} />
-      <View style={s.coverBottomBar} />
+    <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
+      <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
+      <View style={[s.coverBottomBar, { backgroundColor: t.accentColor }]} />
 
       <View style={s.coverContent}>
         {/* School logo */}
@@ -1336,14 +1355,14 @@ export function ClosingPage({ data }: { data: PDFData }) {
           </View>
         )}
 
-        <Text style={s.coverTagline}>Малки спомени</Text>
+        <Text style={[s.coverTagline, { color: t.accentColor }]}>Малки спомени</Text>
         <Text style={s.coverTitle}>{classInfo.namePart}</Text>
         {classInfo.schoolPart && (
           <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8, textAlign: 'center' }}>
             {classInfo.schoolPart}
           </Text>
         )}
-        <Text style={s.coverYear}>{classInfo.school_year}</Text>
+        <Text style={[s.coverYear, { color: t.accentColor }]}>{classInfo.school_year}</Text>
 
         <View style={s.coverDivider} />
 

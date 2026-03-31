@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { PDFData } from '@/lib/pdf/types'
 import type { Section } from './PdfBuilderClient'
+import type { PDFTheme, PageOptions } from '@/lib/pdf/builder-types'
 
 interface Mods {
   PDFViewer: React.ComponentType<any>
@@ -19,9 +20,11 @@ interface Mods {
 interface Props {
   section: Section
   pdfData: PDFData
+  theme?: PDFTheme
+  options?: PageOptions
 }
 
-export default function PdfPreview({ section, pdfData }: Props) {
+export default function PdfPreview({ section, pdfData, theme, options }: Props) {
   const [mods, setMods] = useState<Mods | null>(null)
 
   useEffect(() => {
@@ -64,10 +67,10 @@ export default function PdfPreview({ section, pdfData }: Props) {
 
   switch (section.type) {
     case 'cover':
-      page = <CoverPage data={pdfData} />
+      page = <CoverPage data={pdfData} theme={theme} options={options} />
       break
     case 'overview':
-      page = <ClassOverviewPage data={pdfData} />
+      page = <ClassOverviewPage data={pdfData} theme={theme} options={options} />
       break
     case 'students_grid':
       page = (
@@ -84,19 +87,19 @@ export default function PdfPreview({ section, pdfData }: Props) {
       break
     case 'student': {
       const student = pdfData.students.find(s => s.id === section.studentId)
-      if (student) page = <StudentPage student={student} classInfo={pdfData.classInfo} bgPng={null} />
+      if (student) page = <StudentPage student={student} classInfo={pdfData.classInfo} bgPng={null} theme={theme} options={options} />
       break
     }
     case 'polls':
-      page = <PollsPage polls={pdfData.polls} classInfo={pdfData.classInfo} bgPng={null} />
+      page = <PollsPage polls={pdfData.polls} classInfo={pdfData.classInfo} bgPng={null} theme={theme} />
       break
     case 'memories': {
       const event = pdfData.events.find(e => e.id === section.eventId)
-      if (event) page = <MemoriesPage events={[event]} classInfo={pdfData.classInfo} bgPng={null} />
+      if (event) page = <MemoriesPage events={[event]} classInfo={pdfData.classInfo} bgPng={null} theme={theme} options={options} />
       break
     }
     case 'closing':
-      page = <ClosingPage data={pdfData} />
+      page = <ClosingPage data={pdfData} theme={theme} />
       break
   }
 

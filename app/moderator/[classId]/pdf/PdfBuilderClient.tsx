@@ -18,6 +18,17 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { PDFData } from '@/lib/pdf/types'
+import {
+  DEFAULT_THEME,
+  DEFAULT_OPTIONS,
+  THEME_PRESETS,
+  type PDFTheme,
+  type PageOptions,
+  type CoverOptions,
+  type OverviewOptions,
+  type StudentOptions,
+  type MemoriesOptions,
+} from '@/lib/pdf/builder-types'
 
 export type SectionType =
   | 'cover'
@@ -150,6 +161,59 @@ function SortableRow({ section, isActive, onSelect, onToggle }: SortableRowProps
   )
 }
 
+// ─── Toggle switch ────────────────────────────────────────────────────────────
+
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${
+        checked ? 'bg-indigo-500' : 'bg-slate-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+          checked ? 'translate-x-4' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+  )
+}
+
+// ─── Options panel ────────────────────────────────────────────────────────────
+
+interface OptionRow {
+  label: string
+  key: string
+}
+
+const SECTION_OPTIONS: Record<string, OptionRow[]> = {
+  cover: [
+    { label: 'Лого на училище', key: 'showLogo' },
+    { label: 'Мото/цитат', key: 'showQuote' },
+  ],
+  overview: [
+    { label: 'Гласови въпроси', key: 'showVoice' },
+    { label: 'Анкети / Звезди', key: 'showPolls' },
+    { label: 'Наши спомени', key: 'showEvents' },
+  ],
+  student: [
+    { label: 'Снимка', key: 'showPhoto' },
+    { label: 'QR кодове за видео', key: 'showQRCodes' },
+    { label: 'Коментари към спомени', key: 'showEventComments' },
+    { label: 'Послания', key: 'showMessages' },
+  ],
+  memories: [
+    { label: 'Дата', key: 'showDate' },
+    { label: 'Описание', key: 'showNote' },
+    { label: 'Снимки', key: 'showPhotos' },
+    { label: 'Коментари', key: 'showComments' },
+  ],
+}
+
+const NO_OPTIONS_TYPES = new Set(['students_grid', 'polls', 'closing'])
+
 // ─── Main component ──────────────────────────────────────────────────────────
 
 interface Props {
@@ -163,6 +227,13 @@ export default function PdfBuilderClient({ classId }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Level 3: theme
+  const [globalTheme, setGlobalTheme] = useState<PDFTheme>(DEFAULT_THEME)
+  const [themeOpen, setThemeOpen] = useState(false)
+
+  // Level 2: per-section options
+  const [sectionOpts, setSectionOpts] = useState<Record<string, PageOptions>>({})
+
   // Load preview data on mount
   useEffect(() => {
     setLoading(true)
@@ -173,7 +244,14 @@ export default function PdfBuilderClient({ classId }: Props) {
       })
       .then((data: PDFData) => {
         setPdfData(data)
-        setSections(buildSections(data))
+        const built = buildSections(data)
+        setSections(built)
+        // Initialise sectionOpts from DEFAULT_OPTIONS keyed by section type
+        const initOpts: Record<string, PageOptions> = {}
+        for (const sec of built) {
+          initOpts[sec.id] = { ...(DEFAULT_OPTIONS[sec.type] ?? {}) }
+        }
+        setSectionOpts(initOpts)
         setLoading(false)
       })
       .catch((err) => {
@@ -200,6 +278,20 @@ export default function PdfBuilderClient({ classId }: Props) {
     )
   }, [])
 
+  function getOpts(section: Section): PageOptions {
+    return sectionOpts[section.id] ?? DEFAULT_OPTIONS[section.type] ?? {}
+  }
+
+  function setOpt(sectionId: string, sectionType: string, key: string, value: boolean) {
+    setSectionOpts((prev) => ({
+      ...prev,
+      [sectionId]: {
+        ...(prev[sectionId] ?? DEFAULT_OPTIONS[sectionType] ?? {}),
+        [key]: value,
+      } as PageOptions,
+    }))
+  }
+
   const currentSection = sections.find((s) => s.id === activeSection) ?? sections[0] ?? null
 
   return (
@@ -218,6 +310,89 @@ export default function PdfBuilderClient({ classId }: Props) {
           <p className="text-xs text-slate-400 mt-1">
             Влачете, за да наредите. Кликнете, за да прегледате.
           </p>
+        </div>
+
+        {/* ── Theme panel ── */}
+        <div className="border-b border-slate-200">
+          <button
+            type="button"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors"
+            onClick={() => setThemeOpen((v) => !v)}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base" style={{ fontSize: 15 }}>palette</span>
+              Тема
+            </span>
+            <span className="material-symbols-outlined text-sm">
+              {themeOpen ? 'expand_less' : 'expand_more'}
+            </span>
+          </button>
+
+          {themeOpen && (
+            <div className="px-4 pb-3 space-y-3">
+              {/* Preset swatches */}
+              <div className="flex gap-2 flex-wrap">
+                {THEME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => setGlobalTheme(preset.theme)}
+                    className="flex flex-col items-center gap-1 group"
+                  >
+                    <span
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${
+                        globalTheme.accentColor === preset.theme.accentColor &&
+                        globalTheme.coverBg === preset.theme.coverBg
+                          ? 'border-slate-500 scale-110'
+                          : 'border-transparent group-hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: preset.theme.accentColor }}
+                    />
+                    <span className="text-[10px] text-slate-400 leading-none">{preset.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom color pickers */}
+              <div className="space-y-1.5">
+                <label className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Акцентен цвят</span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="w-4 h-4 rounded-full border border-slate-300 inline-block"
+                      style={{ backgroundColor: globalTheme.accentColor }}
+                    />
+                    <input
+                      type="color"
+                      value={globalTheme.accentColor}
+                      onChange={(e) =>
+                        setGlobalTheme((t) => ({ ...t, accentColor: e.target.value }))
+                      }
+                      className="w-6 h-5 cursor-pointer rounded border-0 p-0 bg-transparent"
+                    />
+                  </span>
+                </label>
+                <label className="flex items-center justify-between text-xs text-slate-500">
+                  <span>Фон на корицата</span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="w-4 h-4 rounded-full border border-slate-300 inline-block"
+                      style={{ backgroundColor: globalTheme.coverBg }}
+                    />
+                    <input
+                      type="color"
+                      value={globalTheme.coverBg}
+                      onChange={(e) =>
+                        setGlobalTheme((t) => ({ ...t, coverBg: e.target.value }))
+                      }
+                      className="w-6 h-5 cursor-pointer rounded border-0 p-0 bg-transparent"
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Section list */}
@@ -251,6 +426,35 @@ export default function PdfBuilderClient({ classId }: Props) {
             </DndContext>
           )}
         </div>
+
+        {/* ── Options panel ── */}
+        {!loading && !error && currentSection && (
+          <div className="border-t border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+              Опции за секцията
+            </p>
+            {NO_OPTIONS_TYPES.has(currentSection.type) ? (
+              <p className="text-xs text-slate-400 italic">Няма опции за тази секция.</p>
+            ) : (
+              <div className="max-h-[200px] overflow-y-auto space-y-2">
+                {(SECTION_OPTIONS[currentSection.type] ?? []).map((row) => {
+                  const opts = getOpts(currentSection) as Record<string, boolean>
+                  const defaultVal = (DEFAULT_OPTIONS[currentSection.type] as Record<string, boolean>)?.[row.key] ?? true
+                  const checked = opts[row.key] !== undefined ? opts[row.key] : defaultVal
+                  return (
+                    <div key={row.key} className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-600 leading-tight">{row.label}</span>
+                      <Toggle
+                        checked={checked}
+                        onChange={(v) => setOpt(currentSection.id, currentSection.type, row.key, v)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Generate button */}
         <div className="p-4 border-t border-slate-200">
@@ -317,7 +521,12 @@ export default function PdfBuilderClient({ classId }: Props) {
             </div>
           ) : pdfData && currentSection ? (
             <div className="h-full rounded-xl overflow-hidden shadow-lg">
-              <PdfPreview section={currentSection} pdfData={pdfData} />
+              <PdfPreview
+                section={currentSection}
+                pdfData={pdfData}
+                theme={globalTheme}
+                options={getOpts(currentSection)}
+              />
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-slate-400 text-sm">
