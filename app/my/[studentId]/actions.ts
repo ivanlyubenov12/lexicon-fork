@@ -184,6 +184,7 @@ export async function submitAnswer(
     )
 
   if (error) {
+    console.error('[submitAnswer] Supabase error:', error)
     return { error: 'Изпращането не успя. Опитайте отново.' }
   }
 
