@@ -21,7 +21,7 @@ interface Contribution {
 }
 
 interface Props {
-  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null; plan?: string | null }
+  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null; plan?: string | null; template_id?: string | null; memberLabel?: string | null; groupLabel?: string | null }
   moderatorEmail: string | null
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null; questionnaire_submitted: boolean }>
@@ -59,6 +59,14 @@ function Icon({ name, className = '' }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>
 }
 
+const TEMPLATE_FIELD_LABELS: Record<string, { group: string; school: string; year: string }> = {
+  primary:      { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
+  classic:      { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
+  teens:        { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
+  kindergarten: { group: 'Група', school: 'Детска градина', year: 'Учебна година' },
+  custom:       { group: 'Група', school: 'Организация',    year: 'Период' },
+}
+
 export default function Dashboard({
   classData, moderatorEmail, deadline, students, awaitingApproval, pendingAnswers, pendingMessages,
   approvedAnswers, hasQuestionnaire, hasLayout, events, recentContributions,
@@ -67,6 +75,9 @@ export default function Dashboard({
   const submittedStudents = students.filter((s) => s.questionnaire_submitted).length
   const progressPercent = totalStudents > 0 ? Math.round((submittedStudents / totalStudents) * 100) : 0
   const remaining = totalStudents - submittedStudents
+
+  const tid = classData.template_id ?? 'primary'
+  const fieldLabels = TEMPLATE_FIELD_LABELS[tid] ?? TEMPLATE_FIELD_LABELS.primary
 
   const base = `/moderator/${classData.id}`
 
@@ -124,7 +135,7 @@ export default function Dashboard({
   }
 
   function handleSaveSettings() {
-    if (!className.trim() || !school.trim()) {
+    if (!className.trim() || !deadlineStr) {
       setSaveError('Моля попълнете задължителните полета.')
       return
     }
@@ -381,22 +392,22 @@ export default function Dashboard({
             {saveError && <p className="text-red-600 text-sm mb-3">{saveError}</p>}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Клас <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.group} <span className="text-red-400">*</span></label>
                 <input value={className} onChange={(e) => setClassName(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Училище <span className="text-red-400">*</span></label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.school}</label>
                 <input value={school} onChange={(e) => setSchool(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Учебна година</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.year}</label>
                 <input value={schoolYear} onChange={(e) => setSchoolYear(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Краен срок</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Краен срок <span className="text-red-400">*</span></label>
                 <DateInput
                   value={deadlineStr}
                   onChange={setDeadlineStr}

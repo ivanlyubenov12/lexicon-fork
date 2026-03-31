@@ -135,7 +135,7 @@ function AnswersSection({ answers, classId, filter }: { answers: Answer[]; class
                     <p className="text-xs text-gray-400 mt-0.5">
                       {group.answers.length} {group.answers.length === 1 ? 'отговор' : 'отговора'}
                       {submittedIds.length > 0 && (
-                        <span className="ml-2 text-amber-500 font-medium">· {submittedIds.length} чакащи</span>
+                        <span className="ml-2 text-amber-500 font-medium">· Очакващи одобрение: {submittedIds.length}</span>
                       )}
                     </p>
                   </div>
@@ -201,8 +201,21 @@ function AnswersSection({ answers, classId, filter }: { answers: Answer[]; class
 // ── Messages section ─────────────────────────────────────────────────────────
 
 function MessagesSection({ messages, classId, filter }: { messages: Message[]; classId: string; filter: FilterTab }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
+
+  function toggleExpand(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function handleBulkApprove(e: React.MouseEvent, ids: string[]) {
+    e.stopPropagation()
+    startTransition(async () => { await bulkApproveMessages(ids, classId) })
+  }
 
   const filtered = messages.filter(m => {
     if (filter === 'all') return true
@@ -213,109 +226,94 @@ function MessagesSection({ messages, classId, filter }: { messages: Message[]; c
 
   if (filtered.length === 0) return null
 
-  const pendingIds = filtered.filter(m => m.status === 'pending').map(m => m.id)
-  const allPendingSelected = pendingIds.length > 0 && pendingIds.every(id => selected.has(id))
-
-  function toggleAll() {
-    if (allPendingSelected) {
-      setSelected(prev => { const next = new Set(prev); pendingIds.forEach(id => next.delete(id)); return next })
-    } else {
-      setSelected(prev => new Set([...prev, ...pendingIds]))
+  // Group by author
+  const authorMap = new Map<string, { name: string; messages: Message[] }>()
+  for (const m of filtered) {
+    if (!authorMap.has(m.author_student_id)) {
+      authorMap.set(m.author_student_id, {
+        name: `${m.author.first_name} ${m.author.last_name}`,
+        messages: [],
+      })
     }
+    authorMap.get(m.author_student_id)!.messages.push(m)
   }
+  const groups = Array.from(authorMap.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name))
 
-  function toggle(id: string) {
-    setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
-  }
-
-  function handleBulkApprove() {
-    const ids = [...selected].filter(id => pendingIds.includes(id))
-    if (!ids.length) return
-    startTransition(async () => {
-      await bulkApproveMessages(ids, classId)
-      setSelected(new Set())
-    })
-  }
-
-  function initials(first: string, last: string) {
-    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
+  function initials(name: string) {
+    const [f = '', l = ''] = name.split(' ')
+    return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase()
   }
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
-          <span className="material-symbols-outlined text-base">favorite</span>
-          Послания между деца
-          <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded-full">{filtered.length}</span>
-        </h2>
-        {pendingIds.length > 0 && (
-          <div className="flex items-center gap-2 ml-auto">
-            {selected.size > 0 && (
-              <button
-                onClick={handleBulkApprove}
-                disabled={isPending}
-                className="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined text-sm">check</span>
-                Одобри избраните ({selected.size})
-              </button>
-            )}
-            <button
-              onClick={toggleAll}
-              className="text-xs font-semibold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 hover:border-indigo-600 px-3 py-1.5 rounded-lg transition-all"
-            >
-              {allPendingSelected ? 'Отмени избора' : `Избери всички чакащи (${pendingIds.length})`}
-            </button>
-          </div>
-        )}
-      </div>
+      <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+        <span className="material-symbols-outlined text-base">favorite</span>
+        Послания между участници
+        <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded-full">{filtered.length}</span>
+      </h2>
       <div className="space-y-3">
-        {filtered.map(message => {
-          const isPending_ = message.status === 'pending'
-          const isSelected = selected.has(message.id)
+        {groups.map(([authorId, group]) => {
+          const pendingIds = group.messages.filter(m => m.status === 'pending').map(m => m.id)
+          const isOpen = expanded.has(authorId)
           return (
-            <div
-              key={message.id}
-              className={`bg-white border rounded-2xl px-6 py-5 shadow-sm hover:shadow-md transition-shadow ${isSelected ? 'border-indigo-300 ring-1 ring-indigo-200' : 'border-gray-100'}`}
-            >
-              <div className="flex items-start gap-5">
-                {isPending_ && (
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => toggle(message.id)}
-                    className="w-4 h-4 rounded accent-indigo-600 cursor-pointer flex-shrink-0 mt-1"
-                  />
-                )}
-                <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold">
-                    {initials(message.author.first_name, message.author.last_name)}
+            <div key={authorId} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div
+                role="button"
+                onClick={() => toggleExpand(authorId)}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-sm font-bold flex-shrink-0">
+                    {initials(group.name)}
                   </div>
-                  <span className="material-symbols-outlined text-gray-300 text-base">arrow_forward</span>
-                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
-                    {initials(message.recipient.first_name, message.recipient.last_name)}
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">{group.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {group.messages.length} {group.messages.length === 1 ? 'послание' : 'послания'}
+                      {pendingIds.length > 0 && (
+                        <span className="ml-2 text-amber-500 font-medium">· Очакващи одобрение: {pendingIds.length}</span>
+                      )}
+                    </p>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="text-sm font-semibold text-gray-800">
-                      {message.author.first_name} {message.author.last_name}
-                    </span>
-                    <span className="text-xs text-gray-400">→</span>
-                    <span className="text-sm font-semibold text-gray-800">
-                      {message.recipient.first_name} {message.recipient.last_name}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed italic" style={{ fontFamily: 'Noto Serif, serif' }}>
-                    „{message.content.length > 160 ? message.content.slice(0, 160) + '…' : message.content}"
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-3 flex-shrink-0 pt-0.5">
-                  <StatusBadge status={message.status} />
-                  <MessageActions message={message} classId={classId} />
+                <div className="flex items-center gap-3">
+                  {pendingIds.length > 0 && (
+                    <button
+                      onClick={(e) => handleBulkApprove(e, pendingIds)}
+                      disabled={isPending}
+                      className="text-xs font-semibold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 hover:border-indigo-600 px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      Одобри всички ({pendingIds.length})
+                    </button>
+                  )}
+                  <span className={`material-symbols-outlined text-gray-300 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                    expand_more
+                  </span>
                 </div>
               </div>
+
+              {isOpen && (
+                <div className="border-t border-gray-100 divide-y divide-gray-50">
+                  {group.messages.map(message => (
+                    <div key={message.id} className="px-6 py-5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-400 mb-1.5">
+                            → <span className="font-semibold text-gray-700">{message.recipient.first_name} {message.recipient.last_name}</span>
+                          </p>
+                          <p className="text-sm text-gray-600 leading-relaxed italic" style={{ fontFamily: 'Noto Serif, serif' }}>
+                            „{message.content.length > 200 ? message.content.slice(0, 200) + '…' : message.content}"
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                          <StatusBadge status={message.status} />
+                          <MessageActions message={message} classId={classId} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}

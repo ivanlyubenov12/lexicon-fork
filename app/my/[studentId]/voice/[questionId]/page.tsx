@@ -51,18 +51,14 @@ export default async function VoiceAnswerRoute({
   const prevUrl = idx > 0 ? seqUrl(seq[idx - 1], studentId) : null
   const nextUrl = idx < seq.length - 1 ? seqUrl(seq[idx + 1], studentId) : null
 
-  // Fetch existing answer for non-anonymous questions
-  const isAnonymous = question.is_anonymous !== false
-  let existingAnswer: string | null = null
-  if (!isAnonymous) {
-    const { data: va } = await admin
-      .from('class_voice_answers')
-      .select('content')
-      .eq('question_id', questionId)
-      .eq('student_id', studentId)
-      .maybeSingle()
-    existingAnswer = va?.content ?? null
-  }
+  // Always fetch existing answer by student_id (anonymous = display only, not DB)
+  const { data: va } = await admin
+    .from('class_voice_answers')
+    .select('content')
+    .eq('question_id', questionId)
+    .eq('student_id', studentId)
+    .maybeSingle()
+  const existingAnswer: string | null = va?.content ?? null
 
   return (
     <VoiceAnswerPage

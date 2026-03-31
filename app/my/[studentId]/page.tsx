@@ -92,17 +92,17 @@ export default async function MyChildPage({ params }: Props) {
     existingVotes[v.poll_id] = v.nominee_student_id
   }
 
-  // Existing answers for all non-anonymous voice questions (class_voice + survey)
-  const nonAnonVoiceIds = (allClassQuestions ?? [])
-    .filter(q => (q.type === 'survey' || q.type === 'class_voice') && q.is_anonymous === false)
+  // All voice answers for this student (both anonymous and non-anonymous)
+  const allVoiceIds = (allClassQuestions ?? [])
+    .filter(q => q.type === 'survey' || q.type === 'class_voice')
     .map(q => q.id)
   const existingVoiceAnswers: Record<string, string> = {}
-  if (nonAnonVoiceIds.length > 0) {
+  if (allVoiceIds.length > 0) {
     const { data: voiceAnswers } = await admin
       .from('class_voice_answers')
       .select('question_id, content')
       .eq('student_id', studentId)
-      .in('question_id', nonAnonVoiceIds)
+      .in('question_id', allVoiceIds)
     for (const a of voiceAnswers ?? []) {
       existingVoiceAnswers[a.question_id] = a.content
     }

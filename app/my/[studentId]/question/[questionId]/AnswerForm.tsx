@@ -247,18 +247,16 @@ export default function AnswerForm({
         </div>
 
         {/* Status banners */}
-        {!editing && (answer?.text_content || answer?.media_url) && (
+        {!editing && (answer?.text_content || answer?.media_url) && (answerStatus === 'approved' || answerStatus === 'submitted') && (
           <div className={`text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2 ${
             answerStatus === 'approved'
               ? 'bg-green-50 border border-green-200 text-green-700'
-              : answerStatus === 'submitted'
-                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                : 'bg-gray-50 border border-gray-200 text-gray-500'
+              : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
           }`}>
             <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {answerStatus === 'approved' ? 'verified' : answerStatus === 'submitted' ? 'check_circle' : 'edit_note'}
+              {answerStatus === 'approved' ? 'verified' : 'check_circle'}
             </span>
-            {answerStatus === 'approved' ? 'Одобрен' : answerStatus === 'submitted' ? 'Изпратен за одобрение' : 'Запазена чернова'}
+            {answerStatus === 'approved' ? 'Одобрен' : 'Изпратен за одобрение'}
           </div>
         )}
         {answer?.status === 'draft' && answer.moderator_note && !isLocked && (

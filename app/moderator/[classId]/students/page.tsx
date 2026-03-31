@@ -119,7 +119,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
               Участници
             </h1>
             <p className="text-sm text-gray-500 mt-2">
-              Управлявайте списъка с участници и изпращайте покани на родителите.
+              Управлявайте списъка с участници и изпращайте покани.
             </p>
           </div>
 

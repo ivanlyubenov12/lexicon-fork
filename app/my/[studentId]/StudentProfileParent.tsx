@@ -125,16 +125,21 @@ const KIND_ICON: Record<string, string> = {
 }
 
 function QuestionListRow({
-  num, item, answered, pendingReview, studentId,
+  num, item, answered, pendingReview, isDraft, studentId,
 }: {
   num: number
   item: SeqItem & { questionType?: string }
   answered: boolean
   pendingReview?: boolean
+  isDraft?: boolean
   studentId: string
 }) {
   const url = seqUrl(item, studentId)
   const icon = KIND_ICON[item.questionType ?? item.kind] ?? 'help_outline'
+
+  const dotColor = answered
+    ? pendingReview ? 'bg-yellow-400' : isDraft ? 'bg-gray-300' : 'bg-green-500'
+    : 'bg-gray-200 group-hover:bg-indigo-300'
 
   return (
     <Link
@@ -142,15 +147,16 @@ function QuestionListRow({
       className="flex items-center gap-3 px-5 py-3.5 hover:bg-indigo-50 transition-colors group"
     >
       <span className="text-xs font-bold text-gray-300 w-5 text-center flex-shrink-0">{num}</span>
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-        answered ? (pendingReview ? 'bg-yellow-400' : 'bg-green-500') : 'bg-gray-200 group-hover:bg-indigo-300'
-      }`} />
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
       <span className="material-symbols-outlined text-sm text-gray-300 group-hover:text-indigo-400 flex-shrink-0">{icon}</span>
       <span className="flex-1 text-sm text-gray-700 group-hover:text-indigo-800 leading-snug truncate">{item.text}</span>
       {answered && pendingReview && (
         <span className="text-xs text-yellow-600 font-medium flex-shrink-0">За преглед</span>
       )}
-      {answered && !pendingReview && (
+      {answered && isDraft && !pendingReview && (
+        <span className="text-xs text-gray-400 font-medium flex-shrink-0">Чернова</span>
+      )}
+      {answered && !pendingReview && !isDraft && (
         <span className="text-xs text-green-600 font-medium flex-shrink-0">✓</span>
       )}
       {!answered && (
@@ -186,49 +192,20 @@ export default function StudentProfileParent({
 
   const totalQuestions = seqItems.length
 
-  // ── Answered counts (client-side, with localStorage for anon voice) ─────────
-  const [answeredCount, setAnsweredCount] = useState(0)
-  const [firstUnansweredUrl, setFirstUnansweredUrl] = useState<string | null>(null)
-  const [anonAnsweredIds, setAnonAnsweredIds] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const anonDone = new Set<string>()
-    for (const item of seqItems) {
-      if (item.kind === 'voice' && item.isAnonymous) {
-        if (localStorage.getItem(`class_voice_${classId}_${item.id}`)) {
-          anonDone.add(item.id)
-        }
-      }
-    }
-    setAnonAnsweredIds(anonDone)
-    let count = 0
-    let firstUrl: string | null = null
-    for (const item of seqItems) {
-      const done = isAnsweredStatic(item, anonDone)
-      if (done) count++
-      else if (!firstUrl) firstUrl = seqUrl(item, studentId)
-    }
-    setAnsweredCount(count)
-    setFirstUnansweredUrl(firstUrl)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function isAnsweredStatic(item: SeqItem, anonDone: Set<string>): boolean {
+  // ── Answered counts ────────────────────────────────────────────────────────
+  function isAnswered(item: SeqItem): boolean {
     if (item.kind === 'question') {
       return ['draft', 'submitted', 'approved'].includes(answerMap.get(item.id) ?? '')
     }
-    if (item.kind === 'voice') {
-      if (item.isAnonymous) return anonDone.has(item.id)
-      return !!existingVoiceAnswers[item.id]
-    }
+    if (item.kind === 'voice') return !!existingVoiceAnswers[item.id]
     if (item.kind === 'poll') return !!existingVotes[item.id]
     return false
   }
 
-  function isAnswered(item: SeqItem): boolean {
-    return isAnsweredStatic(item, anonAnsweredIds)
-  }
+  const answeredCount = seqItems.filter(isAnswered).length
+  const firstUnansweredUrl = seqItems.find(item => !isAnswered(item))
+    ? seqUrl(seqItems.find(item => !isAnswered(item))!, studentId)
+    : null
 
   const progressPct = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0
   const allQuestionsAnswered = answeredCount >= totalQuestions
@@ -357,6 +334,16 @@ export default function StudentProfileParent({
 
       <div className="max-w-xl mx-auto px-4 py-6 space-y-3">
 
+        {/* ── Deadline banner ─────────────────────────────────────────────── */}
+        {deadlineFormatted && !submitted && !allApproved && (
+          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3">
+            <span className="material-symbols-outlined text-amber-500 text-lg flex-shrink-0">event</span>
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">Краен срок за попълване:</span> {deadlineFormatted}
+            </p>
+          </div>
+        )}
+
         {/* ── Banners ─────────────────────────────────────────────────────── */}
         {allApproved ? (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-start gap-3">
@@ -430,7 +417,9 @@ export default function StudentProfileParent({
               {seqItems.map((item, idx) => {
                 const answered = isAnswered(item)
                 const pendingReview = item.kind === 'question' &&
-                  ['submitted', 'draft'].includes(answerMap.get(item.id) ?? '')
+                  answerMap.get(item.id) === 'submitted'
+                const isDraft = item.kind === 'question' &&
+                  answerMap.get(item.id) === 'draft'
                 return (
                   <QuestionListRow
                     key={item.id}
@@ -438,6 +427,7 @@ export default function StudentProfileParent({
                     item={item}
                     answered={answered}
                     pendingReview={pendingReview}
+                    isDraft={isDraft}
                     studentId={studentId}
                   />
                 )

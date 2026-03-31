@@ -32,15 +32,9 @@ export default function VoiceAnswerPage({
 
   const [text, setText] = useState('')
   const [selected, setSelected] = useState<string | null>(existingAnswer ?? null)
-  const [submitted, setSubmitted] = useState(!isAnonymous && !!existingAnswer)
+  const [submitted, setSubmitted] = useState(!!existingAnswer)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isAnonymous && typeof window !== 'undefined') {
-      setSubmitted(!!localStorage.getItem(`class_voice_${classId}_${question.id}`))
-    }
-  }, [isAnonymous, classId, question.id])
 
   async function handleSubmit() {
     const value = isSurvey ? selected : text.trim()
@@ -48,15 +42,10 @@ export default function VoiceAnswerPage({
     setError(null)
     setSubmitting(true)
     const wasSubmitted = submitted
-    const result = await submitClassVoiceAnswer(
-      classId, question.id, value,
-      isAnonymous ? undefined : studentId
-    )
+    const result = await submitClassVoiceAnswer(classId, question.id, value, studentId)
     setSubmitting(false)
     if (result.error) { setError(result.error); return }
-    if (isAnonymous) localStorage.setItem(`class_voice_${classId}_${question.id}`, '1')
     setSubmitted(true)
-    // Auto-navigate only on first submission
     if (!wasSubmitted) {
       window.location.href = nextUrl ?? `/my/${studentId}`
     }

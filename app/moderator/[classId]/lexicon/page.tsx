@@ -472,7 +472,7 @@ export default async function LexiconPage({
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-                  Послания между деца
+                  Послания между участници
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   Прегледайте и одобрете посланията, написани от учениците един към друг.

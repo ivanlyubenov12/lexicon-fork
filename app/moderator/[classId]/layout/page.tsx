@@ -16,7 +16,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   const [clsRes, questionsRes, voiceQsRes, pollsRes, eventsRes, studentsRes] = await Promise.all([
     admin
       .from('classes')
-      .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url')
+      .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label')
       .eq('id', classId)
       .eq('moderator_id', user.id)
       .single(),
@@ -215,6 +215,10 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   const lexiconData: LexiconData = {
     classId,
     preset: cls.template_id ?? null,
+    memberLabel: cls.member_label ?? null,
+    groupLabel: cls.group_label ?? null,
+    memoriesLabel: cls.memories_label ?? null,
+    starsLabel: cls.stars_label ?? null,
     classData: {
       name: cls.name,
       superhero_prompt: cls.superhero_prompt ?? null,

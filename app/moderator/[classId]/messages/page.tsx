@@ -75,7 +75,7 @@ export default async function MessagesPage({ params }: { params: Promise<{ class
                 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
                 style={{ fontFamily: 'Noto Serif, serif' }}
               >
-                Послания между деца
+                Послания между участници
               </h1>
               <p className="text-sm text-gray-500 mt-2">
                 Прегледайте и одобрете посланията, написани от учениците един към друг.

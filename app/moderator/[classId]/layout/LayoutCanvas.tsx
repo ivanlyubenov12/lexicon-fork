@@ -72,9 +72,12 @@ interface CanvasProps {
   activeId: string | null
   onSelect: (id: string) => void
   onAssign: (blockId: string, config: Record<string, unknown>) => void
+  memberLabel?: string | null
+  memoriesLabel?: string | null
+  starsLabel?: string | null
 }
 
-export default function LayoutCanvas({ blocks, assets, classId, activeId, onSelect, onAssign }: CanvasProps) {
+export default function LayoutCanvas({ blocks, assets, classId, activeId, onSelect, onAssign, memberLabel, memoriesLabel, starsLabel }: CanvasProps) {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8">
       {blocks.map((block) => (
@@ -89,6 +92,9 @@ export default function LayoutCanvas({ blocks, assets, classId, activeId, onSele
             isActive={activeId === block.id}
             onSelect={() => onSelect(block.id)}
             onAssign={(config) => onAssign(block.id, config)}
+            memberLabel={memberLabel}
+            memoriesLabel={memoriesLabel}
+            starsLabel={starsLabel}
           />
         </div>
       ))}
@@ -98,17 +104,28 @@ export default function LayoutCanvas({ blocks, assets, classId, activeId, onSele
 
 // ── Per-block wrapper ──────────────────────────────────────────────────────
 
-function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign }: {
+function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, memberLabel, memoriesLabel, starsLabel }: {
   block: Block
   assets: LayoutAssets
   classId: string
   isActive: boolean
   onSelect: () => void
   onAssign: (config: Record<string, unknown>) => void
+  memberLabel?: string | null
+  memoriesLabel?: string | null
+  starsLabel?: string | null
 }) {
   const cfg = block.config as Record<string, unknown>
   const linked = linkedLabel(block.type, cfg, assets)
-  const meta = BLOCK_META[block.type]
+  const baseMeta = BLOCK_META[block.type]
+  const meta = {
+    ...baseMeta,
+    label:
+      block.type === 'students_grid' && memberLabel ? memberLabel :
+      block.type === 'polls_grid'    && starsLabel  ? starsLabel  :
+      block.type === 'events'        && memoriesLabel ? memoriesLabel :
+      baseMeta.label,
+  }
   const options = pickerOptions(block.type, assets)
   const isAssignable = options.length > 0
   const needsPicker = isAssignable && !linked
@@ -134,6 +151,7 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign }: {
         classId={classId}
         isActive={isActive}
         onSelect={onSelect}
+        memoriesLabel={memoriesLabel}
       />
     )
   }
@@ -168,7 +186,7 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign }: {
         </span>
       </div>
 
-      <BlockVisual block={block} assets={assets} linked={linked} />
+      <BlockVisual block={block} assets={assets} linked={linked} memberLabel={memberLabel} memoriesLabel={memoriesLabel} starsLabel={starsLabel} />
     </div>
   )
 }
@@ -337,12 +355,13 @@ const ROTATIONS = ['rotate-1', '-rotate-1', '-rotate-1', 'rotate-1']
 
 interface LocalEvent { id: string; title: string; event_date: string | null; note: string | null; photos: string[] }
 
-function EventsBlockCanvas({ block, assets, classId, isActive, onSelect }: {
+function EventsBlockCanvas({ block, assets, classId, isActive, onSelect, memoriesLabel }: {
   block: Block
   assets: LayoutAssets
   classId: string
   isActive: boolean
   onSelect: () => void
+  memoriesLabel?: string | null
 }) {
   const cfg = block.config as { limit?: number; style?: string }
   const limit = Math.min(cfg.limit ?? 4, 4)
@@ -461,7 +480,7 @@ function EventsBlockCanvas({ block, assets, classId, isActive, onSelect }: {
 
         <div className="space-y-3 pt-2">
           <div className="flex justify-between items-end px-1">
-            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите събития</h2>
+            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>{memoriesLabel || 'Нашите събития'}</h2>
             <span className="text-xs text-gray-400 uppercase tracking-widest">{events.length} / {cfg.limit ?? 20}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -612,7 +631,7 @@ function EventsBlockCanvas({ block, assets, classId, isActive, onSelect }: {
 
 // ── Visual skeletons per block type ───────────────────────────────────────
 
-function BlockVisual({ block, assets, linked }: { block: Block; assets: LayoutAssets; linked: string | null }) {
+function BlockVisual({ block, assets, linked, memberLabel, memoriesLabel, starsLabel }: { block: Block; assets: LayoutAssets; linked: string | null; memberLabel?: string | null; memoriesLabel?: string | null; starsLabel?: string | null }) {
   const cfg = block.config as Record<string, unknown>
   const meta = BLOCK_META[block.type]
 
@@ -637,10 +656,8 @@ function BlockVisual({ block, assets, linked }: { block: Block; assets: LayoutAs
       return (
         <div className="space-y-4 pt-4">
           <div className="flex justify-between items-end px-1">
-            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>Нашите ученици</h2>
-            <span className="text-xs uppercase tracking-widest text-gray-400">
-              {assets.questions.length > 0 ? 'ученици' : 'добавете ученици'}
-            </span>
+            <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Noto Serif, serif' }}>{memberLabel || 'Учениците'}</h2>
+            <span className="text-xs uppercase tracking-widest text-gray-400">{memberLabel || 'ученици'}</span>
           </div>
           <div className="flex gap-5 overflow-x-auto pb-3 hide-scrollbar">
             {[0, 1, 2, 3, 4].map(i => (
@@ -759,7 +776,7 @@ function BlockVisual({ block, assets, linked }: { block: Block; assets: LayoutAs
             <div className="w-8 h-8 rounded-xl bg-amber-400 flex items-center justify-center flex-none">
               <span className="material-symbols-outlined text-sm text-white">emoji_events</span>
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-700">Победители в анкети</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-amber-700">{starsLabel || 'Победители в анкети'}</span>
           </div>
           {polls.length === 0 ? (
             <p className="text-xs text-amber-400 italic px-1">Все още няма създадени анкети</p>

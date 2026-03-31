@@ -624,7 +624,7 @@ function PlaceholderBlock({ icon, text, color }: { icon: string; text: string; c
 // Block types that always span the full width
 const FULL_WIDTH_TYPES = new Set<string>(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
 
-export default function LexiconBlocks({ blocks, data, basePath }: { blocks: Block[]; data: LexiconData; basePath?: string }) {
+export default function LexiconBlocks({ blocks, data, basePath, previewMode }: { blocks: Block[]; data: LexiconData; basePath?: string; previewMode?: boolean }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
       {blocks.map(block => {
@@ -649,7 +649,7 @@ export default function LexiconBlocks({ blocks, data, basePath }: { blocks: Bloc
         return (
           <div
             key={block.id}
-            className={`[&>section]:mb-0 ${fullWidth ? 'col-span-1 md:col-span-2' : ''}`}
+            className={`[&>section]:mb-0 ${fullWidth ? 'col-span-1 md:col-span-2' : ''} ${previewMode ? 'rounded-xl outline outline-2 outline-dashed outline-indigo-200 p-2' : ''}`}
           >
             {content}
           </div>

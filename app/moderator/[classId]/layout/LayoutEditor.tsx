@@ -169,32 +169,6 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
 
         {/* Left: block editor */}
         <aside className="w-full lg:w-96 lg:flex-shrink-0 flex flex-col overflow-y-auto border-r border-gray-100 bg-[#faf9f8]">
-          {/* Template picker */}
-          <div className="px-4 pt-5 pb-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Шаблон</p>
-            <div className="grid grid-cols-2 gap-2">
-              {TEMPLATE_UI.map(t => {
-                const isActive = activeTemplate === t.id
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => handleTemplateClick(t.id)}
-                    className={`relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl border-2 transition-all ${
-                      isActive ? `${t.border} ${t.color}` : 'border-gray-100 bg-white hover:border-gray-200'
-                    }`}
-                  >
-                    {isActive && <span className="absolute top-1.5 right-1.5 material-symbols-outlined text-xs text-green-500">check_circle</span>}
-                    <span className={`material-symbols-outlined text-xl ${isActive ? t.accent : 'text-gray-300'}`}>{t.icon}</span>
-                    <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? t.accent : 'text-gray-400'}`}>{t.name}</span>
-                    {t.subtitle && <span className={`text-[9px] text-center leading-tight ${isActive ? t.accent : 'text-gray-300'} opacity-80`}>{t.subtitle}</span>}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="border-t border-gray-100 mx-4" />
-
           {/* Block list */}
           <div className="px-4 py-4 flex-1">
             <div className="flex items-center justify-between mb-3">
@@ -220,6 +194,9 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
                 activeId={activeBlockId}
                 onSelect={id => setActiveBlockId(prev => prev === id ? null : id)}
                 onAssign={assignBlock}
+                memberLabel={lexiconData.memberLabel}
+                memoriesLabel={lexiconData.memoriesLabel}
+                starsLabel={lexiconData.starsLabel}
               />
             )}
           </div>
@@ -237,6 +214,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
               blocks={blocks}
               data={lexiconData}
               basePath={`/moderator/${classId}/preview`}
+              previewMode
             />
           </div>
         </div>
