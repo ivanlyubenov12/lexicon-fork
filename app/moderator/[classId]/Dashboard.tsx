@@ -526,10 +526,10 @@ export default function Dashboard({
                 </div>
               ) : (
                 awaitingApproval.slice(0, 6).map((student, i) => (
-                  <Link
+                  <div
                     key={student.id}
-                    href={`${base}/answers`}
-                    className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}
+                    onClick={() => window.location.href = `${base}/answers`}
+                    className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer ${i > 0 ? 'border-t border-gray-50' : ''}`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0">
@@ -552,7 +552,7 @@ export default function Dashboard({
                         Чака
                       </span>
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>
