@@ -874,7 +874,7 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
           <View style={s.pollsGridRow}>
             {polls.filter(p => p.nominees.length > 0).map((poll, i) => {
               const winner = poll.nominees[0]
-              const initials = winner.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+              const initials = winner.name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
               return (
                 <Link key={i} src={`#s-${winner.id}`} style={{ textDecoration: 'none', width: 80 }}>
                   <View style={s.pollWinnerCard}>
@@ -948,7 +948,7 @@ function StudentPage({ student, classInfo, bgPng }: {
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
 }) {
-  const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+  const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
   const videoQrs = student.video_qrs.filter(v => v.qr_png)
 
   return (
@@ -1166,7 +1166,7 @@ function MemoriesPage({ events, classInfo, bgPng }: {
         const rightComments = comments.slice(half)
 
         const renderComment = (c: PDFEventComment, ci: number) => {
-          const initials = c.student_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+          const initials = c.student_name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
           return (
             <View key={ci} style={{ ...s.eventCommentRow, marginBottom: 5 }}>
               <View style={s.eventCommentAvatar}>
@@ -1280,7 +1280,7 @@ function StudentsGridPage({ students, classInfo, isFirst, totalCount, memberLabe
       )}
       <View style={s.studentsGridWrap}>
         {students.map((student) => {
-          const initials = `${student.first_name[0]}${student.last_name[0]}`.toUpperCase()
+          const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
           return (
             <Link key={student.id} src={`#s-${student.id}`}
               style={{ textDecoration: 'none' }}>

@@ -7,8 +7,10 @@ import sharp from 'sharp'
 import { getBgPatternSvg } from '@/lib/pdf/bgPatternSvg'
 
 function safeUrl(url: string | null | undefined): string | null {
-  if (!url || url === 'undefined' || url === 'null') return null
-  return url
+  if (!url) return null
+  const s = String(url).trim()
+  if (!s || s === 'undefined' || s === 'null' || !s.startsWith('http')) return null
+  return s
 }
 
 function cloudinaryVideoThumbnail(videoUrl: string): string {
@@ -53,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .from('students')
     .select('id, first_name, last_name, photo_url')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
 
   const studentIds = (students ?? []).map((s: any) => s.id)
