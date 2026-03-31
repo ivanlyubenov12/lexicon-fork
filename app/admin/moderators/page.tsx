@@ -13,27 +13,40 @@ export default async function AdminModeratorsPage() {
   const { data: usersData } = await admin.auth.admin.listUsers()
   const allUsers = usersData?.users ?? []
 
-  // Get classes per moderator
+  // Get classes per moderator (include teacher_name)
   const { data: classes } = await admin
     .from('classes')
-    .select('id, name, school_year, status, moderator_id')
+    .select('id, name, school_year, status, moderator_id, teacher_name')
     .order('created_at', { ascending: false })
 
   const classesByModerator = new Map<string, typeof classes>()
+  // teacher_name per moderator (first class that has one)
+  const teacherNameByModerator = new Map<string, string>()
   for (const cls of classes ?? []) {
     const existing = classesByModerator.get(cls.moderator_id) ?? []
     classesByModerator.set(cls.moderator_id, [...existing, cls])
+    if (cls.teacher_name && !teacherNameByModerator.has(cls.moderator_id)) {
+      teacherNameByModerator.set(cls.moderator_id, cls.teacher_name)
+    }
   }
 
-  // Get student counts per class + parent user ids
+  // Get student counts per class + parent user ids + student names
   const { data: students } = await admin
     .from('students')
-    .select('class_id, parent_user_id')
+    .select('class_id, parent_user_id, first_name, last_name')
   const studentsByClass: Record<string, number> = {}
   const parentUserIds = new Set<string>()
+  // Map parent_user_id → student display name
+  const parentNameByUserId = new Map<string, string>()
   for (const s of students ?? []) {
     studentsByClass[s.class_id] = (studentsByClass[s.class_id] ?? 0) + 1
-    if (s.parent_user_id) parentUserIds.add(s.parent_user_id)
+    if (s.parent_user_id) {
+      parentUserIds.add(s.parent_user_id)
+      if (!parentNameByUserId.has(s.parent_user_id)) {
+        const name = [s.first_name, s.last_name].filter(Boolean).join(' ')
+        if (name) parentNameByUserId.set(s.parent_user_id, name)
+      }
+    }
   }
 
   const adminEmail = process.env.ADMIN_EMAIL
@@ -50,7 +63,12 @@ export default async function AdminModeratorsPage() {
     return {
       id: user.id,
       email: user.email ?? user.id,
-      fullName: (user.user_metadata?.full_name || user.user_metadata?.name || null) as string | null,
+      fullName: (
+        (user.user_metadata?.full_name || user.user_metadata?.name || null) as string | null
+        ?? teacherNameByModerator.get(user.id)
+        ?? parentNameByUserId.get(user.id)
+        ?? null
+      ),
       createdAt: user.created_at,
       lastSignIn: user.last_sign_in_at ?? null,
       role,
