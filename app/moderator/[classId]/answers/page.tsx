@@ -86,7 +86,7 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
                 За одобрение
               </h1>
               <p className="text-sm text-gray-500 mt-2">
-                Отговори на въпроси и послания между деца.
+                Отговори на въпроси и послания между участници.
               </p>
             </div>
             {pendingCount > 0 && (

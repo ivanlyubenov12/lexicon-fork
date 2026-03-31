@@ -7,6 +7,13 @@ function cardRotation(id: string): string {
   return `rotate(${n - 3}deg)` // deterministic -3..+3 deg per student
 }
 
+// Deterministic pseudo-random float 0–1 from a string + numeric seed
+function hashNum(str: string, seed: number): number {
+  let h = (seed + 1) * 2654435761
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 2246822519) >>> 0
+  return h / 0xffffffff
+}
+
 // ── Exported data types ────────────────────────────────────────────────────
 
 export interface QuestionAnswer {
@@ -114,13 +121,10 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
       ? `${studentList.length} участници`
       : `${studentList.length} ученици`)
 
-  // Show preview of first 8, link out for all
-  const preview = studentList.slice(0, 8)
-
   return (
     <section className="mb-20">
-      {/* Header — editorial asymmetric */}
-      <div className="flex items-baseline justify-between mb-14">
+      {/* Header */}
+      <div className="flex items-baseline justify-between mb-8">
         <h3
           className="text-2xl font-bold"
           style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}
@@ -135,46 +139,29 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
         </Link>
       </div>
 
-      {/* Magazine grid — alternating vertical offsets */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-y-14 gap-x-8">
-        {preview.map((student, i) => {
+      {/* Avatar grid — symmetric, 4–8 per row */}
+      <div className="grid grid-cols-4 sm:grid-cols-5 gap-x-4 gap-y-6">
+        {studentList.map((student) => {
           const initials = `${student.first_name?.[0] ?? ''}${student.last_name?.[0] ?? ''}`.toUpperCase()
-          const rotation = cardRotation(student.id)
-          // columns 2 and 4 (index 1 and 3 in a row of 4) get a vertical offset
-          const isOffset = i % 4 === 1 || i % 4 === 3
           return (
             <Link
               key={student.id}
               href={`${base}/student/${student.id}`}
-              className={`group relative pt-5 transition-transform duration-300 hover:-translate-y-2 ${isOffset ? 'lg:mt-10' : ''}`}
+              className="group flex flex-col items-center gap-2 text-center"
             >
-              {/* Washi tape */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-4 tape-overlay z-10 pointer-events-none" />
-
-              {/* Polaroid */}
               <div
-                className="bg-surface-container-lowest p-3 polaroid-frame transition-transform duration-500 group-hover:rotate-0"
-                style={{ transform: rotation }}
+                className="w-14 h-14 rounded-full overflow-hidden flex-none flex items-center justify-center ring-2 ring-transparent group-hover:ring-[color:var(--lex-primary)] transition-all duration-200"
+                style={{ backgroundColor: 'var(--lex-primary-light)' }}
               >
-                <div className="aspect-[4/5] overflow-hidden bg-surface-container">
-                  {student.photo_url ? (
-                    <img
-                      src={student.photo_url}
-                      alt={student.first_name}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-surface-container-high">
-                      <span className="font-headline text-2xl font-bold text-on-surface-variant">{initials}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-4 pb-1">
-                  <h4 className="font-headline text-base font-bold text-on-surface leading-tight">
-                    {student.first_name} {student.last_name}
-                  </h4>
-                </div>
+                {student.photo_url ? (
+                  <img src={student.photo_url} alt={student.first_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-base font-bold" style={{ color: 'var(--lex-primary)' }}>{initials}</span>
+                )}
               </div>
+              <span className="text-xs font-semibold leading-tight" style={{ color: 'var(--lex-text)' }}>
+                {student.first_name}
+              </span>
             </Link>
           )
         })}
@@ -527,7 +514,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
     return (
       <section className="mb-12">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{memoriesLabel || 'Нашите събития'}</h3>
+          <h3 className="text-2xl font-bold" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{memoriesLabel || 'Нашите събития'}</h3>
           <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
         </div>
         <div className="grid grid-cols-3 gap-4">

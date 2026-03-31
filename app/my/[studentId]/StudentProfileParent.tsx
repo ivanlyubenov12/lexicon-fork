@@ -212,16 +212,12 @@ export default function StudentProfileParent({
 
   // ── Optional sections status ───────────────────────────────────────────────
   const photoStatus: SectionStatus = student.photo_url ? 'done' : 'todo'
-  const [localSentCount, setLocalSentCount] = useState(0)
-  const [messagesFinalized, setMessagesFinalized] = useState(false)
-  const effectiveSentCount = sentMessages.length + localSentCount
+  const sentCount = sentMessages.length
   const messagesStatus: SectionStatus =
-    messagesFinalized && effectiveSentCount > 0 ? 'done' :
-    effectiveSentCount === 0 ? 'todo' :
-    effectiveSentCount < classmates.length ? 'partial' : 'done'
+    sentCount === 0 ? 'todo' :
+    sentCount < classmates.length ? 'partial' : 'done'
   const messagesLabel = classmates.length === 0 ? 'Няма съученици' :
-    messagesFinalized && effectiveSentCount > 0 ? 'Изпратено за одобрение' :
-    effectiveSentCount === 0 ? 'Не е започнато' : `${effectiveSentCount} / ${classmates.length} послания`
+    sentCount === 0 ? 'Не е започнато' : `${sentCount} / ${classmates.length} послания`
   const memoriesStatus: SectionStatus =
     events.length === 0 ? 'done' :
     events.every(e => e.myComment) ? 'done' :
@@ -249,7 +245,7 @@ export default function StudentProfileParent({
       const count = events.filter(e => !e.myComment).length
       missing.push({ key: 'memories', label: `Коментари към ${count} ${count === 1 ? 'спомен' : 'спомена'}`, url: '' })
     }
-    if (classmates.length > 0 && effectiveSentCount === 0) {
+    if (classmates.length > 0 && sentCount === 0) {
       missing.push({ key: 'messages', label: 'Послания до съученици', url: '' })
     }
     return missing
@@ -449,14 +445,9 @@ export default function StudentProfileParent({
             accentColor="amber"
           >
             <MessagesSection
-              authorStudentId={student.id}
+              studentId={student.id}
               classmates={classmates}
               sentMessages={sentMessages}
-              onMessageSent={() => setLocalSentCount(c => c + 1)}
-              onFinalize={() => {
-                if (effectiveSentCount > 0) setMessagesFinalized(true)
-                toggle('messages')
-              }}
             />
           </Section>
         )}
