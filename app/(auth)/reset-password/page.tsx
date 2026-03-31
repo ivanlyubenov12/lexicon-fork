@@ -78,7 +78,6 @@ export default function ResetPasswordPage() {
               {loading ? 'Запазване...' : 'Запази новата парола'}
             </button>
           </form>
-        </div>
       </div>
     </div>
   )
