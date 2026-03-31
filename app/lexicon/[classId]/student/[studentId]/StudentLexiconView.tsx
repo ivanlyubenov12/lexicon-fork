@@ -478,7 +478,7 @@ export default function StudentLexiconView({
         {messages.length > 0 && (
           <section className="max-w-3xl mx-auto mb-16">
             <h2 className="font-headline text-3xl font-bold text-on-surface mb-12 text-center">
-              Пожелания от класа
+              Другите за мен
             </h2>
             <div className="space-y-6">
               {messages.map((msg) => {
