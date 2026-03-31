@@ -206,7 +206,6 @@ export default function AnswerForm({
       }
       const result = await submitAnswer(studentId, question.id, {
         media_url: data.url,
-        media_type: 'photo',
         ...(question.allows_text ? { text_content: textValue } : {}),
       })
       if (result.error) {
