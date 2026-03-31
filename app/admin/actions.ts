@@ -159,6 +159,29 @@ export async function adminUpdateUserName(userId: string, fullName: string): Pro
   return { error: error?.message ?? null }
 }
 
+export async function adminUpdateUserFull(
+  userId: string,
+  data: { fullName?: string; email?: string; password?: string }
+): Promise<{ error: string | null }> {
+  await assertAdmin()
+  const admin = createServiceRoleClient()
+
+  const updates: Record<string, unknown> = {}
+  if (data.fullName !== undefined) {
+    updates.user_metadata = { full_name: data.fullName.trim() || null }
+  }
+  if (data.email !== undefined && data.email.trim()) {
+    updates.email = data.email.trim()
+  }
+  if (data.password !== undefined && data.password.trim()) {
+    updates.password = data.password.trim()
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(userId, updates)
+  revalidatePath('/admin/moderators')
+  return { error: error?.message ?? null }
+}
+
 // ── System questions ──────────────────────────────────────────────────────────
 
 // ── Archive system questions ───────────────────────────────────────────────────
