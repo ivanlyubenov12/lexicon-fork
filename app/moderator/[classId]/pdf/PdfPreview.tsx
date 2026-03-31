@@ -87,7 +87,7 @@ export default function PdfPreview({ section, pdfData, theme, options }: Props) 
       break
     case 'student': {
       const student = pdfData.students.find(s => s.id === section.studentId)
-      if (student) page = <StudentPage student={student} classInfo={pdfData.classInfo} bgPng={null} theme={theme} options={options} />
+      if (student) page = <StudentPage student={student} classInfo={pdfData.classInfo} bgPng={null} theme={theme} options={options} groupLabel={pdfData.groupLabel} />
       break
     }
     case 'polls':

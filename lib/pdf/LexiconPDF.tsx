@@ -949,12 +949,13 @@ export function ClassOverviewPage({ data, theme, options }: { data: PDFData; the
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-export function StudentPage({ student, classInfo, bgPng, theme, options }: {
+export function StudentPage({ student, classInfo, bgPng, theme, options, groupLabel }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
   theme?: PDFTheme
   options?: PageOptions
+  groupLabel?: string | null
 }) {
   const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
   const videoQrs = student.video_qrs.filter(v => v.qr_png)
@@ -1061,7 +1062,7 @@ export function StudentPage({ student, classInfo, bgPng, theme, options }: {
         <View style={{ paddingHorizontal: 28, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.border }}>
           <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.gold, letterSpacing: 1.2,
             textTransform: 'uppercase', marginBottom: 8 }}>
-            Моите спомени с класа
+            Моите спомени с {groupLabel ? groupLabel.toLowerCase() : 'класа'}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {student.event_comments.map((ec, i) => (
@@ -1425,6 +1426,7 @@ export function LexiconPDF({ data }: { data: PDFData }) {
           student={student}
           classInfo={data.classInfo}
           bgPng={data.bg_pattern_png}
+          groupLabel={data.groupLabel}
         />
       ))}
 

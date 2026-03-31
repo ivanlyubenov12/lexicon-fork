@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, stars_label, member_label')
+    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, stars_label, member_label, group_label')
     .eq('id', classId)
     .single()
 
@@ -311,6 +311,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     preset: (cls as any).template_id ?? null,
     starsLabel: (cls as any).stars_label ?? null,
     memberLabel: (cls as any).member_label ?? null,
+    groupLabel: (cls as any).group_label ?? null,
     classInfo: {
       name: cls.name,
       namePart,

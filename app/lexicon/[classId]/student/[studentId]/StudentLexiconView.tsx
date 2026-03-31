@@ -64,6 +64,7 @@ interface Props {
   /** When true, skip the outer shell/nav/footer (a layout.tsx provides them) */
   embedded?: boolean
   themeId?: string | null
+  groupLabel?: string | null
 }
 
 function AudioPlayer({ src }: { src: string }) {
@@ -149,6 +150,7 @@ export default function StudentLexiconView({
   showAllQuestions = false,
   embedded = false,
   themeId,
+  groupLabel,
 }: Props) {
   const resolvedPrevHref = prevHref !== undefined ? prevHref : (prevStudentId ? `/lexicon/${classId}/student/${prevStudentId}` : null)
   const resolvedNextHref = nextHref !== undefined ? nextHref : (nextStudentId ? `/lexicon/${classId}/student/${nextStudentId}` : null)
@@ -509,7 +511,7 @@ export default function StudentLexiconView({
           <section className="mb-24">
             <h2 className="font-headline text-3xl font-bold text-on-surface mb-12 flex items-center gap-4">
               <span className="w-8 h-px bg-primary block" />
-              Моите спомени с класа
+              Моите спомени с {groupLabel ? groupLabel.toLowerCase() : 'класа'}
             </h2>
             <div className="columns-1 md:columns-2 gap-6 space-y-6">
               {studentEvents.map((ev, i) => {

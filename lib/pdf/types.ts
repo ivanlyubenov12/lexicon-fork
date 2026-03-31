@@ -76,6 +76,7 @@ export interface PDFData {
   preset?: string | null
   starsLabel?: string | null
   memberLabel?: string | null
+  groupLabel?: string | null
   classInfo: {
     name: string
     namePart: string
