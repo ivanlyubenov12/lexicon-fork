@@ -97,7 +97,15 @@
       "Bash(xargs ls:*)",
       "Bash(grep -n \"\\\\.order\\(''last_name''\\)\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/students/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/student/[studentId]/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/students/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/preview/student/[studentId]/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/admin/classes/[classId]/preview/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/page.tsx)",
       "Bash(grep -n \"last_name.*ascending\\\\|ascending.*last_name\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/page.tsx)",
-      "Bash(grep -n \"text-3xl\\\\|text-4xl\\\\|Noto Serif\\\\|За одобрение\\\\|Участници\\\\|Събития\\\\|Анкети\\\\|Послания\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/answers/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/events/EventsEditor.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/polls/PollsEditor.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/messages/MessagesTable.tsx)"
+      "Bash(grep -n \"text-3xl\\\\|text-4xl\\\\|Noto Serif\\\\|За одобрение\\\\|Участници\\\\|Събития\\\\|Анкети\\\\|Послания\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/answers/page.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/events/EventsEditor.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/polls/PollsEditor.tsx /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/messages/MessagesTable.tsx)",
+      "Bash(grep -n \"Нашите ученици\\\\|BlockVisual\\\\|students_grid\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/layout/LayoutCanvas.tsx)",
+      "Bash(find /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon -type f -name *Student*Block* -o -name *Poll* -o -name *Star*Block*)",
+      "Bash(grep -n \"h-20\\\\|h-7\\\\|w-20\\\\|w-7\" app/lexicon/[classId]/LexiconBlocks.tsx)",
+      "Bash(grep -n \"w-20 h-20\\\\|w-7 h-7\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/lexicon/[classId]/LexiconBlocks.tsx)",
+      "Bash(cp -r app/login \"app/\\(auth\\)/login\")",
+      "Bash(cp -r app/register \"app/\\(auth\\)/register\")",
+      "Bash(cp -r app/forgot-password \"app/\\(auth\\)/forgot-password\")",
+      "Bash(cp -r app/reset-password \"app/\\(auth\\)/reset-password\")"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",
