@@ -21,6 +21,12 @@ function cloudinaryVideoThumbnail(videoUrl: string): string {
     .replace(/\.[^.]+$/, '.jpg')
 }
 
+function cloudinaryImageThumb(url: string, w = 600, h = 400): string {
+  // Resize image via Cloudinary transformation to avoid loading huge originals in react-pdf
+  if (!url.includes('cloudinary.com')) return url
+  return url.replace('/image/upload/', `/image/upload/w_${w},h_${h},c_fill,q_auto,f_jpg/`)
+}
+
 export const config = {
   api: { responseLimit: false },
   maxDuration: 60,
@@ -217,7 +223,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: studentNameMap.get(id) ?? 'Непознат',
         votes: n,
         pct: total > 0 ? Math.round((n / total) * 100) : 0,
-        photo_url: studentPhotoMap.get(id) ?? null,
+        photo_url: safeUrl(studentPhotoMap.get(id)) ? cloudinaryImageThumb(safeUrl(studentPhotoMap.get(id))!, 120, 120) : null,
       }))
     return { question: poll.question, nominees, totalVotes: total }
   })
@@ -247,7 +253,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       student_name: c.students
         ? `${c.students.first_name} ${c.students.last_name}`
         : 'Ученик',
-      student_photo_url: c.students?.photo_url ?? null,
+      student_photo_url: safeUrl(c.students?.photo_url) ? cloudinaryImageThumb(safeUrl(c.students!.photo_url)!, 80, 80) : null,
       text: c.comment_text,
     })
     commentsByEvent.set(c.event_id, list)
@@ -259,7 +265,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       slist.push({
         event_title: ev.title,
         event_date: ev.event_date ?? null,
-        event_photo_url: Array.isArray(ev.photos) && ev.photos.length > 0 ? ev.photos[0] : null,
+        event_photo_url: Array.isArray(ev.photos) && ev.photos.length > 0 ? cloudinaryImageThumb(ev.photos[0], 400, 240) : null,
         comment_text: c.comment_text,
       })
       eventCommentsByStudent.set(c.student_id, slist)
@@ -270,7 +276,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     id: s.id,
     first_name: s.first_name,
     last_name: s.last_name,
-    photo_url: safeUrl(s.photo_url),
+    photo_url: safeUrl(s.photo_url) ? cloudinaryImageThumb(safeUrl(s.photo_url)!, 300, 400) : null,
     answers: (answersByStudent.get(s.id) ?? [])
       .filter((a: any) => (a.text_content || a.media_url) && qMap.has(a.question_id))
       .map((a: any): PDFAnswer => ({
@@ -324,7 +330,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       title: e.title,
       event_date: e.event_date ?? null,
       note: e.note ?? null,
-      photos: Array.isArray(e.photos) ? e.photos : [],
+      photos: (Array.isArray(e.photos) ? e.photos : [])
+        .filter((u: string) => safeUrl(u))
+        .map((u: string) => cloudinaryImageThumb(u, 600, 420)),
       comments: commentsByEvent.get(e.id) ?? [],
     })),
   }
