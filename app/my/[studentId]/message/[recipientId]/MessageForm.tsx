@@ -49,8 +49,7 @@ export default function MessageForm({
       setError(result.error)
     } else {
       setLocalStatus('pending')
-      if (nextUrl) navigateTo(nextUrl)
-      else navigateTo(`/my/${studentId}`)
+      navigateTo(`/my/${studentId}`)
     }
   }
 

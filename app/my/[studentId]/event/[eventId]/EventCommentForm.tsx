@@ -58,8 +58,7 @@ export default function EventCommentForm({
       setError(result.error)
     } else {
       setLocalSaved(true)
-      if (nextUrl) navigateTo(nextUrl)
-      else navigateTo(`/my/${studentId}`)
+      navigateTo(`/my/${studentId}`)
     }
   }
 

@@ -98,7 +98,7 @@ export default function AnswerForm({
       } else {
         setSubmitStatus('submitted')
         setEditing(false)
-        navigateTo(nextUrl ?? `/my/${studentId}`)
+        navigateTo(`/my/${studentId}`)
       }
     } finally {
       setSubmitting(false)
@@ -144,7 +144,7 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
-        navigateTo(nextUrl ?? `/my/${studentId}`)
+        navigateTo(`/my/${studentId}`)
       }
     } catch {
       setSubmitError('Качването не успя. Опитайте отново.')
@@ -212,7 +212,7 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
-        navigateTo(nextUrl ?? `/my/${studentId}`)
+        navigateTo(`/my/${studentId}`)
       }
     } catch {
       setSubmitError('Качването не успя. Опитайте отново.')
