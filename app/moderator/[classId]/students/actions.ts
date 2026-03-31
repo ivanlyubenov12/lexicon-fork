@@ -3,6 +3,23 @@
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+export async function reorderStudents(
+  classId: string,
+  orderedIds: string[],
+): Promise<{ error: string | null }> {
+  const admin = createServiceRoleClient()
+  const updates = orderedIds.map((id, i) =>
+    admin.from('students').update({ sort_order: i + 1 }).eq('id', id).eq('class_id', classId)
+  )
+  const results = await Promise.all(updates)
+  const err = results.find(r => r.error)
+  if (err?.error) return { error: err.error.message }
+  revalidatePath(`/moderator/${classId}/students`)
+  revalidatePath(`/lexicon/${classId}`)
+  revalidatePath(`/lexicon/${classId}/students`)
+  return { error: null }
+}
+
 export async function deleteStudents(
   classId: string,
   studentIds: string[],

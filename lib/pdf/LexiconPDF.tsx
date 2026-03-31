@@ -865,7 +865,9 @@ function ClassOverviewPage({ data }: { data: PDFData }) {
       {polls.length > 0 && (
         <View style={s.overviewSection}>
           <Text style={s.overviewSectionLabel}>
-            {data.preset === 'sports' ? 'Звездите на отбора'
+            {data.starsLabel
+              ? data.starsLabel
+              : data.preset === 'sports' ? 'Звездите на отбора'
               : (data.preset === 'friends' || data.preset === 'kindergarten') ? 'Звездите на групата'
               : 'Звездите на класа'}
           </Text>

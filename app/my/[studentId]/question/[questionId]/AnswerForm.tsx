@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { saveDraft, submitAnswer } from '../../actions'
 import RecordMedia from './RecordMedia'
 
@@ -14,6 +13,7 @@ interface Props {
     type: string
     order_index: number
     max_length: number | null
+    allows_text?: boolean | null
   }
   answer: {
     id?: string
@@ -23,9 +23,8 @@ interface Props {
     status?: string
     moderator_note?: string | null
   } | null
-  prevQuestionId: string | null
-  nextQuestionId: string | null
-  nextUnansweredId: string | null
+  prevUrl: string | null
+  nextUrl: string | null
   questionNumber: number
   totalQuestions: number
 }
@@ -34,26 +33,23 @@ export default function AnswerForm({
   studentId,
   question,
   answer,
-  prevQuestionId,
-  nextQuestionId,
-  nextUnansweredId,
+  prevUrl,
+  nextUrl,
   questionNumber,
   totalQuestions,
 }: Props) {
-  const router = useRouter()
   const isVideo = question.type === 'video'
+  const isPhoto = question.type === 'photo'
 
-  // ── Text state ──────────────────────────────────────────────────────────────
   const [textValue, setTextValue] = useState(answer?.text_content ?? '')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [submitStatus, setSubmitStatus] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  // Start in locked view if question already has any content (draft or submitted)
   const [editing, setEditing] = useState(!answer?.text_content && !answer?.media_url)
 
-  // ── Video state ─────────────────────────────────────────────────────────────
   const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -82,6 +78,15 @@ export default function AnswerForm({
     }
   }, [textValue, isVideo, studentId, question.id])
 
+  // Flush draft + hard-navigate (bypasses Router Cache for fresh DB read)
+  async function navigateTo(url: string) {
+    if (!isVideo && textValue !== lastSavedRef.current) {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      await saveDraft(studentId, question.id, textValue)
+    }
+    window.location.href = url
+  }
+
   async function handleTextSubmit() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     setSubmitError(null)
@@ -93,9 +98,7 @@ export default function AnswerForm({
       } else {
         setSubmitStatus('submitted')
         setEditing(false)
-        if (nextUnansweredId) {
-          router.push(`/my/${studentId}/question/${nextUnansweredId}`)
-        }
+        navigateTo(nextUrl ?? `/my/${studentId}`)
       }
     } finally {
       setSubmitting(false)
@@ -107,21 +110,33 @@ export default function AnswerForm({
     setSubmitError(null)
     setUploading(true)
 
-    const formData = new FormData()
-    formData.append('file', mediaFile)
-
     try {
-      const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
-      const data = await res.json()
+      // Get upload signature from server (no file data sent to server)
+      const signRes = await fetch('/api/media/sign', { method: 'POST' })
+      const { signature, timestamp, apiKey, cloudName } = await signRes.json()
 
-      if (data.error || !data.url) {
-        setSubmitError(data.error ?? 'Качването не успя.')
+      // Upload directly to Cloudinary (bypasses server body size limits)
+      const formData = new FormData()
+      formData.append('file', mediaFile)
+      formData.append('api_key', apiKey)
+      formData.append('timestamp', String(timestamp))
+      formData.append('signature', signature)
+      formData.append('folder', 'lexicon')
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+        { method: 'POST', body: formData }
+      )
+      const uploadData = await uploadRes.json()
+
+      if (uploadData.error || !uploadData.secure_url) {
+        setSubmitError(uploadData.error?.message ?? 'Качването не успя.')
         setUploading(false)
         return
       }
 
       const result = await submitAnswer(studentId, question.id, {
-        media_url: data.url,
+        media_url: uploadData.secure_url,
         media_type: 'video',
       })
 
@@ -129,9 +144,50 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
-        if (nextUnansweredId) {
-          router.push(`/my/${studentId}/question/${nextUnansweredId}`)
-        }
+        navigateTo(nextUrl ?? `/my/${studentId}`)
+      }
+    } catch {
+      setSubmitError('Качването не успя. Опитайте отново.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setMediaFile(file)
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setPhotoPreview(url)
+    } else {
+      setPhotoPreview(null)
+    }
+  }
+
+  async function handlePhotoSubmit() {
+    if (!mediaFile) return
+    setSubmitError(null)
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', mediaFile)
+    try {
+      const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.error || !data.url) {
+        setSubmitError(data.error ?? 'Качването не успя.')
+        setUploading(false)
+        return
+      }
+      const result = await submitAnswer(studentId, question.id, {
+        media_url: data.url,
+        media_type: 'image',
+        ...(question.allows_text ? { text_content: textValue } : {}),
+      })
+      if (result.error) {
+        setSubmitError(result.error)
+      } else {
+        setSubmitStatus('submitted')
+        navigateTo(nextUrl ?? `/my/${studentId}`)
       }
     } catch {
       setSubmitError('Качването не успя. Опитайте отново.')
@@ -144,20 +200,9 @@ export default function AnswerForm({
   const isLocked = answerStatus === 'approved'
 
   async function handleStartEdit() {
-    // Reset questionnaire_submitted immediately so profile page shows correct state
     await saveDraft(studentId, question.id, textValue)
     lastSavedRef.current = textValue
     setEditing(true)
-  }
-
-  // Flush any unsaved draft then hard-navigate — full reload bypasses
-  // Next.js Router Cache so the profile page always reads fresh DB data.
-  async function navigateTo(url: string) {
-    if (!isVideo && textValue !== lastSavedRef.current) {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      await saveDraft(studentId, question.id, textValue)
-    }
-    window.location.href = url
   }
 
   return (
@@ -202,22 +247,18 @@ export default function AnswerForm({
         </div>
 
         {/* Status banners */}
-        {answerStatus === 'approved' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
-            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-            Одобрен
-          </div>
-        )}
         {!editing && (answer?.text_content || answer?.media_url) && (
           <div className={`text-sm px-4 py-3 rounded-xl mb-5 flex items-center gap-2 ${
             answerStatus === 'approved'
               ? 'bg-green-50 border border-green-200 text-green-700'
-              : 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+              : answerStatus === 'submitted'
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                : 'bg-gray-50 border border-gray-200 text-gray-500'
           }`}>
             <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {answerStatus === 'approved' ? 'verified' : 'check_circle'}
+              {answerStatus === 'approved' ? 'verified' : answerStatus === 'submitted' ? 'check_circle' : 'edit_note'}
             </span>
-            {answerStatus === 'approved' ? 'Одобрен' : 'Изпратен за одобрение'}
+            {answerStatus === 'approved' ? 'Одобрен' : answerStatus === 'submitted' ? 'Изпратен за одобрение' : 'Запазена чернова'}
           </div>
         )}
         {answer?.status === 'draft' && answer.moderator_note && !isLocked && (
@@ -230,10 +271,102 @@ export default function AnswerForm({
           </div>
         )}
 
-        {/* ── Video question ────────────────────────────────────────────────── */}
+        {/* ── Photo question ────────────────────────────────────────────── */}
+        {isPhoto && (
+          <div className="space-y-4">
+            {/* Existing approved photo */}
+            {answer?.media_url && !editing && (
+              <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                <img
+                  src={answer.media_url}
+                  alt="Снимка"
+                  className="w-full max-h-80 object-contain"
+                />
+              </div>
+            )}
+
+            {editing && (
+              <>
+                {/* Preview of newly selected photo */}
+                {photoPreview && (
+                  <div className="relative rounded-2xl overflow-hidden border border-indigo-200 bg-gray-50">
+                    <img src={photoPreview} alt="Преглед" className="w-full max-h-80 object-contain" />
+                    <button
+                      onClick={() => { setMediaFile(null); setPhotoPreview(null) }}
+                      className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-600 hover:bg-white shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-base">close</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* File input */}
+                {!photoPreview && (
+                  <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-white cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                    <span className="material-symbols-outlined text-4xl text-gray-300">add_photo_alternate</span>
+                    <span className="text-sm text-gray-500 font-medium">Изберете или снимайте снимка</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </>
+            )}
+
+            {/* Optional text field */}
+            {question.allows_text && (
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  value={textValue}
+                  onChange={(e) => setTextValue(e.target.value)}
+                  maxLength={question.max_length ?? undefined}
+                  placeholder="Добавете текст към снимката..."
+                  disabled={isLocked || !editing}
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
+                />
+                {editing && question.max_length && (
+                  <div className="absolute bottom-3 right-3 text-xs text-gray-300">
+                    {textValue.length}/{question.max_length}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {uploading && (
+              <div className="text-sm text-indigo-600 text-center font-medium">Качва се...</div>
+            )}
+            {submitError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{submitError}</div>
+            )}
+
+            {editing ? (
+              <button
+                onClick={handlePhotoSubmit}
+                disabled={!mediaFile || uploading}
+                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {uploading ? 'Качва се...' : 'Изпрати снимката'}
+              </button>
+            ) : (
+              <button
+                onClick={() => setEditing(true)}
+                className="w-full border-2 border-indigo-300 text-indigo-600 py-3.5 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base">edit</span>
+                Смени снимката
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Video question ─────────────────────────────────────────────── */}
         {isVideo && (
           <div className="space-y-4">
-            {/* Existing approved video */}
             {answer?.media_url && isLocked ? (
               <video
                 src={answer.media_url}
@@ -271,8 +404,8 @@ export default function AnswerForm({
           </div>
         )}
 
-        {/* ── Text question ─────────────────────────────────────────────────── */}
-        {!isVideo && (
+        {/* ── Text question ──────────────────────────────────────────────── */}
+        {!isVideo && !isPhoto && (
           <div className="space-y-3">
             <div className="relative">
               <textarea
@@ -307,7 +440,7 @@ export default function AnswerForm({
               </div>
             )}
 
-            {isLocked ? null : !editing ? (
+            {!editing ? (
               <button
                 onClick={handleStartEdit}
                 className="w-full border-2 border-indigo-300 text-indigo-600 py-3.5 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
@@ -329,30 +462,29 @@ export default function AnswerForm({
 
         {/* Navigation */}
         <div className="flex justify-between mt-8 pt-5 border-t border-gray-200">
-          {!isVideo && prevQuestionId ? (
+          {prevUrl ? (
             <button
-              onClick={() => navigateTo(`/my/${studentId}/question/${prevQuestionId}`)}
+              onClick={() => navigateTo(prevUrl)}
               className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               <span className="material-symbols-outlined text-base">arrow_back</span>
               Предишен
             </button>
           ) : <span />}
-          {!isVideo && nextQuestionId ? (
+          {nextUrl ? (
             <button
-              onClick={() => navigateTo(`/my/${studentId}/question/${nextQuestionId}`)}
+              onClick={() => navigateTo(nextUrl)}
               className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
               Следващ
               <span className="material-symbols-outlined text-base">arrow_forward</span>
             </button>
           ) : (
-            // For video questions always go back to profile (no cross-section navigation)
             <button
               onClick={() => navigateTo(`/my/${studentId}`)}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
             >
-              Финализирай секцията ✓
+              Готово ✓
             </button>
           )}
         </div>

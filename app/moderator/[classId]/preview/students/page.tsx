@@ -26,6 +26,7 @@ export default async function PreviewStudentsPage({ params }: { params: Promise<
     .from('students')
     .select('id, first_name, last_name, photo_url')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
 
   const studentList = students ?? []

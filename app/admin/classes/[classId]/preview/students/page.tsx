@@ -17,7 +17,8 @@ export default async function AdminPreviewStudentsPage({ params }: { params: Pro
   const { data: classData } = await admin.from('classes').select('id, name, school_logo_url, template_id, theme_id, bg_pattern').eq('id', classId).single()
   if (!classData) redirect('/admin/classes')
 
-  const { data: students } = await admin.from('students').select('id, first_name, last_name, photo_url').eq('class_id', classId).order('last_name')
+  const { data: students } = await admin.from('students').select('id, first_name, last_name, photo_url').eq('class_id', classId).order('sort_order', { ascending: true, nullsFirst: false })
+    .order('last_name')
   const studentList = students ?? []
   const basePath = `/admin/classes/${classId}/preview`
 

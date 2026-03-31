@@ -27,6 +27,10 @@ export interface VoiceItem {
 export interface LexiconData {
   classId: string
   preset?: string | null
+  memberLabel?: string | null
+  groupLabel?: string | null
+  memoriesLabel?: string | null
+  starsLabel?: string | null
   classData: {
     name: string
     superhero_prompt?: string | null
@@ -99,13 +103,16 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
   const base = basePath ?? `/lexicon/${classId}`
   if (studentList.length === 0) return null
 
-  const studentsHeading = preset === 'friends' ? 'Хората'
-    : preset === 'sports' ? 'Играчите'
-    : preset === 'kindergarten' ? 'Децата'
-    : 'Учениците'
-  const studentsCount = preset === 'friends' || preset === 'sports' || preset === 'kindergarten'
+  const studentsHeading = data.memberLabel
+    || (preset === 'friends' ? 'Хората'
+      : preset === 'sports' ? 'Играчите'
+      : preset === 'kindergarten' ? 'Децата'
+      : 'Учениците')
+  const studentsCount = data.memberLabel
     ? `${studentList.length} участници`
-    : `${studentList.length} ученици`
+    : (preset === 'friends' || preset === 'sports' || preset === 'kindergarten'
+      ? `${studentList.length} участници`
+      : `${studentList.length} ученици`)
 
   // Show preview of first 8, link out for all
   const preview = studentList.slice(0, 8)
@@ -115,8 +122,8 @@ function StudentsGridBlock({ data, config, basePath }: { data: LexiconData; conf
       {/* Header — editorial asymmetric */}
       <div className="flex items-baseline justify-between mb-14">
         <h3
-          className="font-headline font-bold text-on-surface leading-none"
-          style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}
+          className="text-2xl font-bold"
+          style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}
         >
           {studentsHeading}
         </h3>
@@ -377,11 +384,13 @@ function PollsGridBlock({ data, config, basePath }: { data: LexiconData; config:
 
   if (allPolls.length === 0) return <PlaceholderBlock icon="emoji_events" text="Все още няма анкети" color="secondary" />
 
-  const starsTitle = data.preset === 'sports'
-    ? 'Звездите на отбора'
-    : (data.preset === 'friends' || data.preset === 'kindergarten')
-      ? 'Звездите на групата'
-      : 'Звездите на класа'
+  const starsTitle = data.starsLabel
+    ? data.starsLabel
+    : data.preset === 'sports'
+      ? 'Звездите на отбора'
+      : (data.preset === 'friends' || data.preset === 'kindergarten')
+        ? 'Звездите на групата'
+        : 'Звездите на класа'
 
   return (
     <section className="mb-16">
@@ -504,7 +513,7 @@ function PollBlock({ data, config }: { data: LexiconData; config: Record<string,
 }
 
 function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Record<string, unknown>; basePath?: string }) {
-  const { classId, eventList } = data
+  const { classId, eventList, memoriesLabel } = data
   const limit = (config.limit as number) ?? 4
   const style = (config.style as string) ?? 'polaroids'
   const items = eventList.slice(0, limit)
@@ -518,7 +527,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
     return (
       <section className="mb-12">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
+          <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{memoriesLabel || 'Нашите събития'}</h3>
           <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
         </div>
         <div className="grid grid-cols-3 gap-4">
@@ -543,7 +552,7 @@ function EventsBlock({ data, config, basePath }: { data: LexiconData; config: Re
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>Нашите събития</h3>
+        <h3 className="text-2xl" style={{ fontFamily: 'Noto Serif, serif', color: 'var(--lex-primary)' }}>{memoriesLabel || 'Нашите събития'}</h3>
         <Link href={`${base}/memories`} className="text-sm font-semibold hover:underline" style={{ color: 'var(--lex-secondary)' }}>Виж всички →</Link>
       </div>
       <div className={style === 'timeline' ? 'space-y-4' : 'grid grid-cols-3 gap-6'}>
@@ -620,13 +629,13 @@ export default function LexiconBlocks({ blocks, data, basePath }: { blocks: Bloc
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
       {blocks.map(block => {
         const cfg = block.config as Record<string, unknown>
-        const fullWidth = FULL_WIDTH_TYPES.has(block.type)
+        const fullWidth = FULL_WIDTH_TYPES.has(block.type) || cfg.fullWidth === true
 
         let content: ReactNode = null
         switch (block.type) {
           case 'hero':          content = <HeroBlock          data={data} />;                          break
           case 'superhero':     content = <SuperheroBlock     data={data} />;                          break
-          case 'students_grid': return null  // shown on dedicated /students page
+          case 'students_grid': content = <StudentsGridBlock data={data} config={cfg} basePath={basePath} />; break
           case 'question':      content = <QuestionBlock      data={data} config={cfg} />;             break
           case 'photo_gallery': content = <PhotoGalleryBlock  data={data} config={cfg} />;             break
           case 'class_voice':   content = <ClassVoiceBlock    data={data} config={cfg} />;             break

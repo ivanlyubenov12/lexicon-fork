@@ -5,6 +5,8 @@ import type { Block, BlockType, LayoutAssets, VoiceQuestionAsset } from '@/lib/t
 import { createPoll, deletePoll, reorderPolls } from '../polls/actions'
 import { createQuestion, updateQuestion } from '../questions/actions'
 
+const INHERENTLY_FULL_WIDTH: Set<BlockType> = new Set(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
+
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
   hero:          { label: 'Корица',           icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
   students_grid: { label: 'Ученици',          icon: 'people',            color: 'bg-blue-50 text-blue-700'    },
@@ -83,6 +85,37 @@ export default function BlockConfigDrawer({ block, assets, classId, blockIndex, 
         {/* Config body */}
         <div className="px-5 py-5 space-y-5 pb-safe-area-inset-bottom pb-8">
           <ConfigBody type={block.type} cfg={cfg} assets={assets} classId={classId} set={set} />
+
+          {/* Width toggle — only for blocks that aren't always full-width */}
+          {!INHERENTLY_FULL_WIDTH.has(block.type) && (
+            <div className="space-y-2 pt-2 border-t border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ширина</p>
+              <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => set('fullWidth', false)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
+                    !cfg.fullWidth
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">view_column</span>
+                  Половин
+                </button>
+                <button
+                  onClick={() => set('fullWidth', true)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium border-l border-gray-200 transition-colors ${
+                    cfg.fullWidth
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">crop_landscape</span>
+                  Цяла
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

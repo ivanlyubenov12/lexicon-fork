@@ -16,7 +16,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
   // ── Class ──────────────────────────────────────────────────────────────
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, status, superhero_prompt, superhero_image_url, school_logo_url, cover_image_url, layout, template_id')
+    .select('id, name, status, superhero_prompt, superhero_image_url, school_logo_url, cover_image_url, layout, template_id, member_label, group_label, memories_label, stars_label')
     .eq('id', classId)
     .single()
 
@@ -64,6 +64,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
     .from('students')
     .select('id, first_name, last_name, photo_url')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
   const studentList = students ?? []
   const studentMap = new Map(studentList.map(s => [s.id, s]))
@@ -190,6 +191,10 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
   const lexiconData: LexiconData = {
     classId,
     preset: classData.template_id ?? null,
+    memberLabel: (classData as any).member_label ?? null,
+    groupLabel: (classData as any).group_label ?? null,
+    memoriesLabel: (classData as any).memories_label ?? null,
+    starsLabel: (classData as any).stars_label ?? null,
     classData: {
       name: classData.name,
       superhero_prompt: classData.superhero_prompt,

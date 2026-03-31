@@ -37,6 +37,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
     .from('students')
     .select('id, first_name, last_name, invite_accepted_at, questionnaire_submitted')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name', { ascending: true })
 
   // 5. Fetch pending answers count

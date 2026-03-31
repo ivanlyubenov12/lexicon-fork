@@ -43,6 +43,13 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
     messages = (messagesRes.data ?? []) as unknown as MessageRow[]
   }
 
+  const { data: voiceAnswersData } = await supabase
+    .from('class_voice_answers')
+    .select('id, content, question_id, questions(text)')
+    .eq('class_id', classId)
+    .order('created_at', { ascending: false })
+  const voiceAnswers = (voiceAnswersData ?? []) as unknown as VoiceAnswerRow[]
+
   const [namePart] = classData?.name?.includes(' — ')
     ? classData.name.split(' — ')
     : [classData?.name ?? '']
@@ -75,10 +82,7 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
           </p>
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <h1
-                className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
-                style={{ fontFamily: 'Noto Serif, serif' }}
-              >
+              <h1 className="text-xl font-bold text-gray-900 leading-tight">
                 За одобрение
               </h1>
               <p className="text-sm text-gray-500 mt-2">
@@ -119,7 +123,7 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
           </div>
         </div>
 
-        <AnswersTable answers={answers} messages={messages} classId={classId} />
+        <AnswersTable answers={answers} messages={messages} voiceAnswers={voiceAnswers} classId={classId} />
       </main>
     </div>
   )
@@ -147,4 +151,11 @@ interface MessageRow {
   author_student_id: string
   recipient: { first_name: string; last_name: string }
   author: { first_name: string; last_name: string }
+}
+
+interface VoiceAnswerRow {
+  id: string
+  content: string
+  question_id: string
+  questions: { text: string }
 }

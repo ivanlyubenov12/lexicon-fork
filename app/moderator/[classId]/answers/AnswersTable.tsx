@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import AnswerActions from './AnswerActions'
 import MessageActions from '../messages/MessageActions'
 import { bulkApproveAnswers, bulkApproveMessages } from '../actions'
+import VoiceAnswersTable, { type VoiceAnswer } from './VoiceAnswersTable'
 
 export interface Answer {
   id: string
@@ -32,6 +33,7 @@ export interface Message {
 interface Props {
   answers: Answer[]
   messages: Message[]
+  voiceAnswers: VoiceAnswer[]
   classId: string
 }
 
@@ -324,9 +326,9 @@ function MessagesSection({ messages, classId, filter }: { messages: Message[]; c
 
 // ── Main table ───────────────────────────────────────────────────────────────
 
-type TypeFilter = 'all' | 'answers' | 'messages'
+type TypeFilter = 'all' | 'answers' | 'messages' | 'voice'
 
-export default function AnswersTable({ answers, messages, classId }: Props) {
+export default function AnswersTable({ answers, messages, voiceAnswers, classId }: Props) {
   const [statusFilter, setStatusFilter] = useState<FilterTab>('pending')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
 
@@ -344,10 +346,12 @@ export default function AnswersTable({ answers, messages, classId }: Props) {
     { key: 'all', label: 'Всичко', icon: 'apps', count: totalCount },
     { key: 'answers', label: 'Въпроси', icon: 'quiz', count: answers.length },
     { key: 'messages', label: 'Послания', icon: 'favorite', count: messages.length },
+    { key: 'voice', label: 'Групов глас', icon: 'record_voice_over', count: voiceAnswers.length },
   ]
 
-  const showAnswers = typeFilter === 'all' || typeFilter === 'answers'
-  const showMessages = typeFilter === 'all' || typeFilter === 'messages'
+  const isVoiceTab = typeFilter === 'voice'
+  const showAnswers = !isVoiceTab && (typeFilter === 'all' || typeFilter === 'answers')
+  const showMessages = !isVoiceTab && (typeFilter === 'all' || typeFilter === 'messages')
 
   const filteredAnswers = showAnswers
     ? answers.filter(a => statusFilter === 'all' || (statusFilter === 'pending' ? a.status === 'submitted' : a.status === 'approved'))
@@ -355,7 +359,7 @@ export default function AnswersTable({ answers, messages, classId }: Props) {
   const filteredMessages = showMessages
     ? messages.filter(m => statusFilter === 'all' || (statusFilter === 'pending' ? m.status === 'pending' : m.status === 'approved'))
     : []
-  const isEmpty = filteredAnswers.length === 0 && filteredMessages.length === 0
+  const isEmpty = !isVoiceTab && filteredAnswers.length === 0 && filteredMessages.length === 0
 
   return (
     <div>
@@ -380,38 +384,45 @@ export default function AnswersTable({ answers, messages, classId }: Props) {
         ))}
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit mb-8 shadow-sm">
-        {statusTabs.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setStatusFilter(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              statusFilter === tab.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {tab.label}
-            {tab.count > 0 && (
-              <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {isEmpty ? (
-        <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-16 text-center">
-          <span className="material-symbols-outlined text-5xl text-gray-200 block mb-3">volunteer_activism</span>
-          <p className="text-gray-500 text-sm font-medium">
-            {statusFilter === 'pending' ? 'Няма чакащи елементи' : 'Няма елементи'}
-          </p>
-        </div>
+      {/* Voice tab — no status filter needed */}
+      {isVoiceTab ? (
+        <VoiceAnswersTable answers={voiceAnswers} classId={classId} />
       ) : (
-        <div className="space-y-10">
-          {showAnswers && <AnswersSection answers={answers} classId={classId} filter={statusFilter} />}
-          {showMessages && <MessagesSection messages={messages} classId={classId} filter={statusFilter} />}
-        </div>
+        <>
+          {/* Status tabs */}
+          <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit mb-8 shadow-sm">
+            {statusTabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  statusFilter === tab.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {isEmpty ? (
+            <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-16 text-center">
+              <span className="material-symbols-outlined text-5xl text-gray-200 block mb-3">volunteer_activism</span>
+              <p className="text-gray-500 text-sm font-medium">
+                {statusFilter === 'pending' ? 'Няма чакащи елементи' : 'Няма елементи'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {showAnswers && <AnswersSection answers={answers} classId={classId} filter={statusFilter} />}
+              {showMessages && <MessagesSection messages={messages} classId={classId} filter={statusFilter} />}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

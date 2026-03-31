@@ -20,7 +20,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
   const admin = createServiceRoleClient()
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id, theme_id, bg_pattern')
+    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id, theme_id, bg_pattern, member_label, group_label, memories_label, stars_label')
     .eq('id', classId)
     .single()
 
@@ -43,7 +43,8 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
     if (b.type === 'poll' && cfg.pollId) linkedPollIds.add(cfg.pollId as string)
   }
 
-  const { data: students } = await admin.from('students').select('id, first_name, last_name, photo_url').eq('class_id', classId).order('last_name')
+  const { data: students } = await admin.from('students').select('id, first_name, last_name, photo_url').eq('class_id', classId).order('sort_order', { ascending: true, nullsFirst: false })
+    .order('last_name')
   const studentList = students ?? []
   const studentMap = new Map(studentList.map(s => [s.id, s]))
 
@@ -124,6 +125,10 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
   const basePath = `/admin/classes/${classId}/preview`
   const lexiconData: LexiconData = {
     classId, preset: classData.template_id ?? null,
+    memberLabel: (classData as any).member_label ?? null,
+    groupLabel: (classData as any).group_label ?? null,
+    memoriesLabel: (classData as any).memories_label ?? null,
+    starsLabel: (classData as any).stars_label ?? null,
     classData: { name: classData.name, superhero_prompt: classData.superhero_prompt, superhero_image_url: classData.superhero_image_url, cover_image_url: classData.cover_image_url },
     namePart, schoolPart, studentList, teaserMap, questionData, voiceData, pollData, eventList: events ?? [],
   }
@@ -143,7 +148,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
         </span>
       </div>
       <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath} memberLabel={(classData as any).member_label} groupLabel={(classData as any).group_label} memoriesLabel={(classData as any).memories_label}>
           <LexiconBlocks blocks={blocks} data={lexiconData} basePath={basePath} />
         </LexiconShell>
       </div>

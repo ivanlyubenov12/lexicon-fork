@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import MobileMenuWrapper from './MobileMenuWrapper'
 
 type ActiveNav =
@@ -39,7 +39,12 @@ const NAV_ITEMS = [
 
 export default async function ModeratorSidebar({ classId, namePart, schoolYear, logoUrl, active }: Props) {
   const supabase = createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const admin = createServiceRoleClient()
+  const [{ data: { user } }, { data: classRow }] = await Promise.all([
+    supabase.auth.getUser(),
+    admin.from('classes').select('status').eq('id', classId).single(),
+  ])
+  const isPublished = classRow?.status === 'published'
   const base = `/moderator/${classId}`
 
   return (
@@ -142,16 +147,27 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
           <span className="material-symbols-outlined text-xl">help</span>
           Помощен център
         </a>
-        <Link
-          href={`${base}/finalize`}
-          className={`w-full block py-3 px-4 rounded-xl font-bold text-sm text-center shadow transition-opacity ${
-            active === 'finalize'
-              ? 'bg-gradient-to-br from-indigo-700 to-indigo-600 text-white opacity-100'
-              : 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90'
-          }`}
-        >
-          Финализирай лексикона
-        </Link>
+        {isPublished ? (
+          <Link
+            href={`/lexicon/${classId}`}
+            target="_blank"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm text-center shadow bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-base">open_in_new</span>
+            Към лексикона
+          </Link>
+        ) : (
+          <Link
+            href={`${base}/finalize`}
+            className={`w-full block py-3 px-4 rounded-xl font-bold text-sm text-center shadow transition-opacity ${
+              active === 'finalize'
+                ? 'bg-gradient-to-br from-indigo-700 to-indigo-600 text-white opacity-100'
+                : 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90'
+            }`}
+          >
+            Финализирай лексикона
+          </Link>
+        )}
       </div>
     </aside>
     </MobileMenuWrapper>

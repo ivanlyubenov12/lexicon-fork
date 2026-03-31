@@ -80,7 +80,7 @@ export default function LayoutCanvas({ blocks, assets, classId, activeId, onSele
       {blocks.map((block) => (
         <div
           key={block.id}
-          className={FULL_WIDTH.has(block.type) ? 'col-span-2' : ''}
+          className={FULL_WIDTH.has(block.type) || (block.config as Record<string, unknown>).fullWidth ? 'col-span-2' : ''}
         >
           <CanvasBlock
             block={block}

@@ -24,7 +24,7 @@ export default async function ModeratorPreviewPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id')
+    .select('id, name, school_year, status, school_logo_url, cover_image_url, superhero_prompt, superhero_image_url, layout, template_id, member_label, group_label, memories_label, stars_label')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -70,6 +70,7 @@ export default async function ModeratorPreviewPage({
     .from('students')
     .select('id, first_name, last_name, photo_url')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
   const studentList = students ?? []
   const studentMap = new Map(studentList.map(s => [s.id, s]))
@@ -197,6 +198,10 @@ export default async function ModeratorPreviewPage({
   const lexiconData: LexiconData = {
     classId,
     preset: classData.template_id ?? null,
+    memberLabel: (classData as any).member_label ?? null,
+    groupLabel: (classData as any).group_label ?? null,
+    memoriesLabel: (classData as any).memories_label ?? null,
+    starsLabel: (classData as any).stars_label ?? null,
     classData: {
       name: classData.name,
       superhero_prompt: classData.superhero_prompt,

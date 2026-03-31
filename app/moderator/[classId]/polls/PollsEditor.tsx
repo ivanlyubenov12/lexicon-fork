@@ -105,26 +105,12 @@ export default function PollsEditor({ classId, initialPolls, studentCount }: Pro
 
   return (
     <div>
-      {/* ── Header ────────────────────────────────────────────────── */}
-      <div className="mb-10 flex items-start justify-between gap-6">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
-            Групови въпроси
-          </p>
-          <h1
-            className="text-4xl font-bold text-gray-900 leading-tight"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
-            Анкети на класа
-          </h1>
-          <p className="text-sm text-gray-500 mt-2 max-w-lg">
-            Всеки родител избира един съученик за всяка анкета. Резултатите се показват в лексикона.
-          </p>
-        </div>
+      {/* ── Actions bar ───────────────────────────────────────────── */}
+      <div className="mb-6 flex items-center justify-end gap-2">
         {polls.length < MAX_POLLS && (
           <button
             onClick={() => setAdding(true)}
-            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-5 py-2.5 rounded-xl hover:border-indigo-300 hover:text-indigo-700 shadow-sm transition-colors"
+            className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-xl hover:border-indigo-300 hover:text-indigo-700 shadow-sm transition-colors"
           >
             <span className="material-symbols-outlined text-base">add</span>
             Нова анкета

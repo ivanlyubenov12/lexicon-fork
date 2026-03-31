@@ -30,3 +30,31 @@ export async function updateTheme(classId: string, themeId: string) {
   revalidatePath(`/moderator/${classId}/lexicon`)
   revalidatePath(`/lexicon/${classId}`)
 }
+
+export async function updateLabels(classId: string, data: {
+  member_label?: string
+  group_label?: string
+  memories_label?: string
+  stars_label?: string
+}) {
+  const supabase = createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const admin = createServiceRoleClient()
+  const { data: cls } = await admin
+    .from('classes')
+    .select('id')
+    .eq('id', classId)
+    .eq('moderator_id', user.id)
+    .single()
+  if (!cls) redirect('/moderator')
+
+  await admin
+    .from('classes')
+    .update({ ...data, is_customized: true })
+    .eq('id', classId)
+
+  revalidatePath(`/moderator/${classId}/lexicon`)
+  revalidatePath(`/lexicon/${classId}`)
+}

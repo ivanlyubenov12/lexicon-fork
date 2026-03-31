@@ -42,10 +42,7 @@ export default async function EventsPage({ params }: { params: Promise<{ classId
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">
             Албум на годината
           </p>
-          <h1
-            className="text-4xl font-bold text-gray-900 leading-tight"
-            style={{ fontFamily: 'Noto Serif, serif' }}
-          >
+          <h1 className="text-xl font-bold text-gray-900 leading-tight">
             Нашите събития
           </h1>
           <p className="text-sm text-gray-500 mt-2">

@@ -3,33 +3,30 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-function getNavItems(themeId?: string | null) {
-  if (themeId === 'friends') return [
-    { label: 'Групата',       icon: 'auto_stories', exact: true,  path: ''          },
-    { label: 'Хората',        icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
-  ]
-  if (themeId === 'sports') return [
-    { label: 'Отборът',       icon: 'auto_stories', exact: true,  path: ''          },
-    { label: 'Играчите',      icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
-  ]
-  if (themeId === 'kindergarten') return [
-    { label: 'Групата',       icon: 'auto_stories', exact: true,  path: ''          },
-    { label: 'Децата',        icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите спомени', icon: 'photo_album',  exact: false, path: '/memories' },
-  ]
+interface CustomLabels {
+  groupLabel?: string | null
+  memberLabel?: string | null
+  memoriesLabel?: string | null
+}
+
+function getNavItems(themeId?: string | null, custom?: CustomLabels) {
+  const defaults =
+    themeId === 'friends'      ? { group: 'Групата',  member: 'Хората',    memories: 'Нашите спомени' } :
+    themeId === 'sports'       ? { group: 'Отборът',  member: 'Играчите',  memories: 'Нашите спомени' } :
+    themeId === 'kindergarten' ? { group: 'Групата',  member: 'Децата',    memories: 'Нашите спомени' } :
+                                 { group: 'Класът',   member: 'Учениците', memories: 'Нашите събития' }
+
   return [
-    { label: 'Класът',        icon: 'auto_stories', exact: true,  path: ''          },
-    { label: 'Учениците',     icon: 'people',       exact: false, path: '/students' },
-    { label: 'Нашите събития', icon: 'photo_album',  exact: false, path: '/memories' },
+    { label: custom?.groupLabel    || defaults.group,    icon: 'auto_stories', exact: true,  path: ''          },
+    { label: custom?.memberLabel   || defaults.member,   icon: 'people',       exact: false, path: '/students' },
+    { label: custom?.memoriesLabel || defaults.memories, icon: 'photo_album',  exact: false, path: '/memories' },
   ]
 }
 
-export function LexiconHeaderNav({ classId, basePath, themeId }: { classId: string; basePath?: string; themeId?: string | null }) {
+export function LexiconHeaderNav({ classId, basePath, themeId, customLabels }: { classId: string; basePath?: string; themeId?: string | null; customLabels?: CustomLabels }) {
   const pathname = usePathname()
   const base = basePath ?? `/lexicon/${classId}`
-  const navItems = getNavItems(themeId)
+  const navItems = getNavItems(themeId, customLabels)
   return (
     <nav className="flex gap-8 w-full pt-2 overflow-x-auto hide-scrollbar">
       {navItems.map(item => {
@@ -54,10 +51,10 @@ export function LexiconHeaderNav({ classId, basePath, themeId }: { classId: stri
   )
 }
 
-export function LexiconBottomNav({ classId, basePath, themeId }: { classId: string; basePath?: string; themeId?: string | null }) {
+export function LexiconBottomNav({ classId, basePath, themeId, customLabels }: { classId: string; basePath?: string; themeId?: string | null; customLabels?: CustomLabels }) {
   const pathname = usePathname()
   const base = basePath ?? `/lexicon/${classId}`
-  const navItems = getNavItems(themeId)
+  const navItems = getNavItems(themeId, customLabels)
   return (
     <>
       {navItems.map(item => {

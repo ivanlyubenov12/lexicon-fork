@@ -327,9 +327,21 @@ export default function Dashboard({
             <span>/</span>
             <span className="text-indigo-600 font-bold">Табло</span>
           </nav>
-          <h2 className="text-2xl md:text-4xl font-bold text-gray-900 break-words" style={{ fontFamily: 'Noto Serif, serif' }}>
-            {classData.name}
-          </h2>
+          <div className="flex items-start justify-between gap-4">
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 break-words" style={{ fontFamily: 'Noto Serif, serif' }}>
+              {classData.name}
+            </h2>
+            {classData.status === 'published' && (
+              <Link
+                href={`/lexicon/${classData.id}`}
+                target="_blank"
+                className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">open_in_new</span>
+                Към публикувания лексикон
+              </Link>
+            )}
+          </div>
           <div className="flex items-center gap-2 flex-wrap mt-3">
             <div className="bg-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-gray-100">
               <Icon name="calendar_today" className="text-amber-600 text-sm" />
@@ -460,37 +472,30 @@ export default function Dashboard({
         />
 
         {/* Stats row */}
-        <section className="grid grid-cols-12 gap-4 mb-8">
-          {/* Progress */}
-          <div className="col-span-12 lg:col-span-8 bg-white rounded-2xl p-5 md:p-8 shadow-sm relative overflow-hidden group border border-gray-100">
+        <section className="mb-8">
+          <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm relative overflow-hidden group border border-gray-100">
             <div className="relative z-10">
-              <h3 className="text-xl font-bold text-gray-800 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
-                Прогрес на попълване
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-gray-700">Прогрес на попълване</h3>
+                <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5">
+                  <Icon name="verified" className="text-emerald-600 text-sm" />
+                  <span className="text-sm font-bold text-emerald-700">{approvedAnswers}</span>
+                  <span className="text-xs text-emerald-600">одобрени</span>
+                </div>
+              </div>
               <div className="flex items-end justify-between mb-3 gap-3">
-                <span className="text-5xl md:text-6xl font-bold text-indigo-600">{progressPercent}%</span>
+                <span className="text-4xl md:text-5xl font-bold text-indigo-600">{progressPercent}%</span>
                 {remaining > 0 && (
-                  <span className="text-xs md:text-sm text-slate-400 uppercase tracking-tight text-right">
+                  <span className="text-xs text-slate-400 uppercase tracking-tight text-right">
                     Остават {remaining} профила
                   </span>
                 )}
               </div>
-              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-600 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
               </div>
             </div>
             <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-indigo-100 opacity-40 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
-          </div>
-
-          {/* Quick stats */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-            <div className="bg-emerald-400 rounded-2xl p-5 flex flex-col justify-between flex-1">
-              <Icon name="verified" className="text-emerald-900 text-2xl mb-3" />
-              <div>
-                <p className="text-3xl font-bold text-emerald-900">{approvedAnswers}</p>
-                <p className="text-xs uppercase tracking-widest text-emerald-800 mt-1">Одобрени истории</p>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -498,15 +503,9 @@ export default function Dashboard({
         <div className="grid grid-cols-12 gap-4 md:gap-8">
           {/* Awaiting approval list */}
           <div className="col-span-12 lg:col-span-8">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-                Очакващи одобрение
-              </h3>
-              <Link href={`${base}/finalize`}
-                className="text-sm font-bold text-indigo-600 flex items-center gap-1 hover:underline">
-                Одобри всички <Icon name="arrow_forward" className="text-sm" />
-              </Link>
-            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
+              Очакващи одобрение
+            </h3>
 
             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
               {awaitingApproval.length === 0 ? (
@@ -518,7 +517,7 @@ export default function Dashboard({
                 awaitingApproval.slice(0, 6).map((student, i) => (
                   <Link
                     key={student.id}
-                    href={`${base}/students/${student.id}/preview`}
+                    href={`${base}/answers`}
                     className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}
                   >
                     <div className="flex items-center gap-4">
@@ -530,41 +529,23 @@ export default function Dashboard({
                         <p className="text-xs text-slate-400">Попълнен лексикон</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-700">
-                      Чака одобрение
-                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                      <Link
+                        href={`${base}/students/${student.id}/preview`}
+                        className="text-xs font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        <Icon name="visibility" className="text-sm" />
+                        <span className="hidden sm:inline">Прегледай</span>
+                      </Link>
+                      <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-700">
+                        Чака
+                      </span>
+                    </div>
                   </Link>
                 ))
               )}
             </div>
 
-            {/* Quick links row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-              <Link href={`${base}/questions`}
-                className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-                <Icon name="quiz" className="text-indigo-400 text-xl" />
-                <div>
-                  <p className="text-xs font-bold text-gray-700">Въпросник</p>
-                  <p className="text-xs text-slate-400">{hasQuestionnaire ? 'Конфигуриран' : 'Не е готов'}</p>
-                </div>
-              </Link>
-              <Link href={`${base}/messages`}
-                className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-                <Icon name="mail" className="text-indigo-400 text-xl" />
-                <div>
-                  <p className="text-xs font-bold text-gray-700">Послания</p>
-                  <p className="text-xs text-slate-400">{pendingMessages > 0 ? `${pendingMessages} нови` : 'Няма нови'}</p>
-                </div>
-              </Link>
-              <Link href={`${base}/events`}
-                className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow flex items-center gap-3">
-                <Icon name="calendar_month" className="text-indigo-400 text-xl" />
-                <div>
-                  <p className="text-xs font-bold text-gray-700">Събития</p>
-                  <p className="text-xs text-slate-400">{events.length > 0 ? `${events.length} добавени` : 'Няма'}</p>
-                </div>
-              </Link>
-            </div>
           </div>
 
           {/* Recent contributions */}

@@ -34,6 +34,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
     .from('students')
     .select('id, first_name, last_name, parent_email, parent_user_id, photo_url, invite_accepted_at, invite_token')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name', { ascending: true })
 
   const studentList: StudentRow[] = students ?? []
@@ -114,10 +115,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ class
             Покани и участници
           </p>
           <div>
-            <h1
-              className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
-              style={{ fontFamily: 'Noto Serif, serif' }}
-            >
+            <h1 className="text-xl font-bold text-gray-900 leading-tight">
               Участници
             </h1>
             <p className="text-sm text-gray-500 mt-2">

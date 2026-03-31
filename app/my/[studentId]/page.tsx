@@ -50,7 +50,7 @@ export default async function MyChildPage({ params }: Props) {
   const personalQuestions = (allClassQuestions ?? []).filter(q => q.type === 'personal')
   const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'class_voice' || q.type === 'survey')
   const classQuestions = (allClassQuestions ?? []).filter(q =>
-    ['superhero', 'better_together', 'video'].includes(q.type)
+    ['superhero', 'better_together', 'video', 'photo'].includes(q.type)
   )
 
   // All answers for this student
@@ -65,6 +65,7 @@ export default async function MyChildPage({ params }: Props) {
     .select('id, first_name, last_name, photo_url')
     .eq('class_id', student.class_id)
     .neq('id', studentId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
 
   // Sent messages (tab 2)
@@ -91,19 +92,19 @@ export default async function MyChildPage({ params }: Props) {
     existingVotes[v.poll_id] = v.nominee_student_id
   }
 
-  // Existing answers for non-anonymous survey questions (to pre-populate selection)
-  const nonAnonSurveyIds = (allClassQuestions ?? [])
-    .filter(q => q.type === 'survey' && q.is_anonymous === false)
+  // Existing answers for all non-anonymous voice questions (class_voice + survey)
+  const nonAnonVoiceIds = (allClassQuestions ?? [])
+    .filter(q => (q.type === 'survey' || q.type === 'class_voice') && q.is_anonymous === false)
     .map(q => q.id)
-  const existingSurveyAnswers: Record<string, string> = {}
-  if (nonAnonSurveyIds.length > 0) {
-    const { data: surveyAnswers } = await admin
+  const existingVoiceAnswers: Record<string, string> = {}
+  if (nonAnonVoiceIds.length > 0) {
+    const { data: voiceAnswers } = await admin
       .from('class_voice_answers')
       .select('question_id, content')
       .eq('student_id', studentId)
-      .in('question_id', nonAnonSurveyIds)
-    for (const a of surveyAnswers ?? []) {
-      existingSurveyAnswers[a.question_id] = a.content
+      .in('question_id', nonAnonVoiceIds)
+    for (const a of voiceAnswers ?? []) {
+      existingVoiceAnswers[a.question_id] = a.content
     }
   }
 
@@ -148,7 +149,7 @@ export default async function MyChildPage({ params }: Props) {
       sentMessages={sentMessages ?? []}
       polls={polls ?? []}
       existingVotes={existingVotes}
-      existingSurveyAnswers={existingSurveyAnswers}
+      existingVoiceAnswers={existingVoiceAnswers}
       events={events}
       moderatorName={moderatorName}
       deadline={classData?.deadline ?? null}

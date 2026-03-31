@@ -106,6 +106,7 @@ export default async function LexiconStudentPage({
     .from('students')
     .select('id')
     .eq('class_id', classId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('last_name')
 
   const studentList = allStudents ?? []

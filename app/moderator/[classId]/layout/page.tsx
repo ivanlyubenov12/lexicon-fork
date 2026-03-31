@@ -52,7 +52,8 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       .from('students')
       .select('id, first_name, last_name, photo_url')
       .eq('class_id', classId)
-      .order('last_name'),
+      .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('last_name'),
   ])
 
   if (!clsRes.data) redirect('/moderator')

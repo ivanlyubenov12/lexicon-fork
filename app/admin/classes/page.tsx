@@ -4,16 +4,10 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import ShowcaseToggle from './ShowcaseToggle'
-import PublishToggle from './PublishToggle'
+import StatusDropdown from './StatusDropdown'
 import DeleteClassButton from './DeleteClassButton'
 import PlanDropdown from './PlanDropdown'
 
-const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  draft:       { label: 'Чернова',      color: 'bg-gray-100 text-gray-500' },
-  filling:     { label: 'Непопълнен',   color: 'bg-blue-100 text-blue-700' },
-  unpublished: { label: 'Непубликуван', color: 'bg-amber-100 text-amber-700' },
-  published:   { label: 'Публикуван',   color: 'bg-green-100 text-green-700' },
-}
 
 export default async function AdminClassesPage() {
   noStore()
@@ -118,7 +112,6 @@ export default async function AdminClassesPage() {
           </thead>
           <tbody>
             {(classes ?? []).map((cls) => {
-              const st = STATUS_STYLE[cls.status] ?? { label: cls.status, color: 'bg-gray-100 text-gray-500' }
               const studentCount = studentCountMap[cls.id] ?? 0
               const modEmail = moderatorEmailMap[cls.moderator_id] ?? '—'
               const allSlotsTaken = showcaseFull && cls.showcase_order === null
@@ -131,9 +124,7 @@ export default async function AdminClassesPage() {
                   </td>
                   <td className="px-6 py-4 text-gray-500 text-xs">{modEmail}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${st.color}`}>
-                      {st.label}
-                    </span>
+                    <StatusDropdown classId={cls.id} status={cls.status} />
                   </td>
                   <td className="px-6 py-4 text-center font-semibold text-gray-700">{studentCount}</td>
                   <td className="px-6 py-4">
@@ -160,7 +151,6 @@ export default async function AdminClassesPage() {
                           Публ.
                         </Link>
                       )}
-                      <PublishToggle classId={cls.id} isPublished={cls.status === 'published'} />
                       <DeleteClassButton classId={cls.id} className={cls.name} />
                     </div>
                   </td>

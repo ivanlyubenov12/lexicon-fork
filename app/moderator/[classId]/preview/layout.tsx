@@ -22,7 +22,7 @@ export default async function PreviewLayout({
   const admin = createServiceRoleClient()
   const { data: classData } = await admin
     .from('classes')
-    .select('id, school_logo_url, template_id, theme_id, bg_pattern')
+    .select('id, school_logo_url, template_id, theme_id, bg_pattern, member_label, group_label, memories_label')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -76,7 +76,7 @@ export default async function PreviewLayout({
 
       {/* Content pushed below banner */}
       <div className="pt-10">
-        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath}>
+        <LexiconShell classId={classId} logoUrl={classData.school_logo_url} themeId={classData.theme_id ?? classData.template_id} preset={classData.template_id} bgPattern={classData.bg_pattern} basePath={basePath} memberLabel={(classData as any).member_label} groupLabel={(classData as any).group_label} memoriesLabel={(classData as any).memories_label}>
           {children}
         </LexiconShell>
       </div>

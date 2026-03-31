@@ -1,13 +1,15 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { buildSeq, seqUrl } from '../../sequence'
-import AnswerForm from './AnswerForm'
+import VoiceAnswerPage from './VoiceAnswerPage'
 
-interface Props {
+export default async function VoiceAnswerRoute({
+  params,
+}: {
   params: Promise<{ studentId: string; questionId: string }>
-}
-
-export default async function AnswerQuestionPage({ params }: Props) {
+}) {
   const { studentId, questionId } = await params
 
   const supabase = createServerClient()
@@ -25,19 +27,13 @@ export default async function AnswerQuestionPage({ params }: Props) {
 
   const { data: question } = await admin
     .from('questions')
-    .select('id, text, description, type, order_index, max_length, allows_text')
+    .select('id, text, description, type, poll_options, is_anonymous')
     .eq('id', questionId)
     .single()
-  if (!question) redirect(`/my/${studentId}`)
+  if (!question || (question.type !== 'class_voice' && question.type !== 'survey')) {
+    redirect(`/my/${studentId}`)
+  }
 
-  const { data: answer } = await admin
-    .from('answers')
-    .select('id, text_content, media_url, media_type, status, moderator_note')
-    .eq('student_id', studentId)
-    .eq('question_id', questionId)
-    .single()
-
-  // Build global sequence for cross-type navigation
   const [{ data: allQs }, { data: allPolls }] = await Promise.all([
     admin.from('questions')
       .select('id, text, type, order_index, is_anonymous')
@@ -50,16 +46,30 @@ export default async function AnswerQuestionPage({ params }: Props) {
   ])
 
   const seq = buildSeq(allQs ?? [], allPolls ?? [])
-  const idx = seq.findIndex(item => item.id === questionId && item.kind === 'question')
+  const idx = seq.findIndex(item => item.id === questionId && item.kind === 'voice')
 
   const prevUrl = idx > 0 ? seqUrl(seq[idx - 1], studentId) : null
   const nextUrl = idx < seq.length - 1 ? seqUrl(seq[idx + 1], studentId) : null
 
+  // Fetch existing answer for non-anonymous questions
+  const isAnonymous = question.is_anonymous !== false
+  let existingAnswer: string | null = null
+  if (!isAnonymous) {
+    const { data: va } = await admin
+      .from('class_voice_answers')
+      .select('content')
+      .eq('question_id', questionId)
+      .eq('student_id', studentId)
+      .maybeSingle()
+    existingAnswer = va?.content ?? null
+  }
+
   return (
-    <AnswerForm
+    <VoiceAnswerPage
       studentId={studentId}
+      classId={student.class_id}
       question={question}
-      answer={answer ?? null}
+      existingAnswer={existingAnswer}
       prevUrl={prevUrl}
       nextUrl={nextUrl}
       questionNumber={idx + 1}

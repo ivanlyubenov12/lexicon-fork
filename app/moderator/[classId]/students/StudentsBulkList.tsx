@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import StudentActions from './StudentActions'
-import { deleteStudents } from './actions'
+import { deleteStudents, reorderStudents } from './actions'
 import { addStudentsBulk } from '../actions'
 
 export interface StudentRowData {
@@ -40,6 +40,31 @@ export default function StudentsBulkList({
   const [error, setError]             = useState<string | null>(null)
   const [addRows, setAddRows]         = useState<AddRow[]>([emptyRow()])
   const [addError, setAddError]       = useState<string | null>(null)
+
+  // ── Drag-and-drop reorder ──────────────────────────────────────────────────
+  const [orderedStudents, setOrderedStudents] = useState<StudentRowData[]>(students)
+  const dragIdx = useRef<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
+
+  function handleDragStart(i: number) { dragIdx.current = i }
+  function handleDragEnter(i: number) { setDragOver(i) }
+  function handleDragOver(e: React.DragEvent) { e.preventDefault() }
+
+  function handleDrop(i: number) {
+    const from = dragIdx.current
+    if (from === null || from === i) { setDragOver(null); return }
+    const next = [...orderedStudents]
+    const [moved] = next.splice(from, 1)
+    next.splice(i, 0, moved)
+    setOrderedStudents(next)
+    setDragOver(null)
+    dragIdx.current = null
+    startTransition(async () => {
+      await reorderStudents(classId, next.map(s => s.id))
+    })
+  }
+
+  function handleDragEnd() { setDragOver(null); dragIdx.current = null }
 
   const allSelected = students.length > 0 && selected.size === students.length
 
@@ -151,7 +176,7 @@ export default function StudentsBulkList({
           )}
         </div>
 
-        {students.map(student => {
+        {orderedStudents.map((student, i) => {
           const progress = student.total > 0 ? Math.round((student.approved / student.total) * 100) : 0
           const isSelected = selected.has(student.id)
           const isExpanded = expanded.has(student.id)
@@ -181,14 +206,27 @@ export default function StudentsBulkList({
           return (
             <div
               key={student.id}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragEnter={() => handleDragEnter(i)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(i)}
+              onDragEnd={handleDragEnd}
               className={`bg-white border rounded-2xl shadow-sm transition-all overflow-hidden ${
-                isSelected
-                  ? 'border-indigo-300 ring-1 ring-indigo-200'
-                  : 'border-gray-100'
+                dragOver === i ? 'border-indigo-400 ring-2 ring-indigo-200 scale-[1.01]' :
+                isSelected ? 'border-indigo-300 ring-1 ring-indigo-200' : 'border-gray-100'
               }`}
             >
               {/* ── Header row (always visible) ────────────────────────── */}
               <div className="flex items-center gap-3 px-4 py-3">
+                {/* Drag handle */}
+                <span
+                  className="material-symbols-outlined text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0 select-none"
+                  style={{ fontSize: 18 }}
+                >
+                  drag_indicator
+                </span>
+
                 {/* Checkbox */}
                 <input
                   type="checkbox"

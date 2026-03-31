@@ -66,7 +66,8 @@ export default async function AdminPreviewStudentPage({ params }: { params: Prom
     comment: (eventComments ?? []).find(c => c.event_id === ev.id)?.comment_text ?? '',
   }))
 
-  const { data: allStudents } = await admin.from('students').select('id').eq('class_id', classId).order('last_name')
+  const { data: allStudents } = await admin.from('students').select('id').eq('class_id', classId).order('sort_order', { ascending: true, nullsFirst: false })
+    .order('last_name')
   const studentList = allStudents ?? []
   const currentIndex = studentList.findIndex(s => s.id === studentId)
   const prevId = currentIndex > 0 ? studentList[currentIndex - 1].id : null

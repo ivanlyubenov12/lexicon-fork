@@ -10,7 +10,7 @@ import MessagesTable from '../messages/MessagesTable'
 import { QUESTION_PRESETS } from '@/lib/templates/defaultSeed'
 import TemplateAccordion from './TemplateAccordion'
 import { updateBgPattern } from './bgActions'
-import { updateTheme } from './themeActions'
+import { updateTheme, updateLabels } from './themeActions'
 import type { QuestionPreset } from '@/lib/templates/defaultSeed'
 import { BG_PATTERN_OPTIONS } from '@/lib/lexicon/bgPatterns'
 import { themes } from '@/lib/templates/themes'
@@ -78,7 +78,7 @@ export default async function LexiconPage({
 
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, template_id, theme_id, bg_pattern, layout, is_customized')
+    .select('id, name, school_year, school_logo_url, template_id, theme_id, bg_pattern, layout, is_customized, member_label, group_label, memories_label, stars_label')
     .eq('id', classId)
     .eq('moderator_id', user.id)
     .single()
@@ -206,19 +206,14 @@ export default async function LexiconPage({
 
       <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         {/* Page header */}
-        <div className="flex items-start justify-between gap-4 mb-8">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-1">Лексикон</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Настройки на лексикона
-            </h1>
-          </div>
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h1 className="text-lg font-bold text-gray-800">Лексикон</h1>
           <Link
             href={`/moderator/${classId}/layout`}
-            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 hover:border-indigo-400 hover:text-indigo-700 text-gray-600 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all"
+            className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 hover:border-indigo-400 hover:text-indigo-700 text-gray-600 text-sm font-semibold px-3 py-2 rounded-xl shadow-sm transition-all"
           >
             <span className="material-symbols-outlined text-base">tune</span>
-            Редактирай оформлението
+            Оформление
           </Link>
         </div>
 
@@ -266,11 +261,20 @@ export default async function LexiconPage({
               const isCustomActive = !!(classData as any).is_customized
               const activeThemeId  = classData.theme_id ?? 'classic'
               const activeBgId     = classData.bg_pattern ?? 'school'
+              const memberLabel    = (classData as any).member_label ?? ''
+              const groupLabel     = (classData as any).group_label ?? ''
+              const memoriesLabel  = (classData as any).memories_label ?? ''
+              const starsLabel     = (classData as any).stars_label ?? ''
               return (
                 <div className={`bg-white border-2 rounded-2xl overflow-hidden transition-all ${
                   isCustomActive ? 'border-indigo-500 shadow-md' : 'border-dashed border-gray-200'
                 }`}>
                   <div className="p-4 sm:p-6 flex items-start gap-4 sm:gap-5">
+                    <span className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 transition-colors ${
+                      isCustomActive ? 'border-indigo-600' : 'border-gray-300'
+                    }`}>
+                      {isCustomActive && <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />}
+                    </span>
                     <span className="text-4xl leading-none mt-0.5">✏️</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -345,6 +349,79 @@ export default async function LexiconPage({
                               </form>
                             )
                           })}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-3">Терминология</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <form action={async (fd: FormData) => {
+                            'use server'
+                            await updateLabels(classId, { member_label: fd.get('v') as string || null as any })
+                          }}>
+                            <label className="block text-xs text-gray-500 mb-1">Един член</label>
+                            <div className="flex gap-1">
+                              <input
+                                name="v"
+                                defaultValue={memberLabel}
+                                placeholder="напр. Учениците"
+                                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              />
+                              <button type="submit" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors">
+                                <span className="material-symbols-outlined text-sm">check</span>
+                              </button>
+                            </div>
+                          </form>
+                          <form action={async (fd: FormData) => {
+                            'use server'
+                            await updateLabels(classId, { group_label: fd.get('v') as string || null as any })
+                          }}>
+                            <label className="block text-xs text-gray-500 mb-1">Групата</label>
+                            <div className="flex gap-1">
+                              <input
+                                name="v"
+                                defaultValue={groupLabel}
+                                placeholder="напр. Класа"
+                                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              />
+                              <button type="submit" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors">
+                                <span className="material-symbols-outlined text-sm">check</span>
+                              </button>
+                            </div>
+                          </form>
+                          <form action={async (fd: FormData) => {
+                            'use server'
+                            await updateLabels(classId, { memories_label: fd.get('v') as string || null as any })
+                          }}>
+                            <label className="block text-xs text-gray-500 mb-1">Секция спомени</label>
+                            <div className="flex gap-1">
+                              <input
+                                name="v"
+                                defaultValue={memoriesLabel}
+                                placeholder="напр. Нашите спомени"
+                                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              />
+                              <button type="submit" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors">
+                                <span className="material-symbols-outlined text-sm">check</span>
+                              </button>
+                            </div>
+                          </form>
+                          <form action={async (fd: FormData) => {
+                            'use server'
+                            await updateLabels(classId, { stars_label: fd.get('v') as string || null as any })
+                          }}>
+                            <label className="block text-xs text-gray-500 mb-1">Звездите на...</label>
+                            <div className="flex gap-1">
+                              <input
+                                name="v"
+                                defaultValue={starsLabel}
+                                placeholder="напр. Звездите на класа"
+                                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              />
+                              <button type="submit" className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors">
+                                <span className="material-symbols-outlined text-sm">check</span>
+                              </button>
+                            </div>
+                          </form>
                         </div>
                       </div>
                     </div>

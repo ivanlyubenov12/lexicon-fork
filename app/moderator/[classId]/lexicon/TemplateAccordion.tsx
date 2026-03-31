@@ -68,7 +68,7 @@ function PresetCard({
         onClick={onExpand}
         className="w-full text-left flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors"
       >
-        <RadioDot checked={isOpen} />
+        <RadioDot checked={isActive && !isCustomized} />
         <span className="text-2xl leading-none">{preset.emoji}</span>
         <span className="font-bold text-gray-900 flex-1">{preset.label}</span>
         {isActive && !isCustomized && (
@@ -120,7 +120,7 @@ function PresetCard({
 }
 
 export default function TemplateAccordion({ classId, presets, activePresetId, isCustomized }: Props) {
-  const initialOpen = activePresetId && !isCustomized ? activePresetId : (presets[0]?.id ?? '')
+  const initialOpen = activePresetId && !isCustomized ? activePresetId : ''
   const [expanded, setExpanded] = useState<string>(initialOpen)
 
   return (

@@ -47,8 +47,11 @@ export default function RecordMedia({ type, onReady, onClear, disabled }: Props)
       }
 
       chunksRef.current = []
-      const mimeType = type === 'video' ? 'video/webm' : 'audio/webm'
-      const recorder = new MediaRecorder(stream, { mimeType })
+      const videoCandidates = ['video/webm;codecs=vp9', 'video/webm', 'video/mp4']
+      const audioCandidates = ['audio/webm', 'audio/mp4', 'audio/ogg']
+      const candidates = type === 'video' ? videoCandidates : audioCandidates
+      const mimeType = candidates.find(m => MediaRecorder.isTypeSupported(m)) ?? ''
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       recorderRef.current = recorder
 
       recorder.ondataavailable = (e) => {
@@ -57,9 +60,10 @@ export default function RecordMedia({ type, onReady, onClear, disabled }: Props)
 
       recorder.onstop = () => {
         if (timerRef.current) clearInterval(timerRef.current)
-        const blob = new Blob(chunksRef.current, { type: mimeType })
-        const ext = type === 'video' ? 'webm' : 'webm'
-        const file = new File([blob], `recording.${ext}`, { type: mimeType })
+        const actualMime = recorderRef.current?.mimeType ?? mimeType
+        const blob = new Blob(chunksRef.current, { type: actualMime })
+        const ext = actualMime.includes('mp4') ? 'mp4' : 'webm'
+        const file = new File([blob], `recording.${ext}`, { type: actualMime })
         const url = URL.createObjectURL(blob)
         setPreviewUrl(url)
         setRecordState('preview')

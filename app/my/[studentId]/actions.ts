@@ -172,7 +172,7 @@ export async function submitAnswer(
   data: {
     text_content?: string
     media_url?: string
-    media_type?: 'video' | 'audio'
+    media_type?: 'video' | 'audio' | 'image'
   }
 ): Promise<ActionResult> {
   const admin = createServiceRoleClient()

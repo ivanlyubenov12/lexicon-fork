@@ -13,10 +13,13 @@ interface Props {
   preset?: string | null
   bgPattern?: string | null
   basePath?: string
+  memberLabel?: string | null
+  groupLabel?: string | null
+  memoriesLabel?: string | null
   children: React.ReactNode
 }
 
-export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPattern, basePath, children }: Props) {
+export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPattern, basePath, memberLabel, groupLabel, memoriesLabel, children }: Props) {
   const theme = (themeId && themes[themeId]) ? themes[themeId] : defaultTheme
 
   // bgPattern overrides the auto-derived pattern from themeId
@@ -46,14 +49,9 @@ export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPatt
       {showKinderPattern  && <KindergartenPattern />}
       {showTeensPattern   && <TeensPattern />}
       {showLevskiPattern  && <LevskiPattern />}
-      {/* ── Sticky header ────────────────────────────────────────────── */}
+      {/* ── Header ───────────────────────────────────────────────────── */}
       <header
-        className="flex flex-col items-center w-full pt-2 md:pt-4 px-4 md:px-6 max-w-screen-xl mx-auto sticky top-0 z-40 relative"
-        style={{
-          backgroundColor: 'color-mix(in srgb, var(--lex-bg) 82%, transparent)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        } as React.CSSProperties}
+        className="flex flex-col items-center w-full pt-2 md:pt-4 px-4 md:px-6 max-w-screen-xl mx-auto relative"
       >
         <div className="flex items-center justify-between w-full pb-1 md:pb-4">
           <div className="flex items-center gap-2 md:gap-3">
@@ -72,7 +70,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPatt
             </h1>
           </div>
         </div>
-        <LexiconHeaderNav classId={classId} basePath={basePath} themeId={preset ?? themeId} />
+        <LexiconHeaderNav classId={classId} basePath={basePath} themeId={preset ?? themeId} customLabels={{ memberLabel, groupLabel, memoriesLabel }} />
       </header>
 
       {/* ── Page content ─────────────────────────────────────────────── */}
@@ -93,7 +91,7 @@ export default function LexiconShell({ classId, logoUrl, themeId, preset, bgPatt
           boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
         }}
       >
-        <LexiconBottomNav classId={classId} basePath={basePath} themeId={preset ?? themeId} />
+        <LexiconBottomNav classId={classId} basePath={basePath} themeId={preset ?? themeId} customLabels={{ memberLabel, groupLabel, memoriesLabel }} />
       </footer>
     </div>
   )
