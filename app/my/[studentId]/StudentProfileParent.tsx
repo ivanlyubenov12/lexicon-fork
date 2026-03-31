@@ -210,6 +210,18 @@ export default function StudentProfileParent({
   const progressPct = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0
   const allQuestionsAnswered = answeredCount >= totalQuestions
 
+  // ── Questionnaire section status ──────────────────────────────────────────
+  const hasPending = seqItems.some(item => item.kind === 'question' && answerMap.get(item.id) === 'submitted')
+  const questionnaireStatus: SectionStatus =
+    totalQuestions === 0 ? 'done' :
+    allQuestionsAnswered ? (hasPending ? 'pending' : 'done') :
+    answeredCount > 0 ? 'partial' : 'todo'
+  const questionnaireLabel =
+    totalQuestions === 0 ? 'Няма въпроси' :
+    allQuestionsAnswered && hasPending ? 'За преглед от модератора' :
+    allQuestionsAnswered ? 'Всички попълнени' :
+    answeredCount > 0 ? `${answeredCount} / ${totalQuestions} въпроса` : 'Не е започнат'
+
   // ── Optional sections status ───────────────────────────────────────────────
   const photoStatus: SectionStatus = student.photo_url ? 'done' : 'todo'
   const sentCount = sentMessages.length
@@ -402,14 +414,19 @@ export default function StudentProfileParent({
           />
         </Section>
 
-        {/* ── Flat question list ───────────────────────────────────────────── */}
+        {/* ── Questionnaire section ────────────────────────────────────────── */}
         {seqItems.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <p className="font-semibold text-gray-800 text-sm">Въпросник</p>
-              <span className="text-xs text-gray-400">{answeredCount}/{totalQuestions}</span>
-            </div>
-            <div className="divide-y divide-gray-50">
+          <Section
+            icon="quiz"
+            title="Въпросник"
+            description="Отговорете на въпросите по-долу. Прогресът се запазва автоматично — може да продължите по всяко време."
+            status={questionnaireStatus}
+            statusLabel={questionnaireLabel}
+            open={openSection === 'questionnaire'}
+            onToggle={() => toggle('questionnaire')}
+            accentColor="indigo"
+          >
+            <div className="-mx-5 -my-5 divide-y divide-gray-50">
               {seqItems.map((item, idx) => {
                 const answered = isAnswered(item)
                 const pendingReview = item.kind === 'question' &&
@@ -429,7 +446,7 @@ export default function StudentProfileParent({
                 )
               })}
             </div>
-          </div>
+          </Section>
         )}
 
         {/* ── Послания ────────────────────────────────────────────────────── */}
