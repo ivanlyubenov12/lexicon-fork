@@ -13,7 +13,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
 
   const admin = createServiceRoleClient()
 
-  const [clsRes, questionsRes, voiceQsRes, pollsRes, eventsRes, studentsRes] = await Promise.all([
+  const [clsRes, questionsRes, accentQsRes, voiceQsRes, pollsRes, eventsRes, studentsRes] = await Promise.all([
     admin
       .from('classes')
       .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label, page_layouts')
@@ -26,6 +26,13 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       .select('id, text, type')
       .eq('class_id', classId)
       .eq('type', 'personal')
+      .order('order_index'),
+
+    admin
+      .from('questions')
+      .select('id, text, type')
+      .eq('class_id', classId)
+      .in('type', ['better_together', 'superhero'])
       .order('order_index'),
 
     admin
@@ -80,6 +87,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
 
   const assets: LayoutAssets = {
     questions: (questionsRes.data ?? []).map(q => ({ id: q.id, label: q.text, type: q.type })),
+    accentQuestions: (accentQsRes.data ?? []).map(q => ({ id: q.id, label: q.text, type: q.type })),
     voiceQuestions: voiceQsRaw.map(q => ({
       id: q.id,
       label: q.text,

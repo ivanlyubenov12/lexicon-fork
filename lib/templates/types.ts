@@ -23,6 +23,7 @@ export type BlockType =
   | 'sp_photo'
   | 'sp_name'
   | 'sp_question'
+  | 'sp_accents'
   | 'sp_event'
   | 'sp_peer_messages'
 
@@ -140,8 +141,9 @@ export interface VoiceQuestionAsset extends LayoutAsset {
 }
 
 export interface LayoutAssets {
-  questions: (LayoutAsset & { type: string })[]   // personal questions
-  voiceQuestions: VoiceQuestionAsset[]             // class_voice questions
+  questions: (LayoutAsset & { type: string })[]        // personal questions
+  accentQuestions: (LayoutAsset & { type: string })[]  // better_together / superhero questions
+  voiceQuestions: VoiceQuestionAsset[]                 // class_voice questions
   polls: LayoutAsset[]
   events: LayoutAsset[]
   coverImageUrl: string | null

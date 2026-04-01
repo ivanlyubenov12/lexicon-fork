@@ -40,6 +40,7 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   sp_photo:         { label: 'Снимка',   icon: 'portrait',    addLabel: 'Снимка' },
   sp_name:          { label: 'Име',      icon: 'badge',       addLabel: 'Име' },
   sp_question:      { label: 'Въпрос',  icon: 'quiz',        addLabel: 'Въпрос' },
+  sp_accents:       { label: 'Акценти', icon: 'star',        addLabel: 'Акценти' },
   sp_event:         { label: 'Събитие', icon: 'photo_album', addLabel: 'Събитие' },
   sp_peer_messages: { label: 'Послания',icon: 'mail',        addLabel: 'Послания' },
 }

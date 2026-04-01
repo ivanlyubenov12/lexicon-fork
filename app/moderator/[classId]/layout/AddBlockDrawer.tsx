@@ -26,6 +26,7 @@ const COVER_BLOCKS: Array<{ type: BlockType; label: string; icon: string; descri
 const SP_STATIC_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
   { type: 'sp_photo',         label: 'Снимка',    icon: 'portrait', description: 'Портретна снимка на участника.' },
   { type: 'sp_name',          label: 'Име',        icon: 'badge',    description: 'Трите имена и клас.' },
+  { type: 'sp_accents',       label: 'Акценти',   icon: 'star',     description: 'Въпросите с оценка (звезди) на участника.' },
   { type: 'sp_peer_messages', label: 'Послания',   icon: 'mail',     description: 'Послания от съучениците.' },
 ]
 

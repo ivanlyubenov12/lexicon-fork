@@ -1054,20 +1054,38 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
             <View style={s.divider} />
           </View>
         )}
-        {/* sp_question blocks: match by index — i-th sp_question → i-th answer
-            (PDFAnswer has question_text but not questionId, so positional matching is used) */}
-        {pg.filter(b => b.type === 'sp_question').map((b, i) => {
-          const answer = student.answers[i]
-          if (!answer) return null
-          return (
-            <View key={i} style={s.infoCol}>
-              <View style={s.qaBlock}>
-                <Text style={s.qLabel}>{answer.question_text}</Text>
-                {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
+        {/* sp_question blocks: match by index among personal-type answers */}
+        {(() => {
+          const personalAnswers = student.answers.filter(a => !a.question_type || a.question_type === 'personal')
+          return pg.filter(b => b.type === 'sp_question').map((b, i) => {
+            const answer = personalAnswers[i]
+            if (!answer) return null
+            return (
+              <View key={i} style={s.infoCol}>
+                <View style={s.qaBlock}>
+                  <Text style={s.qLabel}>{answer.question_text}</Text>
+                  {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
+                </View>
               </View>
+            )
+          })
+        })()}
+        {/* sp_accents: all better_together/superhero answers in a shared block */}
+        {pg.some(b => b.type === 'sp_accents') && (() => {
+          const accentAnswers = student.answers.filter(a => a.question_type === 'better_together' || a.question_type === 'superhero')
+          if (accentAnswers.length === 0) return null
+          return (
+            <View style={[s.infoCol, { paddingHorizontal: 28, paddingBottom: 8 }]}>
+              <Text style={[s.qLabel, { color: '#ca8a04' }]}>★ Акценти</Text>
+              {accentAnswers.map((a, i) => (
+                <View key={i} style={{ marginTop: 4 }}>
+                  <Text style={[s.qLabel, { fontSize: 6.5 }]}>{a.question_text}</Text>
+                  {a.text_content ? <Text style={s.aText}>{a.text_content}</Text> : null}
+                </View>
+              ))}
             </View>
           )
-        })}
+        })()}
         {/* sp_event blocks: match by eventId → event title → student event_comment */}
         {pg.filter(b => b.type === 'sp_event').map((b, i) => {
           const cfg = b.config as Record<string, unknown>

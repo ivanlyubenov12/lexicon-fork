@@ -79,6 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     q.type === 'class_voice'
   )
   const qMap = new Map(personalQuestions.map((q: any) => [q.id, q.text]))
+  const qTypeMap = new Map(personalQuestions.map((q: any) => [q.id, q.type as string]))
 
   // ── Voice questions data ──────────────────────────────────────────────────
   const voiceIds = voiceQuestions.map((q: any) => q.id)
@@ -281,6 +282,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .filter((a: any) => (a.text_content || a.media_url) && qMap.has(a.question_id))
       .map((a: any): PDFAnswer => ({
         question_text: qMap.get(a.question_id) ?? '',
+        question_type: qTypeMap.get(a.question_id) ?? null,
         text_content: a.text_content ?? null,
         media_url: a.media_url ?? null,
         media_type: a.media_type ?? null,

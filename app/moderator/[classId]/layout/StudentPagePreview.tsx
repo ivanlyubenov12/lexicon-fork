@@ -54,6 +54,20 @@ export default function StudentPagePreview({ blocks, assets, lexiconData }: {
           </div>
         )
       }
+      case 'sp_accents':
+        return (
+          <div className="mb-1.5">
+            <div className="text-[10px] font-bold text-yellow-600 uppercase tracking-wide mb-1">Акценти</div>
+            <div className="flex flex-col gap-1">
+              {(assets.accentQuestions.length > 0 ? assets.accentQuestions : [{ id: '1', label: 'Акцент 1', type: 'better_together' }, { id: '2', label: 'Акцент 2', type: 'better_together' }]).slice(0, 3).map((q) => (
+                <div key={q.id} className="flex items-center gap-1.5">
+                  <span className="text-yellow-400 text-[10px]">★</span>
+                  <div className="text-[10px] text-gray-500 truncate">{q.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
       case 'sp_peer_messages':
         return (
           <div className="mt-1">

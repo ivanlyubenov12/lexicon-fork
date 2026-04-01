@@ -112,7 +112,8 @@
       "Bash(grep -A 10 \"PDF Builder\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/ModeratorSidebar.tsx)",
       "Bash(ls app/moderator/[classId]/pdf/)",
       "Bash(ls app/api/pdf/preview-data/[classId]/)",
-      "Bash(grep -n \"href.*students\\\\|answers\\\\|Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/Dashboard.tsx)"
+      "Bash(grep -n \"href.*students\\\\|answers\\\\|Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/Dashboard.tsx)",
+      "Bash(grep -r \"better_together\\\\|stars_label\\\\|star\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/layout/page.tsx)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

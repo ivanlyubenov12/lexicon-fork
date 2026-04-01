@@ -47,7 +47,7 @@ interface Props {
   pageLayouts: PageLayouts
 }
 
-const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages'])
+const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_accents', 'sp_event', 'sp_peer_messages'])
 
 function defaultStudentPageBlocks(assets: LayoutAssets): Block[] {
   const blocks: Block[] = []
@@ -55,6 +55,9 @@ function defaultStudentPageBlocks(assets: LayoutAssets): Block[] {
   blocks.push({ id: nanoid(8), type: 'sp_name', config: { page: 1 } })
   for (const q of assets.questions) {
     blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: 1 } })
+  }
+  if (assets.accentQuestions.length > 0) {
+    blocks.push({ id: nanoid(8), type: 'sp_accents', config: { page: 1 } })
   }
   for (const e of assets.events) {
     blocks.push({ id: nanoid(8), type: 'sp_event', config: { eventId: e.id, page: 2 } })

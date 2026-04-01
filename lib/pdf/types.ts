@@ -1,5 +1,6 @@
 export interface PDFAnswer {
   question_text: string
+  question_type?: string | null
   text_content: string | null
   media_url: string | null
   media_type: string | null

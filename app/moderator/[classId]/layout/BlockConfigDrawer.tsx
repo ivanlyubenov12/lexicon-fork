@@ -34,11 +34,12 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
   closing_quote:         { label: 'Цитат',            icon: 'format_quote',      color: 'bg-indigo-50 text-indigo-700'},
   closing_student_count: { label: 'Брой участници',  icon: 'people',            color: 'bg-indigo-50 text-indigo-700'},
   closing_colophon:      { label: 'Колофон',          icon: 'copyright',         color: 'bg-indigo-50 text-indigo-700'},
-  sp_photo:         { label: 'Снимка',   icon: 'portrait',    color: 'bg-indigo-50 text-indigo-700' },
-  sp_name:          { label: 'Име',      icon: 'badge',       color: 'bg-blue-50 text-blue-700'    },
-  sp_question:      { label: 'Въпрос',  icon: 'quiz',        color: 'bg-amber-50 text-amber-700'  },
-  sp_event:         { label: 'Събитие', icon: 'photo_album', color: 'bg-teal-50 text-teal-700'    },
-  sp_peer_messages: { label: 'Послания',icon: 'mail',        color: 'bg-rose-50 text-rose-700'    },
+  sp_photo:         { label: 'Снимка',   icon: 'portrait',    color: 'bg-indigo-50 text-indigo-700'  },
+  sp_name:          { label: 'Име',      icon: 'badge',       color: 'bg-blue-50 text-blue-700'     },
+  sp_question:      { label: 'Въпрос',  icon: 'quiz',        color: 'bg-amber-50 text-amber-700'   },
+  sp_accents:       { label: 'Акценти', icon: 'star',        color: 'bg-yellow-50 text-yellow-700' },
+  sp_event:         { label: 'Събитие', icon: 'photo_album', color: 'bg-teal-50 text-teal-700'     },
+  sp_peer_messages: { label: 'Послания',icon: 'mail',        color: 'bg-rose-50 text-rose-700'     },
 }
 
 interface Props {
