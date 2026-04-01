@@ -1,6 +1,6 @@
 'use client'
 
-import type { BlockType } from '@/lib/templates/types'
+import type { BlockType, PageId } from '@/lib/templates/types'
 
 const ALL_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
   { type: 'hero', label: 'Герой', icon: 'photo', description: 'Голяма заглавна снимка с надпис.' },
@@ -15,13 +15,33 @@ const ALL_BLOCKS: Array<{ type: BlockType; label: string; icon: string; descript
   { type: 'superhero', label: 'Супергерой', icon: 'bolt', description: 'AI-генерирано изображение на класа.' },
 ]
 
+const COVER_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
+  { type: 'cover_photo',      label: 'Корична снимка',       icon: 'image',          description: 'Главна снимка на корицата.' },
+  { type: 'cover_logo',       label: 'Лого',                  icon: 'school',         description: 'Лого на училището.' },
+  { type: 'cover_class_name', label: 'Клас / Група',          icon: 'badge',          description: 'Името на класа или групата.' },
+  { type: 'cover_year',       label: 'Учебна година',         icon: 'calendar_today', description: 'Учебна година.' },
+  { type: 'cover_tagline',    label: 'Слоган',                icon: 'format_quote',   description: 'Кратък слоган или мото.' },
+]
+
+const CLOSING_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
+  { type: 'closing_logo',          label: 'Лого',                icon: 'school',        description: 'Лого на училището.' },
+  { type: 'closing_title',         label: 'Заглавие',            icon: 'title',         description: 'Името на класа.' },
+  { type: 'closing_year',          label: 'Учебна година',       icon: 'calendar_today',description: 'Учебна година.' },
+  { type: 'closing_quote',         label: 'Цитат',               icon: 'format_quote',  description: 'Затварящ цитат или послание.' },
+  { type: 'closing_student_count', label: 'Брой участници',      icon: 'people',        description: 'Автоматично брои участниците.' },
+  { type: 'closing_colophon',      label: 'Колофон',             icon: 'copyright',     description: 'Авторски права и издател.' },
+]
+
 interface Props {
+  pageId: PageId
   onAdd: (type: BlockType) => void
   onClose: () => void
   existingTypes: BlockType[]
 }
 
-export default function AddBlockDrawer({ onAdd, onClose, existingTypes }: Props) {
+export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes }: Props) {
+  const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : ALL_BLOCKS
+
   return (
     <>
       {/* Backdrop */}
@@ -46,7 +66,7 @@ export default function AddBlockDrawer({ onAdd, onClose, existingTypes }: Props)
         </div>
 
         <div className="p-4 grid grid-cols-1 gap-2">
-          {ALL_BLOCKS.map((b) => {
+          {visibleBlocks.map((b) => {
             const alreadyHas = existingTypes.includes(b.type)
             return (
               <button

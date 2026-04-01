@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback, useTransition, useEffect } from 'react'
 import Link from 'next/link'
-import { saveLayout } from './actions'
-import type { Block, BlockType, LayoutAssets } from '@/lib/templates/types'
+import { saveLayout, savePageLayout } from './actions'
+import type { Block, BlockType, LayoutAssets, PageId, PageLayouts } from '@/lib/templates/types'
 import type { LexiconData } from '@/app/lexicon/[classId]/LexiconBlocks'
 import LexiconBlocks from '@/app/lexicon/[classId]/LexiconBlocks'
 import LayoutCanvas from './LayoutCanvas'
 import AddBlockDrawer from './AddBlockDrawer'
 import BlockConfigDrawer from './BlockConfigDrawer'
+import CoverPagePreview from './CoverPagePreview'
+import ClosingPagePreview from './ClosingPagePreview'
 import { nanoid } from 'nanoid'
 import { templatePresets } from '@/lib/templates/presets'
-import type { LayoutAssets as LA } from '@/lib/templates/types'
 
 const TEMPLATE_UI = [
   { id: 'primary',       name: 'Начално училище', subtitle: '1–4 клас',   icon: 'school',      color: 'bg-[#e2dfff]', accent: 'text-[#3632b7]', border: 'border-[#3632b7]' },
@@ -20,6 +21,21 @@ const TEMPLATE_UI = [
   { id: 'custom',        name: 'Собствен',        subtitle: '',           icon: 'tune',        color: 'bg-gray-100',  accent: 'text-gray-600',  border: 'border-gray-400'  },
 ]
 
+const PAGES: Array<{ id: PageId; label: string; icon: string; available: boolean }> = [
+  { id: 'cover',        label: 'Корица',          icon: 'auto_stories',  available: true  },
+  { id: 'group',        label: 'Групата',          icon: 'groups',        available: true  },
+  { id: 'students',     label: 'Участници',        icon: 'people',        available: false },
+  { id: 'student_page', label: 'Лични страници',   icon: 'person',        available: false },
+  { id: 'memories',     label: 'Спомени',          icon: 'photo_album',   available: false },
+  { id: 'closing',      label: 'Задна корица',     icon: 'menu_book',     available: true  },
+]
+
+const FULL_WIDTH_TYPES: Set<BlockType> = new Set([
+  'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
+  'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
+  'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+])
+
 interface Props {
   classId: string
   className: string
@@ -27,10 +43,29 @@ interface Props {
   templateId: string
   assets: LayoutAssets
   lexiconData: LexiconData
+  pageLayouts: PageLayouts
 }
 
-export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData }: Props) {
-  const [blocks, setBlocks]           = useState<Block[]>(initialBlocks)
+export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData, pageLayouts }: Props) {
+  const [activePage, setActivePage] = useState<PageId>('group')
+  const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => ({
+    group: initialBlocks,
+    cover: [],
+    closing: [],
+    ...(pageLayouts as Record<string, Block[]>),
+  }))
+
+  // Derived: blocks for the active page
+  const blocks = allPageBlocks[activePage] ?? []
+
+  function setPageBlocks(newBlocks: Block[] | ((prev: Block[]) => Block[])) {
+    setAllPageBlocks(prev => {
+      const current = prev[activePage] ?? []
+      const next = typeof newBlocks === 'function' ? newBlocks(current) : newBlocks
+      return { ...prev, [activePage]: next }
+    })
+  }
+
   // Map legacy 'classic' to 'primary' so the template picker highlights correctly
   const [activeTemplate, setActiveTemplate] = useState(
     initialTemplateId === 'classic' || !initialTemplateId ? 'primary' : initialTemplateId
@@ -42,22 +77,28 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   const [saveError, setSaveError]     = useState<string | null>(null)
   const [isPending, startTransition]  = useTransition()
 
+  // Reset saved state when switching pages (the new page may have unsaved edits)
+  useEffect(() => {
+    setSaved(true)
+    setActiveBlockId(null)
+  }, [activePage])
+
   const activeBlock = blocks.find(b => b.id === activeBlockId) ?? null
 
   function removeBlock(id: string) {
-    setBlocks(prev => prev.filter(b => b.id !== id))
+    setPageBlocks(prev => prev.filter(b => b.id !== id))
     setActiveBlockId(null)
-    setActiveTemplate('custom')
+    if (activePage === 'group') setActiveTemplate('custom')
     setSaved(false)
   }
 
   function updateBlock(id: string, config: Record<string, unknown>) {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, config } : b))
+    setPageBlocks(prev => prev.map(b => b.id === id ? { ...b, config } : b))
     setSaved(false)
   }
 
   function moveBlock(id: string, dir: 'up' | 'down') {
-    setBlocks(prev => {
+    setPageBlocks(prev => {
       const idx = prev.findIndex(b => b.id === id)
       if (idx === -1) return prev
       const next = [...prev]
@@ -69,20 +110,18 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
     setSaved(false)
   }
 
-  const FULL_WIDTH_TYPES: Set<BlockType> = new Set(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
-
   function addBlock(type: BlockType) {
     const b: Block = { id: nanoid(8), type, config: {} }
-    if (FULL_WIDTH_TYPES.has(type)) {
-      setBlocks(prev => [...prev, b])
+    if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing') {
+      setPageBlocks(prev => [...prev, b])
       setActiveBlockId(b.id)
     } else {
       // Add a pair of empty blocks in a row
       const b2: Block = { id: nanoid(8), type, config: {} }
-      setBlocks(prev => [...prev, b, b2])
+      setPageBlocks(prev => [...prev, b, b2])
       setActiveBlockId(null)
     }
-    setActiveTemplate('custom')
+    if (activePage === 'group') setActiveTemplate('custom')
     setAddDrawerOpen(false)
     setSaved(false)
   }
@@ -102,7 +141,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
     let barchartIdx = 0
     let wordcloudIdx = 0
 
-    setBlocks(preset.blocks.map(b => {
+    setPageBlocks(preset.blocks.map(b => {
       const newId = nanoid(8)
       if (b.type === 'subjects_bar' && barchartQs[barchartIdx]) {
         return { ...b, id: newId, config: { questionId: barchartQs[barchartIdx++].id } }
@@ -128,11 +167,11 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   const handleSave = useCallback(() => {
     setSaveError(null)
     startTransition(async () => {
-      const result = await saveLayout(classId, blocks, activeTemplate)
+      const result = await savePageLayout(classId, activePage, blocks, activePage === 'group' ? activeTemplate : undefined)
       if (result.error) setSaveError(result.error)
       else setSaved(true)
     })
-  }, [classId, blocks, activeTemplate])
+  }, [classId, activePage, blocks, activeTemplate])
 
   return (
     <div className="min-h-screen bg-[#faf9f8] flex flex-col" style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -169,6 +208,32 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
 
         {/* Left: block editor */}
         <aside className="w-full lg:w-96 lg:flex-shrink-0 flex flex-col overflow-y-auto border-r border-gray-100 bg-[#faf9f8]">
+
+          {/* Page selector */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Страница</p>
+            <div className="flex flex-col gap-1">
+              {PAGES.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => { if (p.available) setActivePage(p.id) }}
+                  disabled={!p.available}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-all text-left ${
+                    activePage === p.id
+                      ? 'bg-indigo-600 text-white'
+                      : p.available
+                        ? 'text-gray-600 hover:bg-gray-100'
+                        : 'text-gray-300 cursor-not-allowed'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">{p.icon}</span>
+                  {p.label}
+                  {!p.available && <span className="ml-auto text-[9px] font-bold uppercase tracking-wider opacity-60">скоро</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Block list */}
           <div className="px-4 py-4 flex-1">
             <div className="flex items-center justify-between mb-3">
@@ -210,12 +275,23 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
             {!saved && <span className="ml-auto text-xs text-amber-500 font-medium">Незапазени промени</span>}
           </div>
           <div className="max-w-3xl mx-auto py-6 px-4">
-            <LexiconBlocks
-              blocks={blocks}
-              data={lexiconData}
-              basePath={`/moderator/${classId}/preview`}
-              previewMode
-            />
+            {activePage === 'group' && (
+              <LexiconBlocks
+                blocks={blocks}
+                data={lexiconData}
+                basePath={`/moderator/${classId}/preview`}
+                previewMode
+              />
+            )}
+            {activePage === 'cover' && (
+              <CoverPagePreview blocks={blocks} assets={assets} />
+            )}
+            {activePage === 'closing' && (
+              <ClosingPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
+            )}
+            {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && (
+              <div className="p-8 text-center text-gray-400 text-sm">Тази страница ще бъде налична скоро.</div>
+            )}
           </div>
         </div>
       </div>
@@ -238,14 +314,15 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
       {/* ── Add block drawer ────────────────────────────────────────── */}
       {addDrawerOpen && (
         <AddBlockDrawer
+          pageId={activePage}
           onAdd={addBlock}
           onClose={() => setAddDrawerOpen(false)}
           existingTypes={blocks.map(b => b.type)}
         />
       )}
 
-      {/* ── Confirm template switch ─────────────────────────────────── */}
-      {confirmTemplate && (
+      {/* ── Confirm template switch (group page only) ───────────────── */}
+      {confirmTemplate && activePage === 'group' && (
         <>
           <div className="fixed inset-0 bg-black/30 z-50 backdrop-blur-sm" onClick={() => setConfirmTemplate(null)} />
           <div className="fixed inset-x-0 bottom-0 z-[51] bg-white rounded-t-3xl shadow-2xl p-6 max-w-screen-sm mx-auto">

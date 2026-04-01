@@ -5,19 +5,34 @@ import type { Block, BlockType, LayoutAssets, VoiceQuestionAsset } from '@/lib/t
 import { createPoll, deletePoll, reorderPolls } from '../polls/actions'
 import { createQuestion, updateQuestion } from '../questions/actions'
 
-const INHERENTLY_FULL_WIDTH: Set<BlockType> = new Set(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
+const INHERENTLY_FULL_WIDTH: Set<BlockType> = new Set([
+  'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
+  'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
+  'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
-  hero:          { label: 'Корица',           icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
-  students_grid: { label: 'Ученици',          icon: 'people',            color: 'bg-blue-50 text-blue-700'    },
-  question:      { label: 'Въпрос',           icon: 'quiz',              color: 'bg-amber-50 text-amber-700'  },
-  photo_gallery: { label: 'Галерия',          icon: 'photo_library',     color: 'bg-pink-50 text-pink-700'    },
-  poll:          { label: 'Анкета',           icon: 'bar_chart',         color: 'bg-green-50 text-green-700'  },
-  polls_grid:    { label: 'Победители',       icon: 'emoji_events',      color: 'bg-emerald-50 text-emerald-700' },
-  class_voice:   { label: 'Анонимен въпрос — облак',   icon: 'record_voice_over', color: 'bg-purple-50 text-purple-700'},
-  subjects_bar:  { label: 'Анонимен въпрос — графика', icon: 'bar_chart',         color: 'bg-teal-50 text-teal-700'   },
-  events:        { label: 'Събития',          icon: 'photo_album',       color: 'bg-orange-50 text-orange-700'},
-  superhero:     { label: 'Супергерой',       icon: 'bolt',              color: 'bg-yellow-50 text-yellow-700'},
+  hero:                  { label: 'Корица',           icon: 'add_a_photo',       color: 'bg-[#e2dfff] text-[#3632b7]' },
+  students_grid:         { label: 'Ученици',          icon: 'people',            color: 'bg-blue-50 text-blue-700'    },
+  question:              { label: 'Въпрос',           icon: 'quiz',              color: 'bg-amber-50 text-amber-700'  },
+  photo_gallery:         { label: 'Галерия',          icon: 'photo_library',     color: 'bg-pink-50 text-pink-700'    },
+  poll:                  { label: 'Анкета',           icon: 'bar_chart',         color: 'bg-green-50 text-green-700'  },
+  polls_grid:            { label: 'Победители',       icon: 'emoji_events',      color: 'bg-emerald-50 text-emerald-700' },
+  class_voice:           { label: 'Анонимен въпрос — облак',   icon: 'record_voice_over', color: 'bg-purple-50 text-purple-700'},
+  subjects_bar:          { label: 'Анонимен въпрос — графика', icon: 'bar_chart',         color: 'bg-teal-50 text-teal-700'   },
+  events:                { label: 'Събития',          icon: 'photo_album',       color: 'bg-orange-50 text-orange-700'},
+  superhero:             { label: 'Супергерой',       icon: 'bolt',              color: 'bg-yellow-50 text-yellow-700'},
+  cover_photo:           { label: 'Корична снимка',   icon: 'image',             color: 'bg-slate-50 text-slate-700'  },
+  cover_logo:            { label: 'Лого',             icon: 'school',            color: 'bg-slate-50 text-slate-700'  },
+  cover_class_name:      { label: 'Клас / Група',     icon: 'badge',             color: 'bg-slate-50 text-slate-700'  },
+  cover_year:            { label: 'Учебна година',    icon: 'calendar_today',    color: 'bg-slate-50 text-slate-700'  },
+  cover_tagline:         { label: 'Слоган',           icon: 'format_quote',      color: 'bg-slate-50 text-slate-700'  },
+  closing_logo:          { label: 'Лого',             icon: 'school',            color: 'bg-indigo-50 text-indigo-700'},
+  closing_title:         { label: 'Заглавие',         icon: 'title',             color: 'bg-indigo-50 text-indigo-700'},
+  closing_year:          { label: 'Учебна година',    icon: 'calendar_today',    color: 'bg-indigo-50 text-indigo-700'},
+  closing_quote:         { label: 'Цитат',            icon: 'format_quote',      color: 'bg-indigo-50 text-indigo-700'},
+  closing_student_count: { label: 'Брой участници',  icon: 'people',            color: 'bg-indigo-50 text-indigo-700'},
+  closing_colophon:      { label: 'Колофон',          icon: 'copyright',         color: 'bg-indigo-50 text-indigo-700'},
 }
 
 interface Props {

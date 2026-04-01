@@ -9,6 +9,17 @@ export type BlockType =
   | 'subjects_bar'
   | 'events'
   | 'superhero'
+  | 'cover_photo'
+  | 'cover_logo'
+  | 'cover_class_name'
+  | 'cover_year'
+  | 'cover_tagline'
+  | 'closing_logo'
+  | 'closing_title'
+  | 'closing_year'
+  | 'closing_quote'
+  | 'closing_student_count'
+  | 'closing_colophon'
 
 export interface HeroBlockConfig {
   title?: string
@@ -60,6 +71,9 @@ export interface SuperheroBlockConfig {
   caption?: string
 }
 
+export interface CoverTaglineBlockConfig { text?: string }
+export interface ClosingQuoteBlockConfig { text?: string }
+
 export type BlockConfig =
   | HeroBlockConfig
   | StudentsGridBlockConfig
@@ -71,6 +85,8 @@ export type BlockConfig =
   | SubjectsBarBlockConfig
   | EventsBlockConfig
   | SuperheroBlockConfig
+  | CoverTaglineBlockConfig
+  | ClosingQuoteBlockConfig
 
 export interface Block {
   id: string
@@ -96,6 +112,9 @@ export interface Theme {
   previewBg: string
 }
 
+export type PageId = 'cover' | 'group' | 'students' | 'student_page' | 'memories' | 'closing'
+export type PageLayouts = Partial<Record<PageId, Block[]>>
+
 // Assets available for a class — loaded server-side and passed to the layout editor
 export interface LayoutAsset {
   id: string
@@ -116,4 +135,5 @@ export interface LayoutAssets {
   polls: LayoutAsset[]
   events: LayoutAsset[]
   coverImageUrl: string | null
+  schoolLogoUrl?: string | null
 }

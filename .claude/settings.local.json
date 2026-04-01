@@ -111,7 +111,8 @@
       "Bash(ls /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/*/pdf/)",
       "Bash(grep -A 10 \"PDF Builder\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/ModeratorSidebar.tsx)",
       "Bash(ls app/moderator/[classId]/pdf/)",
-      "Bash(ls app/api/pdf/preview-data/[classId]/)"
+      "Bash(ls app/api/pdf/preview-data/[classId]/)",
+      "Bash(grep -n \"href.*students\\\\|answers\\\\|Link\" /Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/moderator/[classId]/Dashboard.tsx)"
     ],
     "additionalDirectories": [
       "/Users/andreylyubenov/Desktop/ClaudeProjects/Lexicon/app/join/[invite_token]",

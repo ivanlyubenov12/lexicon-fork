@@ -8,19 +8,34 @@ import { updateCoverImage } from './actions'
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
-const FULL_WIDTH: Set<BlockType> = new Set(['hero', 'superhero', 'students_grid', 'polls_grid', 'events'])
+const FULL_WIDTH: Set<BlockType> = new Set([
+  'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
+  'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
+  'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: string }> = {
-  hero:          { label: 'Корица',           icon: 'add_a_photo',       addLabel: 'Добави корица' },
-  students_grid: { label: 'Ученици',          icon: 'group',             addLabel: 'Ученици на класа' },
-  question:      { label: 'Въпрос',           icon: 'quiz',              addLabel: 'Избери въпрос' },
-  photo_gallery: { label: 'Галерия',          icon: 'photo_library',     addLabel: 'Избери въпрос за снимки' },
-  poll:          { label: 'Анкета',           icon: 'poll',              addLabel: 'Добави анкета' },
-  polls_grid:    { label: 'Победители',       icon: 'emoji_events',      addLabel: 'Победители в анкети' },
-  class_voice:   { label: 'Анонимен въпрос — облак', icon: 'record_voice_over', addLabel: 'Анонимен въпрос (облак)' },
-  subjects_bar:  { label: 'Анонимен въпрос — графика', icon: 'bar_chart',      addLabel: 'Анонимен въпрос (графика)' },
-  events:        { label: 'Събития',          icon: 'photo_album',       addLabel: 'Добави събитие' },
-  superhero:     { label: 'Супергерой',       icon: 'bolt',              addLabel: 'AI изображение на класа' },
+  hero:                  { label: 'Корица',           icon: 'add_a_photo',       addLabel: 'Добави корица' },
+  students_grid:         { label: 'Ученици',          icon: 'group',             addLabel: 'Ученици на класа' },
+  question:              { label: 'Въпрос',           icon: 'quiz',              addLabel: 'Избери въпрос' },
+  photo_gallery:         { label: 'Галерия',          icon: 'photo_library',     addLabel: 'Избери въпрос за снимки' },
+  poll:                  { label: 'Анкета',           icon: 'poll',              addLabel: 'Добави анкета' },
+  polls_grid:            { label: 'Победители',       icon: 'emoji_events',      addLabel: 'Победители в анкети' },
+  class_voice:           { label: 'Анонимен въпрос — облак', icon: 'record_voice_over', addLabel: 'Анонимен въпрос (облак)' },
+  subjects_bar:          { label: 'Анонимен въпрос — графика', icon: 'bar_chart',      addLabel: 'Анонимен въпрос (графика)' },
+  events:                { label: 'Събития',          icon: 'photo_album',       addLabel: 'Добави събитие' },
+  superhero:             { label: 'Супергерой',       icon: 'bolt',              addLabel: 'AI изображение на класа' },
+  cover_photo:           { label: 'Корична снимка',   icon: 'image',             addLabel: 'Корична снимка' },
+  cover_logo:            { label: 'Лого',             icon: 'school',            addLabel: 'Лого' },
+  cover_class_name:      { label: 'Клас / Група',     icon: 'badge',             addLabel: 'Клас' },
+  cover_year:            { label: 'Учебна година',    icon: 'calendar_today',    addLabel: 'Учебна година' },
+  cover_tagline:         { label: 'Слоган',           icon: 'format_quote',      addLabel: 'Слоган' },
+  closing_logo:          { label: 'Лого',             icon: 'school',            addLabel: 'Лого' },
+  closing_title:         { label: 'Заглавие',         icon: 'title',             addLabel: 'Заглавие' },
+  closing_year:          { label: 'Учебна година',    icon: 'calendar_today',    addLabel: 'Учебна година' },
+  closing_quote:         { label: 'Цитат',            icon: 'format_quote',      addLabel: 'Цитат' },
+  closing_student_count: { label: 'Брой участници',  icon: 'people',            addLabel: 'Брой участници' },
+  closing_colophon:      { label: 'Колофон',          icon: 'copyright',         addLabel: 'Колофон' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -129,6 +144,28 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
   const options = pickerOptions(block.type, assets)
   const isAssignable = options.length > 0
   const needsPicker = isAssignable && !linked
+
+  // Cover / Closing static blocks — no picker needed, show styled placeholder
+  const isCoverClosing = block.type.startsWith('cover_') || block.type.startsWith('closing_')
+  if (isCoverClosing) {
+    const isDark = block.type.startsWith('closing_')
+    return (
+      <div
+        onClick={onSelect}
+        className={`relative cursor-pointer rounded-2xl transition-all duration-200 ${
+          isActive
+            ? 'ring-2 ring-indigo-500 ring-offset-2'
+            : 'hover:ring-2 hover:ring-indigo-300 hover:ring-offset-2'
+        } ${isDark ? 'bg-[#12082e] border border-[#3632b7]/30' : 'bg-slate-800 border border-slate-600/30'} min-h-[60px] flex items-center px-4 gap-3`}
+      >
+        <span className="material-symbols-outlined text-lg text-white/40">{meta.icon}</span>
+        <span className="text-xs font-bold text-white/60 uppercase tracking-widest">{meta.label}</span>
+        {isActive && (
+          <span className="ml-auto text-[10px] text-white/40">Избрано</span>
+        )}
+      </div>
+    )
+  }
 
   // Hero/cover block has its own interactive component
   if (block.type === 'hero') {

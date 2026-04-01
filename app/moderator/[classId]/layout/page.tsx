@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { defaultTemplate } from '@/lib/templates/presets'
-import type { Block, LayoutAssets } from '@/lib/templates/types'
+import type { Block, LayoutAssets, PageLayouts } from '@/lib/templates/types'
 import type { LexiconData, QuestionAnswer, VoiceItem } from '@/app/lexicon/[classId]/LexiconBlocks'
 import LayoutEditor from './LayoutEditor'
 
@@ -16,7 +16,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   const [clsRes, questionsRes, voiceQsRes, pollsRes, eventsRes, studentsRes] = await Promise.all([
     admin
       .from('classes')
-      .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label')
+      .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label, page_layouts')
       .eq('id', classId)
       .eq('moderator_id', user.id)
       .single(),
@@ -92,6 +92,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     polls: (pollsRes.data ?? []).map(p => ({ id: p.id, label: p.question })),
     events: (eventsRes.data ?? []).map(e => ({ id: e.id, label: e.title })),
     coverImageUrl: cls.cover_image_url ?? null,
+    schoolLogoUrl: cls.school_logo_url ?? null,
   }
 
   // ── Build live lexicon data for the preview panel ─────────────────────────
@@ -208,6 +209,12 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     }
   }
 
+  const rawPageLayouts = (cls.page_layouts as Record<string, unknown> | null) ?? {}
+  const pageLayouts: Record<string, unknown> = {
+    ...rawPageLayouts,
+    group: (rawPageLayouts.group as Block[] | undefined) ?? initialBlocks,
+  }
+
   const [namePart, schoolPart] = cls.name.includes(' — ')
     ? cls.name.split(' — ')
     : [cls.name, null]
@@ -243,6 +250,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       templateId={cls.template_id ?? 'primary'}
       assets={assets}
       lexiconData={lexiconData}
+      pageLayouts={pageLayouts as PageLayouts}
     />
   )
 }
