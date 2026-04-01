@@ -12,7 +12,7 @@ const FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
-  'sp_photo', 'sp_name', 'sp_featured_questions', 'sp_questions', 'sp_event_comments', 'sp_peer_messages',
+  'sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages',
 ])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: string }> = {
@@ -37,12 +37,11 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   closing_quote:         { label: 'Цитат',            icon: 'format_quote',      addLabel: 'Цитат' },
   closing_student_count: { label: 'Брой участници',  icon: 'people',            addLabel: 'Брой участници' },
   closing_colophon:      { label: 'Колофон',          icon: 'copyright',         addLabel: 'Колофон' },
-  sp_photo:              { label: 'Снимка',             icon: 'portrait',    addLabel: 'Снимка' },
-  sp_name:               { label: 'Име',                icon: 'badge',       addLabel: 'Име' },
-  sp_featured_questions: { label: 'Основни въпроси',    icon: 'star',        addLabel: 'Основни въпроси' },
-  sp_questions:          { label: 'Останали въпроси',   icon: 'quiz',        addLabel: 'Въпроси' },
-  sp_event_comments:     { label: 'Спомени',            icon: 'photo_album', addLabel: 'Спомени' },
-  sp_peer_messages:      { label: 'Послания',           icon: 'mail',        addLabel: 'Послания' },
+  sp_photo:         { label: 'Снимка',   icon: 'portrait',    addLabel: 'Снимка' },
+  sp_name:          { label: 'Име',      icon: 'badge',       addLabel: 'Име' },
+  sp_question:      { label: 'Въпрос',  icon: 'quiz',        addLabel: 'Въпрос' },
+  sp_event:         { label: 'Събитие', icon: 'photo_album', addLabel: 'Събитие' },
+  sp_peer_messages: { label: 'Послания',icon: 'mail',        addLabel: 'Послания' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -62,6 +61,14 @@ function linkedLabel(type: BlockType, cfg: Record<string, unknown>, assets: Layo
     case 'subjects_bar': {
       const id = cfg.questionId as string | null
       return id ? (assets.voiceQuestions.find(q => q.id === id)?.label ?? null) : null
+    }
+    case 'sp_question': {
+      const id = cfg.questionId as string | null
+      return id ? (assets.questions.find(q => q.id === id)?.label ?? null) : null
+    }
+    case 'sp_event': {
+      const id = cfg.eventId as string | null
+      return id ? (assets.events.find(e => e.id === id)?.label ?? null) : null
     }
     default: return null
   }
@@ -159,7 +166,9 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
     const cfg = block.config as Record<string, unknown>
     const pageNum = cfg.page as number | undefined
     const isDark = block.type.startsWith('closing_')
-    const pageLabel = isStudentPage ? (pageNum === 2 ? 'Страница 2' : 'Страница 1') : null
+    const pageLabel = isStudentPage ? (pageNum === 2 ? 'Стр. 2' : 'Стр. 1') : null
+    // Get linked label for question/event
+    const linkedName = linkedLabel(block.type, cfg, assets)
     return (
       <div
         onClick={onSelect}
@@ -168,9 +177,12 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
         } ${isDark ? 'bg-[#12082e] border border-[#3632b7]/30' : isStudentPage ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-800 border border-slate-600/30'} min-h-[60px] flex items-center px-4 gap-3`}
       >
         <span className={`material-symbols-outlined text-lg ${isStudentPage ? 'text-indigo-400' : 'text-white/40'}`}>{meta.icon}</span>
-        <span className={`text-xs font-bold uppercase tracking-widest ${isStudentPage ? 'text-indigo-600' : 'text-white/60'}`}>{meta.label}</span>
+        <div className="flex-1 min-w-0">
+          <span className={`text-xs font-bold uppercase tracking-widest ${isStudentPage ? 'text-indigo-600' : 'text-white/60'}`}>{meta.label}</span>
+          {linkedName && <p className="text-xs text-gray-500 truncate mt-0.5">{linkedName}</p>}
+        </div>
         {pageLabel && (
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-500">{pageLabel}</span>
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-500 flex-none">{pageLabel}</span>
         )}
         {isActive && !pageLabel && (
           <span className={`ml-auto text-[10px] ${isStudentPage ? 'text-indigo-400' : 'text-white/40'}`}>Избрано</span>

@@ -22,9 +22,8 @@ export type BlockType =
   | 'closing_colophon'
   | 'sp_photo'
   | 'sp_name'
-  | 'sp_featured_questions'
-  | 'sp_questions'
-  | 'sp_event_comments'
+  | 'sp_question'
+  | 'sp_event'
   | 'sp_peer_messages'
 
 export interface HeroBlockConfig {
@@ -80,6 +79,9 @@ export interface SuperheroBlockConfig {
 export interface CoverTaglineBlockConfig { text?: string }
 export interface ClosingQuoteBlockConfig { text?: string }
 
+export interface SpQuestionBlockConfig { questionId?: string | null; page?: 1 | 2 }
+export interface SpEventBlockConfig { eventId?: string | null; page?: 1 | 2 }
+
 export type BlockConfig =
   | HeroBlockConfig
   | StudentsGridBlockConfig
@@ -93,6 +95,8 @@ export type BlockConfig =
   | SuperheroBlockConfig
   | CoverTaglineBlockConfig
   | ClosingQuoteBlockConfig
+  | SpQuestionBlockConfig
+  | SpEventBlockConfig
 
 export interface Block {
   id: string

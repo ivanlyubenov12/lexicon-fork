@@ -1,6 +1,6 @@
 'use client'
 
-import type { BlockType, PageId } from '@/lib/templates/types'
+import type { BlockType, PageId, LayoutAssets } from '@/lib/templates/types'
 
 const ALL_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
   { type: 'hero', label: 'Герой', icon: 'photo', description: 'Голяма заглавна снимка с надпис.' },
@@ -23,13 +23,10 @@ const COVER_BLOCKS: Array<{ type: BlockType; label: string; icon: string; descri
   { type: 'cover_tagline',    label: 'Слоган',                icon: 'format_quote',   description: 'Кратък слоган или мото.' },
 ]
 
-const STUDENT_PAGE_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
-  { type: 'sp_photo',              label: 'Снимка',               icon: 'portrait',       description: 'Портретна снимка на участника.' },
-  { type: 'sp_name',               label: 'Име',                  icon: 'badge',          description: 'Трите имена и клас.' },
-  { type: 'sp_featured_questions', label: 'Основни въпроси',      icon: 'star',           description: 'Първата половина от отговорите.' },
-  { type: 'sp_questions',          label: 'Останали въпроси',     icon: 'quiz',           description: 'Втората половина от отговорите.' },
-  { type: 'sp_event_comments',     label: 'Спомени от събития',   icon: 'photo_album',    description: 'Снимки и коментари от събития.' },
-  { type: 'sp_peer_messages',      label: 'Послания',             icon: 'mail',           description: 'Послания от съучениците.' },
+const SP_STATIC_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
+  { type: 'sp_photo',         label: 'Снимка',    icon: 'portrait', description: 'Портретна снимка на участника.' },
+  { type: 'sp_name',          label: 'Име',        icon: 'badge',    description: 'Трите имена и клас.' },
+  { type: 'sp_peer_messages', label: 'Послания',   icon: 'mail',     description: 'Послания от съучениците.' },
 ]
 
 const CLOSING_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
@@ -43,13 +40,43 @@ const CLOSING_BLOCKS: Array<{ type: BlockType; label: string; icon: string; desc
 
 interface Props {
   pageId: PageId
-  onAdd: (type: BlockType) => void
+  onAdd: (type: BlockType, config?: Record<string, unknown>) => void
   onClose: () => void
   existingTypes: BlockType[]
+  assets?: LayoutAssets
 }
 
-export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes }: Props) {
-  const visibleBlocks = pageId === 'student_page' ? STUDENT_PAGE_BLOCKS : pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : ALL_BLOCKS
+function BlockRow({ icon, label, description, badge, onClick }: {
+  icon: string; label: string; description: string; badge?: string; onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-4 text-left p-4 rounded-2xl border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group w-full"
+    >
+      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-none group-hover:bg-indigo-100 transition-colors">
+        <span className="material-symbols-outlined text-lg">{icon}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-gray-800">{label}</span>
+          {badge && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-400 rounded-full">
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 mt-0.5 truncate">{description}</p>
+      </div>
+      <span className="material-symbols-outlined text-gray-200 group-hover:text-indigo-400 transition-colors">
+        add_circle
+      </span>
+    </button>
+  )
+}
+
+export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes, assets }: Props) {
+  const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : pageId !== 'student_page' ? ALL_BLOCKS : null
 
   return (
     <>
@@ -75,34 +102,70 @@ export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes }
         </div>
 
         <div className="p-4 grid grid-cols-1 gap-2">
-          {visibleBlocks.map((b) => {
-            const alreadyHas = existingTypes.includes(b.type)
-            return (
-              <button
-                key={b.type}
-                onClick={() => onAdd(b.type)}
-                className="flex items-center gap-4 text-left p-4 rounded-2xl border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-none group-hover:bg-indigo-100 transition-colors">
-                  <span className="material-symbols-outlined text-lg">{b.icon}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-gray-800">{b.label}</span>
-                    {alreadyHas && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 bg-gray-100 text-gray-400 rounded-full">
-                        вече е добавен
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5 truncate">{b.description}</p>
-                </div>
-                <span className="material-symbols-outlined text-gray-200 group-hover:text-indigo-400 transition-colors">
-                  add_circle
-                </span>
-              </button>
-            )
-          })}
+          {visibleBlocks ? (
+            visibleBlocks.map((b) => {
+              const alreadyHas = existingTypes.includes(b.type)
+              return (
+                <BlockRow
+                  key={b.type}
+                  icon={b.icon}
+                  label={b.label}
+                  description={b.description}
+                  badge={alreadyHas ? 'вече е добавен' : undefined}
+                  onClick={() => onAdd(b.type)}
+                />
+              )
+            })
+          ) : (
+            /* Student page: static + pickers */
+            <>
+              {SP_STATIC_BLOCKS.map((b) => {
+                const alreadyHas = existingTypes.includes(b.type)
+                return (
+                  <BlockRow
+                    key={b.type}
+                    icon={b.icon}
+                    label={b.label}
+                    description={b.description}
+                    badge={alreadyHas ? 'вече е добавен' : undefined}
+                    onClick={() => onAdd(b.type)}
+                  />
+                )
+              })}
+
+              {/* Questions */}
+              {assets && assets.questions.length > 0 && (
+                <>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 px-1">Въпроси</p>
+                  {assets.questions.map((q) => (
+                    <BlockRow
+                      key={q.id}
+                      icon="quiz"
+                      label={q.label}
+                      description="Личен въпрос от участника"
+                      onClick={() => onAdd('sp_question', { questionId: q.id })}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Events */}
+              {assets && assets.events.length > 0 && (
+                <>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 px-1">Събития</p>
+                  {assets.events.map((e) => (
+                    <BlockRow
+                      key={e.id}
+                      icon="photo_album"
+                      label={e.label}
+                      description="Снимка и бележка от събитие"
+                      onClick={() => onAdd('sp_event', { eventId: e.id })}
+                    />
+                  ))}
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
     </>

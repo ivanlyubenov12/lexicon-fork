@@ -9,7 +9,7 @@ const INHERENTLY_FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
-  'sp_photo', 'sp_name', 'sp_featured_questions', 'sp_questions', 'sp_event_comments', 'sp_peer_messages',
+  'sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages',
 ])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
@@ -34,12 +34,11 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
   closing_quote:         { label: 'Цитат',            icon: 'format_quote',      color: 'bg-indigo-50 text-indigo-700'},
   closing_student_count: { label: 'Брой участници',  icon: 'people',            color: 'bg-indigo-50 text-indigo-700'},
   closing_colophon:      { label: 'Колофон',          icon: 'copyright',         color: 'bg-indigo-50 text-indigo-700'},
-  sp_photo:              { label: 'Снимка',           icon: 'portrait',          color: 'bg-indigo-50 text-indigo-700'},
-  sp_name:               { label: 'Име',              icon: 'badge',             color: 'bg-blue-50 text-blue-700'   },
-  sp_featured_questions: { label: 'Основни въпроси',  icon: 'star',              color: 'bg-amber-50 text-amber-700' },
-  sp_questions:          { label: 'Останали въпроси', icon: 'quiz',              color: 'bg-purple-50 text-purple-700'},
-  sp_event_comments:     { label: 'Спомени',          icon: 'photo_album',       color: 'bg-teal-50 text-teal-700'   },
-  sp_peer_messages:      { label: 'Послания',         icon: 'mail',              color: 'bg-rose-50 text-rose-700'   },
+  sp_photo:         { label: 'Снимка',   icon: 'portrait',    color: 'bg-indigo-50 text-indigo-700' },
+  sp_name:          { label: 'Име',      icon: 'badge',       color: 'bg-blue-50 text-blue-700'    },
+  sp_question:      { label: 'Въпрос',  icon: 'quiz',        color: 'bg-amber-50 text-amber-700'  },
+  sp_event:         { label: 'Събитие', icon: 'photo_album', color: 'bg-teal-50 text-teal-700'    },
+  sp_peer_messages: { label: 'Послания',icon: 'mail',        color: 'bg-rose-50 text-rose-700'    },
 }
 
 interface Props {
@@ -153,11 +152,29 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
   classId: string
   set: (key: string, value: unknown) => void
 }) {
-  // Student page blocks — show page selector
+  // Student page blocks — show linked item info + page selector
   if (type.startsWith('sp_')) {
     const currentPage = (cfg.page as number | undefined) ?? 1
+    const linkedQuestion = type === 'sp_question' && cfg.questionId
+      ? assets.questions.find(q => q.id === cfg.questionId)
+      : null
+    const linkedEvent = type === 'sp_event' && cfg.eventId
+      ? assets.events.find(e => e.id === cfg.eventId)
+      : null
     return (
       <div className="p-4 space-y-4">
+        {linkedQuestion && (
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+            <span className="material-symbols-outlined text-amber-500 text-base">quiz</span>
+            <span className="text-sm text-amber-800 font-medium truncate">{linkedQuestion.label}</span>
+          </div>
+        )}
+        {linkedEvent && (
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-teal-50 border border-teal-200 rounded-xl">
+            <span className="material-symbols-outlined text-teal-500 text-base">photo_album</span>
+            <span className="text-sm text-teal-800 font-medium truncate">{linkedEvent.label}</span>
+          </div>
+        )}
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Страница</label>
           <div className="grid grid-cols-2 gap-2">

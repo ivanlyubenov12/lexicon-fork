@@ -112,8 +112,8 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
     setSaved(false)
   }
 
-  function addBlock(type: BlockType) {
-    const b: Block = { id: nanoid(8), type, config: {} }
+  function addBlock(type: BlockType, config?: Record<string, unknown>) {
+    const b: Block = { id: nanoid(8), type, config: config ?? {} }
     if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing' || activePage === 'student_page') {
       setPageBlocks(prev => [...prev, b])
       setActiveBlockId(b.id)
@@ -323,6 +323,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           onAdd={addBlock}
           onClose={() => setAddDrawerOpen(false)}
           existingTypes={blocks.map(b => b.type)}
+          assets={assets}
         />
       )}
 

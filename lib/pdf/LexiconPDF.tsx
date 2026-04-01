@@ -1002,7 +1002,7 @@ export function ClassOverviewPage({ data, theme, options }: { data: PDFData; the
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-export function StudentPage({ student, classInfo, bgPng, theme, options, groupLabel, studentPageBlocks }: {
+export function StudentPage({ student, classInfo, bgPng, theme, options, groupLabel, studentPageBlocks, events }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
@@ -1010,6 +1010,7 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
   options?: PageOptions
   groupLabel?: string | null
   studentPageBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
+  events?: PDFEvent[]
 }) {
   const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
   const videoQrs = student.video_qrs.filter(v => v.qr_png)
@@ -1022,26 +1023,14 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
     const page1 = spBlocks.filter(b => (b.config.page as number | undefined) !== 2)
     const page2 = spBlocks.filter(b => (b.config.page as number | undefined) === 2)
 
-    const hasPhoto  = (pg: typeof page1) => pg.some(b => b.type === 'sp_photo')
-    const hasName   = (pg: typeof page1) => pg.some(b => b.type === 'sp_name')
-    const hasFeatQ  = (pg: typeof page1) => pg.some(b => b.type === 'sp_featured_questions')
-    const hasQ      = (pg: typeof page1) => pg.some(b => b.type === 'sp_questions')
-    const hasEvents = (pg: typeof page1) => pg.some(b => b.type === 'sp_event_comments')
-    const hasMsgs   = (pg: typeof page1) => pg.some(b => b.type === 'sp_peer_messages')
+    const hasPhoto = (pg: typeof page1) => pg.some(b => b.type === 'sp_photo')
+    const hasName  = (pg: typeof page1) => pg.some(b => b.type === 'sp_name')
+    const hasMsgs  = (pg: typeof page1) => pg.some(b => b.type === 'sp_peer_messages')
 
-    // Split answers: featured questions = first half, questions = second half
-    const half = Math.ceil(student.answers.length / 2)
-    const featuredAnswers = student.answers.slice(0, half)
-    const remainingAnswers = student.answers.slice(half)
-
-    const renderAnswers = (answers: typeof student.answers) => answers.map((qa, i) => (
-      <View key={i} style={s.qaBlock}>
-        <Text style={s.qLabel}>{qa.question_text}</Text>
-        {qa.text_content ? (
-          <Text style={s.aText}>{qa.text_content}</Text>
-        ) : null}
-      </View>
-    ))
+    // Build a map from event_title → PDFStudentEvent for matching by eventId
+    // Note: PDFStudentEvent has event_title but not event_id, so we match by title.
+    // The i-th sp_question block maps to the i-th answer by index (question_id not stored in PDFAnswer).
+    const eventByTitle = new Map(student.event_comments.map(ec => [ec.event_title, ec]))
 
     const renderPageContent = (pg: typeof page1) => (
       <>
@@ -1065,34 +1054,38 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
             <View style={s.divider} />
           </View>
         )}
-        {hasFeatQ(pg) && featuredAnswers.length > 0 && (
-          <View style={s.infoCol}>
-            {renderAnswers(featuredAnswers)}
-          </View>
-        )}
-        {hasQ(pg) && remainingAnswers.length > 0 && (
-          <View style={s.infoCol}>
-            {renderAnswers(remainingAnswers)}
-          </View>
-        )}
-        {hasEvents(pg) && student.event_comments.length > 0 && (
-          <View style={{ paddingHorizontal: 28, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.border }}>
-            <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.gold, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8 }}>
-              Моите спомени с {groupLabel ? groupLabel.toLowerCase() : 'класа'}
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {student.event_comments.map((ec, i) => (
-                <View key={i} style={{ width: 130, backgroundColor: C.white, borderWidth: 1, borderColor: C.border, borderRadius: 4, overflow: 'hidden' }}>
-                  {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover' }} />}
-                  <View style={{ padding: 5 }}>
-                    <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark, marginBottom: 2 }}>„{ec.event_title}"</Text>
-                    <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
-                  </View>
-                </View>
-              ))}
+        {/* sp_question blocks: match by index — i-th sp_question → i-th answer
+            (PDFAnswer has question_text but not questionId, so positional matching is used) */}
+        {pg.filter(b => b.type === 'sp_question').map((b, i) => {
+          const answer = student.answers[i]
+          if (!answer) return null
+          return (
+            <View key={i} style={s.infoCol}>
+              <View style={s.qaBlock}>
+                <Text style={s.qLabel}>{answer.question_text}</Text>
+                {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
+              </View>
             </View>
-          </View>
-        )}
+          )
+        })}
+        {/* sp_event blocks: match by eventId → event title → student event_comment */}
+        {pg.filter(b => b.type === 'sp_event').map((b, i) => {
+          const cfg = b.config as Record<string, unknown>
+          // Find the event title from events list by eventId
+          const eventTitle = cfg.eventId && events
+            ? events.find(e => e.id === (cfg.eventId as string))?.title
+            : null
+          // Match the student's comment by event title (no event_id stored in PDFStudentEvent)
+          const ec = eventTitle ? eventByTitle.get(eventTitle) : student.event_comments[i]
+          if (!ec) return null
+          return (
+            <View key={i} style={{ paddingHorizontal: 28, paddingVertical: 8 }}>
+              {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover', borderRadius: 4 }} />}
+              <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark, marginTop: 2 }}>„{ec.event_title}"</Text>
+              <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
+            </View>
+          )
+        })}
         {hasMsgs(pg) && student.messages.length > 0 && (
           <View style={s.messagesSection}>
             <Text style={s.messagesTitle}>Послания от съучениците</Text>
@@ -1675,6 +1668,7 @@ export function LexiconPDF({ data }: { data: PDFData }) {
           bgPng={data.bg_pattern_png}
           groupLabel={data.groupLabel}
           studentPageBlocks={data.studentPageBlocks}
+          events={data.events}
         />
       ))}
 
