@@ -1032,128 +1032,116 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
     // The i-th sp_question block maps to the i-th answer by index (question_id not stored in PDFAnswer).
     const eventByTitle = new Map(student.event_comments.map(ec => [ec.event_title, ec]))
 
-    const renderPageContent = (pg: typeof page1) => (
-      <>
-        {hasPhoto(pg) && (
-          <View style={s.photoCol}>
-            <View style={s.photoFrame}>
-              {student.photo_url ? (
-                <Image src={student.photo_url} style={s.photoImage} />
-              ) : (
-                <Text style={s.photoInitials}>{initials}</Text>
-              )}
-            </View>
-            <View style={{ height: 3, backgroundColor: C.gold, borderRadius: 2, marginTop: 8, width: 40 }} />
+    const renderPage = (pg: typeof page1, pageId: string) => {
+      const personalAnswers = student.answers.filter(a => !a.question_type || a.question_type === 'personal')
+      const accentAnswers   = student.answers.filter(a => a.question_type === 'better_together' || a.question_type === 'superhero')
+
+      return (
+        <Page size="A4" style={s.page}>
+          <View id={pageId} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
+            <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
+            <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
           </View>
-        )}
-        {hasName(pg) && (
-          <View style={s.infoCol}>
-            <Text style={s.studentName}>{student.first_name}</Text>
-            <Text style={{ ...s.studentName, fontSize: 16, color: C.muted, marginTop: -4, marginBottom: 6 }}>{student.last_name}</Text>
-            <Text style={s.studentClass}>{classInfo.namePart} · {classInfo.school_year}</Text>
-            <View style={s.divider} />
-          </View>
-        )}
-        {/* sp_question blocks: match by index among personal-type answers */}
-        {(() => {
-          const personalAnswers = student.answers.filter(a => !a.question_type || a.question_type === 'personal')
-          return pg.filter(b => b.type === 'sp_question').map((b, i) => {
-            const answer = personalAnswers[i]
-            if (!answer) return null
-            return (
-              <View key={i} style={s.infoCol}>
-                <View style={s.qaBlock}>
-                  <Text style={s.qLabel}>{answer.question_text}</Text>
-                  {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
+
+          {/* Two-column body */}
+          <View style={s.studentBody}>
+            {/* Left: photo */}
+            {hasPhoto(pg) && (
+              <View style={s.photoCol}>
+                <View style={s.photoFrame}>
+                  {student.photo_url ? (
+                    <Image src={student.photo_url} style={s.photoImage} />
+                  ) : (
+                    <Text style={s.photoInitials}>{initials}</Text>
+                  )}
                 </View>
+                <View style={{ height: 3, backgroundColor: C.gold, borderRadius: 2, marginTop: 8, width: 40 }} />
               </View>
-            )
-          })
-        })()}
-        {/* sp_accents: all better_together/superhero answers in a shared block */}
-        {pg.some(b => b.type === 'sp_accents') && (() => {
-          const accentAnswers = student.answers.filter(a => a.question_type === 'better_together' || a.question_type === 'superhero')
-          if (accentAnswers.length === 0) return null
-          return (
-            <View style={[s.infoCol, { paddingHorizontal: 28, paddingBottom: 8 }]}>
-              <Text style={[s.qLabel, { color: '#ca8a04' }]}>★ Акценти</Text>
-              {accentAnswers.map((a, i) => (
-                <View key={i} style={{ marginTop: 4 }}>
-                  <Text style={[s.qLabel, { fontSize: 6.5 }]}>{a.question_text}</Text>
-                  {a.text_content ? <Text style={s.aText}>{a.text_content}</Text> : null}
+            )}
+
+            {/* Right: name + questions + accents + events — all in one column */}
+            <View style={s.infoCol}>
+              {hasName(pg) && (
+                <>
+                  <Text style={s.studentName}>{student.first_name}</Text>
+                  <Text style={{ ...s.studentName, fontSize: 16, color: C.muted, marginTop: -4, marginBottom: 6 }}>{student.last_name}</Text>
+                  <Text style={s.studentClass}>{classInfo.namePart} · {classInfo.school_year}</Text>
+                  <View style={s.divider} />
+                </>
+              )}
+
+              {/* sp_question blocks */}
+              {pg.filter(b => b.type === 'sp_question').map((b, i) => {
+                const answer = personalAnswers[i]
+                if (!answer) return null
+                return (
+                  <View key={i} style={s.qaBlock}>
+                    <Text style={s.qLabel}>{answer.question_text}</Text>
+                    {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
+                  </View>
+                )
+              })}
+
+              {/* sp_accents */}
+              {pg.some(b => b.type === 'sp_accents') && accentAnswers.length > 0 && (
+                <View style={s.qaBlock}>
+                  <Text style={[s.qLabel, { color: '#ca8a04' }]}>★ Акценти</Text>
+                  {accentAnswers.map((a, i) => (
+                    <View key={i} style={{ marginTop: 4 }}>
+                      <Text style={[s.qLabel, { fontSize: 6.5 }]}>{a.question_text}</Text>
+                      {a.text_content ? <Text style={s.aText}>{a.text_content}</Text> : null}
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          )
-        })()}
-        {/* sp_event blocks: match by eventId → event title → student event_comment */}
-        {pg.filter(b => b.type === 'sp_event').map((b, i) => {
-          const cfg = b.config as Record<string, unknown>
-          // Find the event title from events list by eventId
-          const eventTitle = cfg.eventId && events
-            ? events.find(e => e.id === (cfg.eventId as string))?.title
-            : null
-          // Match the student's comment by event title (no event_id stored in PDFStudentEvent)
-          const ec = eventTitle ? eventByTitle.get(eventTitle) : student.event_comments[i]
-          if (!ec) return null
-          return (
-            <View key={i} style={{ paddingHorizontal: 28, paddingVertical: 8 }}>
-              {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover', borderRadius: 4 }} />}
-              <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark, marginTop: 2 }}>„{ec.event_title}"</Text>
-              <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
-            </View>
-          )
-        })}
-        {hasMsgs(pg) && student.messages.length > 0 && (
-          <View style={s.messagesSection}>
-            <Text style={s.messagesTitle}>Послания от съучениците</Text>
-            <View style={s.messagesGrid}>
-              {student.messages.map((msg, i) => (
-                <View key={i} style={s.messageCard}>
-                  <Text style={s.messageText}>„{truncate(msg.content, 160)}"</Text>
-                  <Text style={s.messageAuthor}>— {msg.author_name}</Text>
-                </View>
-              ))}
+              )}
+
+              {/* sp_event blocks */}
+              {pg.filter(b => b.type === 'sp_event').map((b, i) => {
+                const cfg = b.config as Record<string, unknown>
+                const eventTitle = cfg.eventId && events
+                  ? events.find(e => e.id === (cfg.eventId as string))?.title
+                  : null
+                const ec = eventTitle ? eventByTitle.get(eventTitle) : student.event_comments[i]
+                if (!ec) return null
+                return (
+                  <View key={i} style={{ marginBottom: 8 }}>
+                    {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover', borderRadius: 4, marginBottom: 4 }} />}
+                    <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark }}>„{ec.event_title}"</Text>
+                    <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
+                  </View>
+                )
+              })}
             </View>
           </View>
-        )}
-      </>
-    )
+
+          {/* Messages footer — outside body row, full width */}
+          {hasMsgs(pg) && student.messages.length > 0 && (
+            <View style={s.messagesSection}>
+              <Text style={s.messagesTitle}>Послания от съучениците</Text>
+              <View style={s.messagesGrid}>
+                {student.messages.map((msg, i) => (
+                  <View key={i} style={s.messageCard}>
+                    <Text style={s.messageText}>„{truncate(msg.content, 160)}"</Text>
+                    <Text style={s.messageAuthor}>— {msg.author_name}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View style={s.pageFooter}>
+            <Text style={s.pageFooterText} />
+            <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
+          </View>
+          <BgImage png={bgPng} />
+        </Page>
+      )
+    }
 
     return (
       <>
-        {page1.length > 0 && (
-          <Page size="A4" style={s.page}>
-            <View id={`s-${student.id}`} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
-              <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
-              <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
-            </View>
-            <View style={s.studentBody}>
-              {renderPageContent(page1)}
-            </View>
-            <View style={s.pageFooter}>
-              <Text style={s.pageFooterText} />
-              <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
-            </View>
-            <BgImage png={bgPng} />
-          </Page>
-        )}
-        {page2.length > 0 && (
-          <Page size="A4" style={s.page}>
-            <View style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
-              <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
-              <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
-            </View>
-            <View style={s.studentBody}>
-              {renderPageContent(page2)}
-            </View>
-            <View style={s.pageFooter}>
-              <Text style={s.pageFooterText} />
-              <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
-            </View>
-            <BgImage png={bgPng} />
-          </Page>
-        )}
+        {page1.length > 0 && renderPage(page1, `s-${student.id}`)}
+        {page2.length > 0 && renderPage(page2, `s2-${student.id}`)}
       </>
     )
   }
