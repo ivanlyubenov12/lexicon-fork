@@ -1,6 +1,21 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Block, BlockType, LayoutAssets } from '@/lib/templates/types'
 import { createEvent, updateEvent } from '../events/actions'
 import DateInput from '@/components/DateInput'
@@ -106,40 +121,88 @@ interface CanvasProps {
   activeId: string | null
   onSelect: (id: string) => void
   onAssign: (blockId: string, config: Record<string, unknown>) => void
+  onReorder: (blocks: Block[]) => void
   memberLabel?: string | null
   memoriesLabel?: string | null
   starsLabel?: string | null
 }
 
-export default function LayoutCanvas({ blocks, assets, classId, activeId, onSelect, onAssign, memberLabel, memoriesLabel, starsLabel }: CanvasProps) {
+export default function LayoutCanvas({ blocks, assets, classId, activeId, onSelect, onAssign, onReorder, memberLabel, memoriesLabel, starsLabel }: CanvasProps) {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = blocks.findIndex(b => b.id === active.id)
+    const newIndex = blocks.findIndex(b => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    onReorder(arrayMove(blocks, oldIndex, newIndex))
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
-      {blocks.map((block) => (
-        <div
-          key={block.id}
-          className={FULL_WIDTH.has(block.type) || (block.config as Record<string, unknown>).fullWidth ? 'col-span-2' : ''}
-        >
-          <CanvasBlock
-            block={block}
-            assets={assets}
-            classId={classId}
-            isActive={activeId === block.id}
-            onSelect={() => onSelect(block.id)}
-            onAssign={(config) => onAssign(block.id, config)}
-            memberLabel={memberLabel}
-            memoriesLabel={memoriesLabel}
-            starsLabel={starsLabel}
-          />
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8">
+          {blocks.map((block) => (
+            <SortableCanvasBlock
+              key={block.id}
+              block={block}
+              assets={assets}
+              classId={classId}
+              isActive={activeId === block.id}
+              onSelect={() => onSelect(block.id)}
+              onAssign={(config) => onAssign(block.id, config)}
+              memberLabel={memberLabel}
+              memoriesLabel={memoriesLabel}
+              starsLabel={starsLabel}
+            />
+          ))}
         </div>
-      ))}
+      </SortableContext>
+    </DndContext>
+  )
+}
+
+// ── Sortable wrapper ──────────────────────────────────────────────────────────
+
+function SortableCanvasBlock(props: {
+  block: Block
+  assets: LayoutAssets
+  classId: string
+  isActive: boolean
+  onSelect: () => void
+  onAssign: (config: Record<string, unknown>) => void
+  memberLabel?: string | null
+  memoriesLabel?: string | null
+  starsLabel?: string | null
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.block.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  }
+
+  const isFullWidth = FULL_WIDTH.has(props.block.type) || (props.block.config as Record<string, unknown>).fullWidth
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={isFullWidth ? 'col-span-2' : ''}
+    >
+      <CanvasBlock {...props} dragHandleProps={{ ...attributes, ...listeners }} />
     </div>
   )
 }
 
 // ── Per-block wrapper ──────────────────────────────────────────────────────
 
-function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, memberLabel, memoriesLabel, starsLabel }: {
+function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, dragHandleProps, memberLabel, memoriesLabel, starsLabel }: {
   block: Block
+  dragHandleProps?: Record<string, unknown>
   assets: LayoutAssets
   classId: string
   isActive: boolean
@@ -181,6 +244,11 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
           isActive ? 'ring-2 ring-indigo-500 ring-offset-2' : 'hover:ring-2 hover:ring-indigo-300 hover:ring-offset-2'
         } ${isDark ? 'bg-[#12082e] border border-[#3632b7]/30' : isStudentPage ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-800 border border-slate-600/30'} min-h-[60px] flex items-center px-4 gap-3`}
       >
+        <span
+          {...(dragHandleProps ?? {})}
+          onClick={e => e.stopPropagation()}
+          className={`material-symbols-outlined text-base cursor-grab active:cursor-grabbing flex-none ${isStudentPage ? 'text-indigo-300' : 'text-white/20'}`}
+        >drag_indicator</span>
         <span className={`material-symbols-outlined text-lg ${isStudentPage ? 'text-indigo-400' : 'text-white/40'}`}>{meta.icon}</span>
         <div className="flex-1 min-w-0">
           <span className={`text-xs font-bold uppercase tracking-widest ${isStudentPage ? 'text-indigo-600' : 'text-white/60'}`}>{meta.label}</span>
@@ -243,8 +311,14 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
           : 'hover:ring-2 hover:ring-indigo-300 hover:ring-offset-2'
       }`}
     >
-      {/* Block label badge */}
+      {/* Block label badge + drag handle */}
       <div className="absolute -top-3 left-4 z-10 flex items-center gap-1.5">
+        <span
+          {...(dragHandleProps ?? {})}
+          onClick={e => e.stopPropagation()}
+          className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing material-symbols-outlined text-base"
+          title="Премести"
+        >drag_indicator</span>
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
           isActive ? 'bg-indigo-600 text-white' : 'bg-white text-gray-400 border border-gray-200'
         }`}>

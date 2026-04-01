@@ -300,6 +300,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
                 activeId={activeBlockId}
                 onSelect={id => setActiveBlockId(prev => prev === id ? null : id)}
                 onAssign={assignBlock}
+                onReorder={newBlocks => { setPageBlocks(newBlocks); setSaved(false) }}
                 memberLabel={lexiconData.memberLabel}
                 memoriesLabel={lexiconData.memoriesLabel}
                 starsLabel={lexiconData.starsLabel}
