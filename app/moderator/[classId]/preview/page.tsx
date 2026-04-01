@@ -127,7 +127,7 @@ export default async function ModeratorPreviewPage({
       const display = (q.voice_display as 'wordcloud' | 'barchart' | null)
         ?? ((q.order_index ?? 99) <= 1 ? 'barchart' : 'wordcloud')
       const raw = (voiceAnswers.data ?? []).filter(a => a.question_id === q.id).map(a => a.content)
-      const allWords = raw.flatMap(c => c.split(',').map(w => w.trim()).filter(Boolean))
+      const allWords = raw.flatMap(c => c.split(',').map((w: string) => w.trim()).filter(Boolean))
       const total = raw.length
       const freq: Record<string, number> = {}
       for (const w of allWords) { const k = w.toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
