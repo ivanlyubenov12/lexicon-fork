@@ -243,6 +243,8 @@ export default function PdfBuilderClient({ classId }: Props) {
         return r.json()
       })
       .then((data: PDFData) => {
+        console.log('[PDF Builder] coverBlocks from API:', data.coverBlocks)
+        console.log('[PDF Builder] closingBlocks from API:', data.closingBlocks)
         setPdfData(data)
         const built = buildSections(data)
         setSections(built)

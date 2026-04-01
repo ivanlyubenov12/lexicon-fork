@@ -63,6 +63,7 @@ export async function savePageLayout(
   if (pageId === 'group') update.is_customized = true
 
   const { error } = await admin.from('classes').update(update).eq('id', classId)
+  console.log('[savePageLayout] pageId:', pageId, '| blocks count:', blocks.length, '| error:', error?.message ?? null)
   return { error: error?.message ?? null }
 }
 
