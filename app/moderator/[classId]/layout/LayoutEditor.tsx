@@ -326,7 +326,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
               />
             )}
             {activePage === 'cover' && (
-              <CoverPagePreview blocks={blocks} assets={assets} />
+              <CoverPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
             )}
             {activePage === 'closing' && (
               <ClosingPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />

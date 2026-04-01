@@ -1,8 +1,9 @@
 'use client'
 
 import type { Block, LayoutAssets } from '@/lib/templates/types'
+import type { LexiconData } from '@/app/lexicon/[classId]/LexiconBlocks'
 
-export default function CoverPagePreview({ blocks, assets }: { blocks: Block[]; assets: LayoutAssets }) {
+export default function CoverPagePreview({ blocks, assets, lexiconData }: { blocks: Block[]; assets: LayoutAssets; lexiconData: LexiconData }) {
   if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400 text-sm gap-2">
@@ -46,15 +47,17 @@ export default function CoverPagePreview({ blocks, assets }: { blocks: Block[]; 
       case 'cover_class_name':
         return (
           <div className="text-center px-10 py-3">
-            <p className="text-3xl font-bold text-white" style={{ fontFamily: 'Noto Serif, serif' }}>Клас / Група</p>
-            <p className="text-base text-white/40 mt-1">Училище</p>
+            <p className="text-3xl font-bold text-white" style={{ fontFamily: 'Noto Serif, serif' }}>{lexiconData.namePart}</p>
+            {lexiconData.schoolPart && <p className="text-base text-white/40 mt-1">{lexiconData.schoolPart}</p>}
           </div>
         )
 
       case 'cover_year':
         return (
           <div className="text-center py-2">
-            <p className="text-lg font-bold" style={{ color: '#3632b7' }}>2024/2025</p>
+            <p className="text-lg font-bold" style={{ color: '#3632b7' }}>
+              {lexiconData.classData?.name?.split(' — ')[1] ?? '2024/2025'}
+            </p>
           </div>
         )
 
