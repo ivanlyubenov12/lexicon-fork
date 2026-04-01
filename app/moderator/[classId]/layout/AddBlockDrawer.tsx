@@ -23,6 +23,15 @@ const COVER_BLOCKS: Array<{ type: BlockType; label: string; icon: string; descri
   { type: 'cover_tagline',    label: 'Слоган',                icon: 'format_quote',   description: 'Кратък слоган или мото.' },
 ]
 
+const STUDENT_PAGE_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
+  { type: 'sp_photo',              label: 'Снимка',               icon: 'portrait',       description: 'Портретна снимка на участника.' },
+  { type: 'sp_name',               label: 'Име',                  icon: 'badge',          description: 'Трите имена и клас.' },
+  { type: 'sp_featured_questions', label: 'Основни въпроси',      icon: 'star',           description: 'Първата половина от отговорите.' },
+  { type: 'sp_questions',          label: 'Останали въпроси',     icon: 'quiz',           description: 'Втората половина от отговорите.' },
+  { type: 'sp_event_comments',     label: 'Спомени от събития',   icon: 'photo_album',    description: 'Снимки и коментари от събития.' },
+  { type: 'sp_peer_messages',      label: 'Послания',             icon: 'mail',           description: 'Послания от съучениците.' },
+]
+
 const CLOSING_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
   { type: 'closing_logo',          label: 'Лого',                icon: 'school',        description: 'Лого на училището.' },
   { type: 'closing_title',         label: 'Заглавие',            icon: 'title',         description: 'Името на класа.' },
@@ -40,7 +49,7 @@ interface Props {
 }
 
 export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes }: Props) {
-  const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : ALL_BLOCKS
+  const visibleBlocks = pageId === 'student_page' ? STUDENT_PAGE_BLOCKS : pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : ALL_BLOCKS
 
   return (
     <>

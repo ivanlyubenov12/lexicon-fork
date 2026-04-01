@@ -9,6 +9,7 @@ const INHERENTLY_FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+  'sp_photo', 'sp_name', 'sp_featured_questions', 'sp_questions', 'sp_event_comments', 'sp_peer_messages',
 ])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string }> = {
@@ -33,6 +34,12 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
   closing_quote:         { label: 'Цитат',            icon: 'format_quote',      color: 'bg-indigo-50 text-indigo-700'},
   closing_student_count: { label: 'Брой участници',  icon: 'people',            color: 'bg-indigo-50 text-indigo-700'},
   closing_colophon:      { label: 'Колофон',          icon: 'copyright',         color: 'bg-indigo-50 text-indigo-700'},
+  sp_photo:              { label: 'Снимка',           icon: 'portrait',          color: 'bg-indigo-50 text-indigo-700'},
+  sp_name:               { label: 'Име',              icon: 'badge',             color: 'bg-blue-50 text-blue-700'   },
+  sp_featured_questions: { label: 'Основни въпроси',  icon: 'star',              color: 'bg-amber-50 text-amber-700' },
+  sp_questions:          { label: 'Останали въпроси', icon: 'quiz',              color: 'bg-purple-50 text-purple-700'},
+  sp_event_comments:     { label: 'Спомени',          icon: 'photo_album',       color: 'bg-teal-50 text-teal-700'   },
+  sp_peer_messages:      { label: 'Послания',         icon: 'mail',              color: 'bg-rose-50 text-rose-700'   },
 }
 
 interface Props {
@@ -146,6 +153,34 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
   classId: string
   set: (key: string, value: unknown) => void
 }) {
+  // Student page blocks — show page selector
+  if (type.startsWith('sp_')) {
+    const currentPage = (cfg.page as number | undefined) ?? 1
+    return (
+      <div className="p-4 space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Страница</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[1, 2].map(p => (
+              <button
+                key={p}
+                onClick={() => set('page', p)}
+                className={`py-3 rounded-xl border text-sm font-bold transition-all ${
+                  currentPage === p
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                }`}
+              >
+                Страница {p}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">На коя страница се появява този блок</p>
+        </div>
+      </div>
+    )
+  }
+
   switch (type) {
 
     case 'question':

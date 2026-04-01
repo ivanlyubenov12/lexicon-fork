@@ -314,6 +314,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     groupLabel: (cls as any).group_label ?? null,
     coverBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.cover; return Array.isArray(v) ? v as any : null })(),
     closingBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.closing; return Array.isArray(v) ? v as any : null })(),
+    studentPageBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.student_page; return Array.isArray(v) ? v as any : null })(),
     classInfo: {
       name: cls.name,
       namePart,

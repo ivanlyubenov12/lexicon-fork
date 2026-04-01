@@ -11,6 +11,7 @@ import AddBlockDrawer from './AddBlockDrawer'
 import BlockConfigDrawer from './BlockConfigDrawer'
 import CoverPagePreview from './CoverPagePreview'
 import ClosingPagePreview from './ClosingPagePreview'
+import StudentPagePreview from './StudentPagePreview'
 import { nanoid } from 'nanoid'
 import { templatePresets } from '@/lib/templates/presets'
 
@@ -25,7 +26,7 @@ const PAGES: Array<{ id: PageId; label: string; icon: string; available: boolean
   { id: 'cover',        label: 'Корица',          icon: 'auto_stories',  available: true  },
   { id: 'group',        label: 'Групата',          icon: 'groups',        available: true  },
   { id: 'students',     label: 'Участници',        icon: 'people',        available: false },
-  { id: 'student_page', label: 'Лични страници',   icon: 'person',        available: false },
+  { id: 'student_page', label: 'Лични страници',   icon: 'person',        available: true  },
   { id: 'memories',     label: 'Спомени',          icon: 'photo_album',   available: false },
   { id: 'closing',      label: 'Задна корица',     icon: 'menu_book',     available: true  },
 ]
@@ -51,6 +52,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => ({
     group: initialBlocks,
     cover: [],
+    student_page: [],
     closing: [],
     ...(pageLayouts as Record<string, Block[]>),
   }))
@@ -112,7 +114,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
 
   function addBlock(type: BlockType) {
     const b: Block = { id: nanoid(8), type, config: {} }
-    if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing') {
+    if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing' || activePage === 'student_page') {
       setPageBlocks(prev => [...prev, b])
       setActiveBlockId(b.id)
     } else {
@@ -289,7 +291,10 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
             {activePage === 'closing' && (
               <ClosingPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
             )}
-            {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && (
+            {activePage === 'student_page' && (
+              <StudentPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
+            )}
+            {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && activePage !== 'student_page' && (
               <div className="p-8 text-center text-gray-400 text-sm">Тази страница ще бъде налична скоро.</div>
             )}
           </div>

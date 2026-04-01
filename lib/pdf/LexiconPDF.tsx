@@ -1002,18 +1002,150 @@ export function ClassOverviewPage({ data, theme, options }: { data: PDFData; the
 
 // ─── Student Page ────────────────────────────────────────────────────────────
 
-export function StudentPage({ student, classInfo, bgPng, theme, options, groupLabel }: {
+export function StudentPage({ student, classInfo, bgPng, theme, options, groupLabel, studentPageBlocks }: {
   student: PDFStudent
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
   theme?: PDFTheme
   options?: PageOptions
   groupLabel?: string | null
+  studentPageBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
 }) {
   const initials = [student.first_name?.[0], student.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'
   const videoQrs = student.video_qrs.filter(v => v.qr_png)
   const t = theme ?? DEFAULT_THEME
   const opts = (options ?? {}) as StudentOptions
+
+  // Block-driven 2-page rendering
+  const spBlocks = Array.isArray(studentPageBlocks) ? studentPageBlocks : null
+  if (spBlocks && spBlocks.length > 0) {
+    const page1 = spBlocks.filter(b => (b.config.page as number | undefined) !== 2)
+    const page2 = spBlocks.filter(b => (b.config.page as number | undefined) === 2)
+
+    const hasPhoto  = (pg: typeof page1) => pg.some(b => b.type === 'sp_photo')
+    const hasName   = (pg: typeof page1) => pg.some(b => b.type === 'sp_name')
+    const hasFeatQ  = (pg: typeof page1) => pg.some(b => b.type === 'sp_featured_questions')
+    const hasQ      = (pg: typeof page1) => pg.some(b => b.type === 'sp_questions')
+    const hasEvents = (pg: typeof page1) => pg.some(b => b.type === 'sp_event_comments')
+    const hasMsgs   = (pg: typeof page1) => pg.some(b => b.type === 'sp_peer_messages')
+
+    // Split answers: featured questions = first half, questions = second half
+    const half = Math.ceil(student.answers.length / 2)
+    const featuredAnswers = student.answers.slice(0, half)
+    const remainingAnswers = student.answers.slice(half)
+
+    const renderAnswers = (answers: typeof student.answers) => answers.map((qa, i) => (
+      <View key={i} style={s.qaBlock}>
+        <Text style={s.qLabel}>{qa.question_text}</Text>
+        {qa.text_content ? (
+          <Text style={s.aText}>{qa.text_content}</Text>
+        ) : null}
+      </View>
+    ))
+
+    const renderPageContent = (pg: typeof page1) => (
+      <>
+        {hasPhoto(pg) && (
+          <View style={s.photoCol}>
+            <View style={s.photoFrame}>
+              {student.photo_url ? (
+                <Image src={student.photo_url} style={s.photoImage} />
+              ) : (
+                <Text style={s.photoInitials}>{initials}</Text>
+              )}
+            </View>
+            <View style={{ height: 3, backgroundColor: C.gold, borderRadius: 2, marginTop: 8, width: 40 }} />
+          </View>
+        )}
+        {hasName(pg) && (
+          <View style={s.infoCol}>
+            <Text style={s.studentName}>{student.first_name}</Text>
+            <Text style={{ ...s.studentName, fontSize: 16, color: C.muted, marginTop: -4, marginBottom: 6 }}>{student.last_name}</Text>
+            <Text style={s.studentClass}>{classInfo.namePart} · {classInfo.school_year}</Text>
+            <View style={s.divider} />
+          </View>
+        )}
+        {hasFeatQ(pg) && featuredAnswers.length > 0 && (
+          <View style={s.infoCol}>
+            {renderAnswers(featuredAnswers)}
+          </View>
+        )}
+        {hasQ(pg) && remainingAnswers.length > 0 && (
+          <View style={s.infoCol}>
+            {renderAnswers(remainingAnswers)}
+          </View>
+        )}
+        {hasEvents(pg) && student.event_comments.length > 0 && (
+          <View style={{ paddingHorizontal: 28, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.border }}>
+            <Text style={{ fontSize: 7, fontWeight: 'bold', color: C.gold, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8 }}>
+              Моите спомени с {groupLabel ? groupLabel.toLowerCase() : 'класа'}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {student.event_comments.map((ec, i) => (
+                <View key={i} style={{ width: 130, backgroundColor: C.white, borderWidth: 1, borderColor: C.border, borderRadius: 4, overflow: 'hidden' }}>
+                  {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover' }} />}
+                  <View style={{ padding: 5 }}>
+                    <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark, marginBottom: 2 }}>„{ec.event_title}"</Text>
+                    <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+        {hasMsgs(pg) && student.messages.length > 0 && (
+          <View style={s.messagesSection}>
+            <Text style={s.messagesTitle}>Послания от съучениците</Text>
+            <View style={s.messagesGrid}>
+              {student.messages.map((msg, i) => (
+                <View key={i} style={s.messageCard}>
+                  <Text style={s.messageText}>„{truncate(msg.content, 160)}"</Text>
+                  <Text style={s.messageAuthor}>— {msg.author_name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </>
+    )
+
+    return (
+      <>
+        {page1.length > 0 && (
+          <Page size="A4" style={s.page}>
+            <View id={`s-${student.id}`} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
+              <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
+              <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
+            </View>
+            <View style={s.studentBody}>
+              {renderPageContent(page1)}
+            </View>
+            <View style={s.pageFooter}>
+              <Text style={s.pageFooterText} />
+              <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
+            </View>
+            <BgImage png={bgPng} />
+          </Page>
+        )}
+        {page2.length > 0 && (
+          <Page size="A4" style={s.page}>
+            <View style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
+              <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
+              <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
+            </View>
+            <View style={s.studentBody}>
+              {renderPageContent(page2)}
+            </View>
+            <View style={s.pageFooter}>
+              <Text style={s.pageFooterText} />
+              <Text style={s.pageFooterText} render={({ pageNumber }) => `${pageNumber}`} />
+            </View>
+            <BgImage png={bgPng} />
+          </Page>
+        )}
+      </>
+    )
+  }
 
   return (
     <Page size="A4" style={s.page}>
@@ -1542,6 +1674,7 @@ export function LexiconPDF({ data }: { data: PDFData }) {
           classInfo={data.classInfo}
           bgPng={data.bg_pattern_png}
           groupLabel={data.groupLabel}
+          studentPageBlocks={data.studentPageBlocks}
         />
       ))}
 

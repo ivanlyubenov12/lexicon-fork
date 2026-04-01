@@ -12,6 +12,7 @@ const FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+  'sp_photo', 'sp_name', 'sp_featured_questions', 'sp_questions', 'sp_event_comments', 'sp_peer_messages',
 ])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: string }> = {
@@ -36,6 +37,12 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   closing_quote:         { label: 'Цитат',            icon: 'format_quote',      addLabel: 'Цитат' },
   closing_student_count: { label: 'Брой участници',  icon: 'people',            addLabel: 'Брой участници' },
   closing_colophon:      { label: 'Колофон',          icon: 'copyright',         addLabel: 'Колофон' },
+  sp_photo:              { label: 'Снимка',             icon: 'portrait',    addLabel: 'Снимка' },
+  sp_name:               { label: 'Име',                icon: 'badge',       addLabel: 'Име' },
+  sp_featured_questions: { label: 'Основни въпроси',    icon: 'star',        addLabel: 'Основни въпроси' },
+  sp_questions:          { label: 'Останали въпроси',   icon: 'quiz',        addLabel: 'Въпроси' },
+  sp_event_comments:     { label: 'Спомени',            icon: 'photo_album', addLabel: 'Спомени' },
+  sp_peer_messages:      { label: 'Послания',           icon: 'mail',        addLabel: 'Послания' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -145,23 +152,28 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
   const isAssignable = options.length > 0
   const needsPicker = isAssignable && !linked
 
-  // Cover / Closing static blocks — no picker needed, show styled placeholder
+  // Cover / Closing / Student Page static blocks — no picker needed, show styled placeholder
   const isCoverClosing = block.type.startsWith('cover_') || block.type.startsWith('closing_')
-  if (isCoverClosing) {
+  const isStudentPage = block.type.startsWith('sp_')
+  if (isCoverClosing || isStudentPage) {
+    const cfg = block.config as Record<string, unknown>
+    const pageNum = cfg.page as number | undefined
     const isDark = block.type.startsWith('closing_')
+    const pageLabel = isStudentPage ? (pageNum === 2 ? 'Страница 2' : 'Страница 1') : null
     return (
       <div
         onClick={onSelect}
         className={`relative cursor-pointer rounded-2xl transition-all duration-200 ${
-          isActive
-            ? 'ring-2 ring-indigo-500 ring-offset-2'
-            : 'hover:ring-2 hover:ring-indigo-300 hover:ring-offset-2'
-        } ${isDark ? 'bg-[#12082e] border border-[#3632b7]/30' : 'bg-slate-800 border border-slate-600/30'} min-h-[60px] flex items-center px-4 gap-3`}
+          isActive ? 'ring-2 ring-indigo-500 ring-offset-2' : 'hover:ring-2 hover:ring-indigo-300 hover:ring-offset-2'
+        } ${isDark ? 'bg-[#12082e] border border-[#3632b7]/30' : isStudentPage ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-800 border border-slate-600/30'} min-h-[60px] flex items-center px-4 gap-3`}
       >
-        <span className="material-symbols-outlined text-lg text-white/40">{meta.icon}</span>
-        <span className="text-xs font-bold text-white/60 uppercase tracking-widest">{meta.label}</span>
-        {isActive && (
-          <span className="ml-auto text-[10px] text-white/40">Избрано</span>
+        <span className={`material-symbols-outlined text-lg ${isStudentPage ? 'text-indigo-400' : 'text-white/40'}`}>{meta.icon}</span>
+        <span className={`text-xs font-bold uppercase tracking-widest ${isStudentPage ? 'text-indigo-600' : 'text-white/60'}`}>{meta.label}</span>
+        {pageLabel && (
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-500">{pageLabel}</span>
+        )}
+        {isActive && !pageLabel && (
+          <span className={`ml-auto text-[10px] ${isStudentPage ? 'text-indigo-400' : 'text-white/40'}`}>Избрано</span>
         )}
       </div>
     )

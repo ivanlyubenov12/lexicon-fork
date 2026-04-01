@@ -20,6 +20,12 @@ export type BlockType =
   | 'closing_quote'
   | 'closing_student_count'
   | 'closing_colophon'
+  | 'sp_photo'
+  | 'sp_name'
+  | 'sp_featured_questions'
+  | 'sp_questions'
+  | 'sp_event_comments'
+  | 'sp_peer_messages'
 
 export interface HeroBlockConfig {
   title?: string
