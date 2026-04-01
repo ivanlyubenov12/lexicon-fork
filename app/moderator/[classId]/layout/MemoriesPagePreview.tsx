@@ -20,12 +20,12 @@ export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
       case 'mem_photos': {
         const cols = (cfg.cols as number) ?? 3
         return (
-          <div className="mb-3">
-            <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Снимки</div>
-            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+          <div className="mb-6">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Снимки</div>
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
               {Array.from({ length: cols * 2 }).map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded aspect-[4/3] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-gray-300" style={{ fontSize: 14 }}>image</span>
+                <div key={i} className="bg-gray-100 rounded-lg aspect-[4/3] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-gray-300" style={{ fontSize: 28 }}>image</span>
                 </div>
               ))}
             </div>
@@ -34,27 +34,29 @@ export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
       }
       case 'mem_note':
         return (
-          <div className="mb-3">
-            <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Бележка</div>
-            <div className="space-y-1">
-              <div className="h-1.5 bg-gray-100 rounded w-full" />
-              <div className="h-1.5 bg-gray-100 rounded w-5/6" />
-              <div className="h-1.5 bg-gray-100 rounded w-4/5" />
+          <div className="mb-6">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Бележка</div>
+            <div className="space-y-2">
+              <div className="h-3 bg-gray-100 rounded w-full" />
+              <div className="h-3 bg-gray-100 rounded w-5/6" />
+              <div className="h-3 bg-gray-100 rounded w-4/5" />
+              <div className="h-3 bg-gray-100 rounded w-3/4" />
             </div>
           </div>
         )
       case 'mem_comments':
         return (
-          <div className="mb-2">
-            <div className="text-[9px] font-bold uppercase tracking-wide mb-1.5" style={{ color: accent }}>Коментари от класа</div>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mb-4">
+            <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: accent }}>Коментари от класа</div>
+            <div className="grid grid-cols-2 gap-4">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} className="flex gap-1.5 items-start">
-                  <div className="w-4 h-4 rounded-full bg-gray-200 flex-none" />
-                  <div className="flex-1 space-y-1">
-                    <div className="h-1 bg-gray-200 rounded w-2/3" />
-                    <div className="h-1 bg-gray-100 rounded w-full" />
-                    <div className="h-1 bg-gray-100 rounded w-5/6" />
+                <div key={i} className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex-none" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-2.5 bg-gray-200 rounded w-2/3" />
+                    <div className="h-2 bg-gray-100 rounded w-full" />
+                    <div className="h-2 bg-gray-100 rounded w-5/6" />
+                    <div className="h-2 bg-gray-100 rounded w-4/5" />
                   </div>
                 </div>
               ))}
@@ -68,15 +70,15 @@ export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
 
   return (
     <div>
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+      <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
         {/* Header strip */}
-        <div className="px-4 py-3" style={{ backgroundColor: accent }}>
-          <div className="text-[8px] font-bold text-white/60 uppercase tracking-widest mb-0.5">Нашите спомени</div>
-          <div className="text-sm font-bold text-white">Пролетен поход</div>
-          <div className="text-[8px] text-white/60 mt-0.5">18 април 2025</div>
+        <div className="px-6 py-5" style={{ backgroundColor: accent }}>
+          <div className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Нашите спомени</div>
+          <div className="text-2xl font-bold text-white" style={{ fontFamily: 'Noto Serif, serif' }}>Пролетен поход</div>
+          <div className="text-sm text-white/50 mt-1">18 април 2025</div>
         </div>
         {/* Content */}
-        <div className="p-4">
+        <div className="p-6">
           {blocks.map(b => (
             <div key={b.id}>{renderBlock(b)}</div>
           ))}
