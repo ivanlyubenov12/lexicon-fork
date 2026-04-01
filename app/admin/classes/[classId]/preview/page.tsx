@@ -76,7 +76,7 @@ export default async function AdminPreviewPage({ params }: { params: Promise<{ c
     ])
     for (const q of qTexts.data ?? []) {
       const raw = (voiceAnswers.data ?? []).filter(a => a.question_id === q.id).map(a => a.content)
-      const allWords = raw.flatMap(c => c.split(',').map(w => w.trim()).filter(Boolean))
+      const allWords = raw.flatMap(c => c.split(',').map((w: string) => w.trim()).filter(Boolean))
       const freq: Record<string, number> = {}
       for (const w of allWords) { const k = w.toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
       const maxF = Math.max(...Object.values(freq), 1)
