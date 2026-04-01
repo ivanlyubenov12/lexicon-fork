@@ -23,7 +23,7 @@ export default function ClosingPagePreview({ blocks, assets, lexiconData }: { bl
   const memberCount = lexiconData.studentList?.length ?? 0
 
   return (
-    <div className="max-w-xs mx-auto">
+    <div>
       <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#12082e', minHeight: 400 }}>
         <div className="h-2" style={{ background: '#3632b7' }} />
 

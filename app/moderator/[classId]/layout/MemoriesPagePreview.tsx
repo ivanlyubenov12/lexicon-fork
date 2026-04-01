@@ -67,7 +67,7 @@ export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
   }
 
   return (
-    <div className="max-w-sm mx-auto">
+    <div>
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
         {/* Header strip */}
         <div className="px-4 py-3" style={{ backgroundColor: accent }}>

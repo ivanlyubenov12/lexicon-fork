@@ -136,7 +136,7 @@ export default function StudentPagePreview({ blocks, assets, lexiconData }: {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div>
       <div className="flex gap-4 mb-3">
         <PageLayout pageNum={1} pageBlocks={page1Blocks} />
         <PageLayout pageNum={2} pageBlocks={page2Blocks} />

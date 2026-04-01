@@ -21,7 +21,7 @@ export default function CoverPagePreview({ blocks, assets }: { blocks: Block[]; 
   const taglineText = (blocks.find(b => b.type === 'cover_tagline')?.config as Record<string, unknown>)?.text as string | undefined
 
   return (
-    <div className="max-w-xs mx-auto">
+    <div>
       <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#12082e', minHeight: 400 }}>
         {/* top bar */}
         <div className="h-2" style={{ background: '#3632b7' }} />
