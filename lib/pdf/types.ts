@@ -77,6 +77,8 @@ export interface PDFData {
   starsLabel?: string | null
   memberLabel?: string | null
   groupLabel?: string | null
+  coverBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
+  closingBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
   classInfo: {
     name: string
     namePart: string

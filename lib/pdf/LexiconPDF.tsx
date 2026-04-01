@@ -707,6 +707,59 @@ export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDF
   const { classInfo } = data
   const t = theme ?? DEFAULT_THEME
   const opts = (options ?? {}) as CoverOptions
+
+  // Block-driven rendering when page_layouts.cover is configured
+  const blocks = data.coverBlocks
+  if (blocks && blocks.length > 0) {
+    const hasLogo    = blocks.some(b => b.type === 'cover_logo')
+    const hasPhoto   = blocks.some(b => b.type === 'cover_photo')
+    const hasTitle   = blocks.some(b => b.type === 'cover_class_name')
+    const hasYear    = blocks.some(b => b.type === 'cover_year')
+    const hasTagline = blocks.some(b => b.type === 'cover_tagline')
+    const taglineText = (blocks.find(b => b.type === 'cover_tagline')?.config?.text as string | undefined) || 'Малки спомени'
+
+    return (
+      <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
+        <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
+        <View style={[s.coverBottomBar, { backgroundColor: t.accentColor }]} />
+
+        <View style={s.coverContent}>
+          {hasLogo && classInfo.school_logo_url && (
+            <View style={{ marginBottom: 20, alignItems: 'center' }}>
+              <Image src={classInfo.school_logo_url} style={{ width: 64, height: 64, objectFit: 'contain' }} />
+            </View>
+          )}
+
+          {hasPhoto && classInfo.cover_image_url && (
+            <View style={{ width: '100%', marginBottom: 16 }}>
+              <Image src={classInfo.cover_image_url} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 6 }} />
+            </View>
+          )}
+
+          {hasTagline && (
+            <Text style={[s.coverTagline, { color: t.accentColor }]}>{taglineText}</Text>
+          )}
+
+          {hasTitle && (
+            <>
+              <Text style={s.coverTitle}>{classInfo.namePart}</Text>
+              {classInfo.schoolPart && (
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8, textAlign: 'center' }}>
+                  {classInfo.schoolPart}
+                </Text>
+              )}
+            </>
+          )}
+
+          {hasYear && (
+            <Text style={[s.coverYear, { color: t.accentColor }]}>{classInfo.school_year}</Text>
+          )}
+        </View>
+      </Page>
+    )
+  }
+
+  // Default rendering (no page_layouts configured)
   return (
     <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
       <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
@@ -1340,6 +1393,72 @@ export function ClosingPage({ data, theme }: { data: PDFData; theme?: PDFTheme }
   const { classInfo } = data
   const t = theme ?? DEFAULT_THEME
   const year = classInfo.school_year?.split('/')[0] ?? new Date().getFullYear().toString()
+  const memberWord = (data.preset === 'friends' || data.preset === 'sports' || data.preset === 'kindergarten') ? 'участника' : 'ученика'
+
+  // Block-driven rendering when page_layouts.closing is configured
+  const blocks = data.closingBlocks
+  if (blocks && blocks.length > 0) {
+    const hasLogo    = blocks.some(b => b.type === 'closing_logo')
+    const hasTitle   = blocks.some(b => b.type === 'closing_title')
+    const hasYear    = blocks.some(b => b.type === 'closing_year')
+    const hasQuote   = blocks.some(b => b.type === 'closing_quote')
+    const hasCount   = blocks.some(b => b.type === 'closing_student_count')
+    const hasColophon = blocks.some(b => b.type === 'closing_colophon')
+    const quoteText = (blocks.find(b => b.type === 'closing_quote')?.config?.text as string | undefined)
+
+    return (
+      <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
+        <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
+        <View style={[s.coverBottomBar, { backgroundColor: t.accentColor }]} />
+
+        <View style={s.coverContent}>
+          {hasLogo && classInfo.school_logo_url && (
+            <View style={{ marginBottom: 20, alignItems: 'center' }}>
+              <Image src={classInfo.school_logo_url} style={{ width: 56, height: 56, objectFit: 'contain' }} />
+            </View>
+          )}
+
+          {hasTitle && (
+            <>
+              <Text style={[s.coverTagline, { color: t.accentColor }]}>Малки спомени</Text>
+              <Text style={s.coverTitle}>{classInfo.namePart}</Text>
+              {classInfo.schoolPart && (
+                <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 8, textAlign: 'center' }}>
+                  {classInfo.schoolPart}
+                </Text>
+              )}
+            </>
+          )}
+
+          {hasYear && (
+            <Text style={[s.coverYear, { color: t.accentColor }]}>{classInfo.school_year}</Text>
+          )}
+
+          {(hasCount || hasQuote) && <View style={s.coverDivider} />}
+
+          {hasCount && (
+            <Text style={{ ...s.coverQuote, fontSize: 9 }}>
+              Тази книга пази спомените на {data.students.length} {memberWord} от учебната {classInfo.school_year} година.
+            </Text>
+          )}
+
+          {hasQuote && quoteText && (
+            <Text style={s.coverQuote}>„{quoteText}"</Text>
+          )}
+        </View>
+
+        {hasColophon && (
+          <View style={{ position: 'absolute', bottom: 28, left: 0, right: 0, alignItems: 'center' }}>
+            <Text style={{ fontSize: 7, color: 'rgba(255,255,255,0.25)', letterSpacing: 1 }}>
+              © {year} · mini-memories.com
+            </Text>
+          </View>
+        )}
+      </Page>
+    )
+  }
+
+  // Default rendering
   return (
     <Page size="A4" style={[s.coverPage, { backgroundColor: t.coverBg }]}>
       <View style={[s.coverTopBar, { backgroundColor: t.accentColor }]} />
@@ -1369,11 +1488,7 @@ export function ClosingPage({ data, theme }: { data: PDFData; theme?: PDFTheme }
 
         <Text style={{ ...s.coverQuote, fontSize: 9 }}>
           Тази книга е създадена с помощта на платформата Малки спомени.{'\n'}
-          Тя пази спомените на {data.students.length} {
-            (data.preset === 'friends' || data.preset === 'sports' || data.preset === 'kindergarten')
-              ? 'участника'
-              : 'ученика'
-          } от учебната {classInfo.school_year} година.
+          Тя пази спомените на {data.students.length} {memberWord} от учебната {classInfo.school_year} година.
         </Text>
       </View>
 
