@@ -710,7 +710,6 @@ export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDF
 
   // Block-driven rendering when page_layouts.cover is configured
   const blocks = Array.isArray(data.coverBlocks) ? data.coverBlocks : null
-  console.log('[CoverPage] coverBlocks:', JSON.stringify(data.coverBlocks), '| blocks:', blocks?.length)
   if (blocks && blocks.length > 0) {
     const hasLogo    = blocks.some(b => b.type === 'cover_logo')
     const hasPhoto   = blocks.some(b => b.type === 'cover_photo')
@@ -732,8 +731,8 @@ export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDF
           )}
 
           {hasPhoto && classInfo.cover_image_url && (
-            <View style={{ width: '100%', marginBottom: 16 }}>
-              <Image src={classInfo.cover_image_url} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 6 }} />
+            <View style={{ width: 475, marginBottom: 16 }}>
+              <Image src={classInfo.cover_image_url} style={{ width: 475, height: 280, objectFit: 'cover', borderRadius: 6 }} />
             </View>
           )}
 
