@@ -26,6 +26,9 @@ export type BlockType =
   | 'sp_accents'
   | 'sp_event'
   | 'sp_peer_messages'
+  | 'mem_photos'
+  | 'mem_note'
+  | 'mem_comments'
 
 export interface HeroBlockConfig {
   title?: string
@@ -82,6 +85,7 @@ export interface ClosingQuoteBlockConfig { text?: string }
 
 export interface SpQuestionBlockConfig { questionId?: string | null; page?: 1 | 2 }
 export interface SpEventBlockConfig { eventId?: string | null; page?: 1 | 2 }
+export interface MemPhotosBlockConfig { cols?: 2 | 3 }
 
 export type BlockConfig =
   | HeroBlockConfig
@@ -98,6 +102,8 @@ export type BlockConfig =
   | ClosingQuoteBlockConfig
   | SpQuestionBlockConfig
   | SpEventBlockConfig
+  | MemPhotosBlockConfig
+  | Record<string, unknown>
 
 export interface Block {
   id: string

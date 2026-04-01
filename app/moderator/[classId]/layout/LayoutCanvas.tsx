@@ -13,6 +13,7 @@ const FULL_WIDTH: Set<BlockType> = new Set([
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
   'sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages',
+  'mem_photos', 'mem_note', 'mem_comments',
 ])
 
 const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: string }> = {
@@ -43,6 +44,9 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   sp_accents:       { label: 'Акценти', icon: 'star',        addLabel: 'Акценти' },
   sp_event:         { label: 'Събитие', icon: 'photo_album', addLabel: 'Събитие' },
   sp_peer_messages: { label: 'Послания',icon: 'mail',        addLabel: 'Послания' },
+  mem_photos:   { label: 'Снимки',    icon: 'photo_library', addLabel: 'Снимки' },
+  mem_note:     { label: 'Бележка',   icon: 'notes',         addLabel: 'Бележка' },
+  mem_comments: { label: 'Коментари', icon: 'chat',          addLabel: 'Коментари' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

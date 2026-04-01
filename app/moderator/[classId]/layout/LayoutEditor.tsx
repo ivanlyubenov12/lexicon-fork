@@ -12,6 +12,7 @@ import BlockConfigDrawer from './BlockConfigDrawer'
 import CoverPagePreview from './CoverPagePreview'
 import ClosingPagePreview from './ClosingPagePreview'
 import StudentPagePreview from './StudentPagePreview'
+import MemoriesPagePreview from './MemoriesPagePreview'
 import { nanoid } from 'nanoid'
 import { templatePresets } from '@/lib/templates/presets'
 
@@ -27,7 +28,7 @@ const PAGES: Array<{ id: PageId; label: string; icon: string; available: boolean
   { id: 'group',        label: 'Групата',          icon: 'groups',        available: true  },
   { id: 'students',     label: 'Участници',        icon: 'people',        available: false },
   { id: 'student_page', label: 'Лични страници',   icon: 'person',        available: true  },
-  { id: 'memories',     label: 'Спомени',          icon: 'photo_album',   available: false },
+  { id: 'memories',     label: 'Спомени',          icon: 'photo_album',   available: true  },
   { id: 'closing',      label: 'Задна корица',     icon: 'menu_book',     available: true  },
 ]
 
@@ -35,6 +36,7 @@ const FULL_WIDTH_TYPES: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
+  'mem_photos', 'mem_note', 'mem_comments',
 ])
 
 interface Props {
@@ -66,6 +68,14 @@ function defaultStudentPageBlocks(assets: LayoutAssets): Block[] {
   return blocks
 }
 
+function defaultMemoriesBlocks(): Block[] {
+  return [
+    { id: nanoid(8), type: 'mem_photos', config: { cols: 3 } },
+    { id: nanoid(8), type: 'mem_note', config: {} },
+    { id: nanoid(8), type: 'mem_comments', config: {} },
+  ]
+}
+
 export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData, pageLayouts }: Props) {
   const [activePage, setActivePage] = useState<PageId>('group')
   const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => {
@@ -75,12 +85,14 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
     const studentPageBlocks = cleanedStudentPage.length > 0
       ? cleanedStudentPage
       : defaultStudentPageBlocks(assets)
+    const memoriesBlocks = (saved.memories ?? []).length > 0 ? saved.memories : defaultMemoriesBlocks()
     return {
       group: initialBlocks,
       cover: [],
       closing: [],
       ...saved,
       student_page: studentPageBlocks,
+      memories: memoriesBlocks,
     }
   })
 
@@ -141,7 +153,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
 
   function addBlock(type: BlockType, config?: Record<string, unknown>) {
     const b: Block = { id: nanoid(8), type, config: config ?? {} }
-    if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing' || activePage === 'student_page') {
+    if (FULL_WIDTH_TYPES.has(type) || activePage === 'cover' || activePage === 'closing' || activePage === 'student_page' || activePage === 'memories') {
       setPageBlocks(prev => [...prev, b])
       setActiveBlockId(b.id)
     } else {
@@ -321,7 +333,10 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
             {activePage === 'student_page' && (
               <StudentPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
             )}
-            {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && activePage !== 'student_page' && (
+            {activePage === 'memories' && (
+              <MemoriesPagePreview blocks={blocks} />
+            )}
+            {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && activePage !== 'student_page' && activePage !== 'memories' && (
               <div className="p-8 text-center text-gray-400 text-sm">Тази страница ще бъде налична скоро.</div>
             )}
           </div>

@@ -39,7 +39,10 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; color: string
   sp_question:      { label: 'Въпрос',  icon: 'quiz',        color: 'bg-amber-50 text-amber-700'   },
   sp_accents:       { label: 'Акценти', icon: 'star',        color: 'bg-yellow-50 text-yellow-700' },
   sp_event:         { label: 'Събитие', icon: 'photo_album', color: 'bg-teal-50 text-teal-700'     },
-  sp_peer_messages: { label: 'Послания',icon: 'mail',        color: 'bg-rose-50 text-rose-700'     },
+  sp_peer_messages: { label: 'Послания',  icon: 'mail',         color: 'bg-rose-50 text-rose-700'     },
+  mem_photos:       { label: 'Снимки',    icon: 'photo_library',color: 'bg-teal-50 text-teal-700'     },
+  mem_note:         { label: 'Бележка',   icon: 'notes',        color: 'bg-orange-50 text-orange-700' },
+  mem_comments:     { label: 'Коментари', icon: 'chat',         color: 'bg-purple-50 text-purple-700' },
 }
 
 interface Props {
@@ -325,6 +328,19 @@ function ConfigBody({ type, cfg, assets, classId, set }: {
 
     case 'polls_grid':
       return <PollsGridConfig classId={classId} existingPolls={assets.polls} />
+
+    case 'mem_photos':
+      return (
+        <SelectField
+          label="Колони снимки"
+          value={String((cfg.cols as number) ?? 3)}
+          options={[
+            { value: '3', label: '3 колони' },
+            { value: '2', label: '2 колони (по-големи)' },
+          ]}
+          onChange={v => set('cols', Number(v))}
+        />
+      )
 
     default:
       return <p className="text-sm text-gray-400">Няма допълнителни настройки за този блок.</p>

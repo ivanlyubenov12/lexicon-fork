@@ -274,6 +274,7 @@ export async function GET(
     coverBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.cover; return Array.isArray(v) ? v as any : null })(),
     closingBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.closing as any ?? null,
     studentPageBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.student_page; return Array.isArray(v) ? v as any : null })(),
+    memoriesBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.memories; return Array.isArray(v) ? v as any : null })(),
     classInfo: {
       name: cls.name,
       namePart,

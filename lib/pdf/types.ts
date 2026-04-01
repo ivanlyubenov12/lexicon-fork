@@ -81,6 +81,7 @@ export interface PDFData {
   coverBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
   closingBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
   studentPageBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
+  memoriesBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
   classInfo: {
     name: string
     namePart: string

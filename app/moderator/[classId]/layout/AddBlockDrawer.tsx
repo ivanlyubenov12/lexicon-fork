@@ -30,6 +30,12 @@ const SP_STATIC_BLOCKS: Array<{ type: BlockType; label: string; icon: string; de
   { type: 'sp_peer_messages', label: 'Послания',   icon: 'mail',     description: 'Послания от съучениците.' },
 ]
 
+const MEMORIES_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
+  { type: 'mem_photos',   label: 'Снимки',    icon: 'photo_library', description: 'Решетка от снимки на събитието.' },
+  { type: 'mem_note',     label: 'Бележка',   icon: 'notes',         description: 'Текстово описание на събитието.' },
+  { type: 'mem_comments', label: 'Коментари', icon: 'chat',          description: 'Коментари от участниците.' },
+]
+
 const CLOSING_BLOCKS: Array<{ type: BlockType; label: string; icon: string; description: string }> = [
   { type: 'closing_logo',          label: 'Лого',                icon: 'school',        description: 'Лого на училището.' },
   { type: 'closing_title',         label: 'Заглавие',            icon: 'title',         description: 'Името на класа.' },
@@ -77,7 +83,7 @@ function BlockRow({ icon, label, description, badge, onClick }: {
 }
 
 export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes, assets }: Props) {
-  const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : pageId !== 'student_page' ? ALL_BLOCKS : null
+  const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : pageId === 'memories' ? MEMORIES_BLOCKS : pageId !== 'student_page' ? ALL_BLOCKS : null
 
   return (
     <>

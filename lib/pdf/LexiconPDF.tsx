@@ -1361,51 +1361,95 @@ export function PollsPage({ polls, classInfo, bgPng, theme }: {
 
 // ─── Memories Page ───────────────────────────────────────────────────────────
 
-export function MemoriesPage({ events, classInfo, bgPng, theme, options }: {
+export function MemoriesPage({ events, classInfo, bgPng, theme, options, memoriesBlocks }: {
   events: PDFEvent[]
   classInfo: PDFData['classInfo']
   bgPng?: Buffer | null
   theme?: PDFTheme
   options?: PageOptions
+  memoriesBlocks?: Array<{ type: string; config: Record<string, unknown> }> | null
 }) {
   const t = theme ?? DEFAULT_THEME
   const opts = (options ?? {}) as MemoriesOptions
+  const blocks = Array.isArray(memoriesBlocks) && memoriesBlocks.length > 0 ? memoriesBlocks : null
+
   if (events.length === 0) return null
+
+  const renderComment = (c: PDFEventComment, ci: number) => {
+    const initials = c.student_name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
+    return (
+      <View key={ci} style={{ ...s.eventCommentRow, marginBottom: 5 }}>
+        <View style={s.eventCommentAvatar}>
+          {c.student_photo_url ? (
+            <Image src={c.student_photo_url} style={s.eventCommentAvatarImg} />
+          ) : (
+            <Text style={{ fontSize: 6, fontWeight: 'bold', color: C.indigo }}>{initials}</Text>
+          )}
+        </View>
+        <View style={s.eventCommentContent}>
+          <Text style={s.eventCommentName}>{c.student_name}</Text>
+          <Text style={s.eventCommentText}>{truncate(c.text, 160)}</Text>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <>
-      {events.map((ev, idx) => {
+      {events.map((ev) => {
         const photos = ev.photos.slice(0, 6)
         const comments = ev.comments.slice(0, 20)
         const half = Math.ceil(comments.length / 2)
         const leftComments = comments.slice(0, half)
         const rightComments = comments.slice(half)
 
-        const renderComment = (c: PDFEventComment, ci: number) => {
-          const initials = c.student_name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
-          return (
-            <View key={ci} style={{ ...s.eventCommentRow, marginBottom: 5 }}>
-              <View style={s.eventCommentAvatar}>
-                {c.student_photo_url ? (
-                  <Image src={c.student_photo_url} style={s.eventCommentAvatarImg} />
-                ) : (
-                  <Text style={{ fontSize: 6, fontWeight: 'bold', color: C.indigo }}>{initials}</Text>
-                )}
-              </View>
-              <View style={s.eventCommentContent}>
-                <Text style={s.eventCommentName}>{c.student_name}</Text>
-                <Text style={s.eventCommentText}>{truncate(c.text, 160)}</Text>
-              </View>
-            </View>
-          )
+        const renderBlock = (b: { type: string; config: Record<string, unknown> }, bi: number) => {
+          switch (b.type) {
+            case 'mem_photos': {
+              if (photos.length === 0) return null
+              const cols = (b.config.cols as number) ?? 3
+              const imgW = cols === 2 ? 228 : 150
+              const imgH = cols === 2 ? 160 : 105
+              return (
+                <View key={bi} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                  {photos.filter(url => url && url !== 'undefined').map((url, pi) => (
+                    <Image key={pi} src={url} style={{ width: imgW, height: imgH, borderRadius: 4, objectFit: 'cover', objectPosition: 'center center' }} />
+                  ))}
+                </View>
+              )
+            }
+            case 'mem_note':
+              if (!ev.note) return null
+              return (
+                <Text key={bi} style={{ ...s.eventNote, marginBottom: 12 }}>
+                  {truncate(ev.note, 300)}
+                </Text>
+              )
+            case 'mem_comments':
+              if (comments.length === 0) return null
+              return (
+                <View key={bi}>
+                  <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: t.accentColor, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                    Коментари от класа
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 14 }}>
+                    <View style={{ flex: 1 }}>{leftComments.map((c, ci) => renderComment(c, ci))}</View>
+                    <View style={{ flex: 1 }}>{rightComments.map((c, ci) => renderComment(c, ci + half))}</View>
+                  </View>
+                </View>
+              )
+            default:
+              return null
+          }
         }
 
         return (
           <Page key={ev.id} size="A4" style={{ ...s.page, ...s.sectionPage }}>
-            {/* Compact header — themed */}
+            {/* Header strip */}
             <View style={{ backgroundColor: t.accentColor, paddingHorizontal: 36, paddingVertical: 18 }}>
               <Text style={s.sectionHeaderLabel}>Нашите спомени</Text>
               <Text style={{ ...s.sectionHeaderTitle, fontSize: 20 }}>{truncate(ev.title, 60)}</Text>
-              {opts.showDate !== false && ev.event_date && (
+              {ev.event_date && (
                 <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
                   {formatDate(ev.event_date)}
                 </Text>
@@ -1413,37 +1457,31 @@ export function MemoriesPage({ events, classInfo, bgPng, theme, options }: {
             </View>
 
             <View style={{ padding: 24 }}>
-              {/* Note */}
-              {opts.showNote !== false && ev.note && (
-                <Text style={{ ...s.eventNote, marginBottom: 12 }}>
-                  {truncate(ev.note, 300)}
-                </Text>
-              )}
-
-              {/* Photos — 3 per row */}
-              {opts.showPhotos !== false && photos.length > 0 && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                  {photos.filter(url => url && url !== 'undefined').map((url, pi) => (
-                    <Image key={pi} src={url} style={{ width: 170, height: 118, borderRadius: 4, objectFit: 'cover', objectPosition: 'center center' }} />
-                  ))}
-                </View>
-              )}
-
-              {/* Comments — 2-column grid */}
-              {opts.showComments !== false && comments.length > 0 && (
+              {blocks ? (
+                blocks.map((b, bi) => renderBlock(b, bi))
+              ) : (
                 <>
-                  <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: t.accentColor, letterSpacing: 1.5,
-                    textTransform: 'uppercase', marginBottom: 8 }}>
-                    Коментари от класа
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 14 }}>
-                    <View style={{ flex: 1 }}>
-                      {leftComments.map((c, ci) => renderComment(c, ci))}
+                  {opts.showNote !== false && ev.note && (
+                    <Text style={{ ...s.eventNote, marginBottom: 12 }}>{truncate(ev.note, 300)}</Text>
+                  )}
+                  {opts.showPhotos !== false && photos.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                      {photos.filter(url => url && url !== 'undefined').map((url, pi) => (
+                        <Image key={pi} src={url} style={{ width: 170, height: 118, borderRadius: 4, objectFit: 'cover', objectPosition: 'center center' }} />
+                      ))}
                     </View>
-                    <View style={{ flex: 1 }}>
-                      {rightComments.map((c, ci) => renderComment(c, ci + half))}
-                    </View>
-                  </View>
+                  )}
+                  {opts.showComments !== false && comments.length > 0 && (
+                    <>
+                      <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: t.accentColor, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                        Коментари от класа
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 14 }}>
+                        <View style={{ flex: 1 }}>{leftComments.map((c, ci) => renderComment(c, ci))}</View>
+                        <View style={{ flex: 1 }}>{rightComments.map((c, ci) => renderComment(c, ci + half))}</View>
+                      </View>
+                    </>
+                  )}
                 </>
               )}
             </View>
@@ -1695,7 +1733,7 @@ export function LexiconPDF({ data }: { data: PDFData }) {
       ) : null}
 
       {data.events.length > 0 ? (
-        <MemoriesPage events={data.events} classInfo={data.classInfo} bgPng={data.bg_pattern_png} />
+        <MemoriesPage events={data.events} classInfo={data.classInfo} bgPng={data.bg_pattern_png} memoriesBlocks={data.memoriesBlocks} />
       ) : null}
 
       <ClosingPage data={data} />
