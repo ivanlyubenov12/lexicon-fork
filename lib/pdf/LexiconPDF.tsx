@@ -710,6 +710,7 @@ export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDF
 
   // Block-driven rendering when page_layouts.cover is configured
   const blocks = Array.isArray(data.coverBlocks) ? data.coverBlocks : null
+  console.log('[CoverPage] coverBlocks:', JSON.stringify(data.coverBlocks), '| blocks:', blocks?.length)
   if (blocks && blocks.length > 0) {
     const hasLogo    = blocks.some(b => b.type === 'cover_logo')
     const hasPhoto   = blocks.some(b => b.type === 'cover_photo')
