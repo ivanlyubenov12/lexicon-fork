@@ -269,7 +269,7 @@ export async function GET(
     starsLabel: (cls as any).stars_label ?? null,
     memberLabel: (cls as any).member_label ?? null,
     groupLabel: (cls as any).group_label ?? null,
-    coverBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.cover as any ?? null,
+    coverBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.cover; console.log('[preview-data] raw page_layouts:', JSON.stringify((cls as any).page_layouts)); return v as any ?? null })(),
     closingBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.closing as any ?? null,
     classInfo: {
       name: cls.name,
