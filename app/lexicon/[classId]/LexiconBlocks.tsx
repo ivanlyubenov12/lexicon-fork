@@ -40,6 +40,8 @@ export interface LexiconData {
   starsLabel?: string | null
   classData: {
     name: string
+    school_year?: string | null
+    school_logo_url?: string | null
     superhero_prompt?: string | null
     superhero_image_url?: string | null
     cover_image_url?: string | null

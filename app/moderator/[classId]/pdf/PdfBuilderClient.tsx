@@ -218,9 +218,10 @@ const NO_OPTIONS_TYPES = new Set(['students_grid', 'polls', 'closing'])
 
 interface Props {
   classId: string
+  initialTheme?: PDFTheme
 }
 
-export default function PdfBuilderClient({ classId }: Props) {
+export default function PdfBuilderClient({ classId, initialTheme }: Props) {
   const [pdfData, setPdfData] = useState<PDFData | null>(null)
   const [sections, setSections] = useState<Section[]>([])
   const [activeSection, setActiveSection] = useState<string>('cover')
@@ -228,7 +229,7 @@ export default function PdfBuilderClient({ classId }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   // Level 3: theme
-  const [globalTheme, setGlobalTheme] = useState<PDFTheme>(DEFAULT_THEME)
+  const [globalTheme, setGlobalTheme] = useState<PDFTheme>(initialTheme ?? DEFAULT_THEME)
   const [themeOpen, setThemeOpen] = useState(false)
 
   // Level 2: per-section options

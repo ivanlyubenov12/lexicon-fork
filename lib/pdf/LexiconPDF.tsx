@@ -1685,7 +1685,7 @@ export function ClosingPage({ data, theme }: { data: PDFData; theme?: PDFTheme }
 
 // ─── Main Document ───────────────────────────────────────────────────────────
 
-export function LexiconPDF({ data }: { data: PDFData }) {
+export function LexiconPDF({ data, theme }: { data: PDFData; theme?: PDFTheme }) {
   // Chunk students into pages of CARDS_PER_PAGE for the grid
   const gridChunks: PDFStudent[][] = []
   for (let i = 0; i < data.students.length; i += CARDS_PER_PAGE) {
@@ -1698,9 +1698,9 @@ export function LexiconPDF({ data }: { data: PDFData }) {
       author="Малки спомени"
       subject={data.classInfo.school_year}
     >
-      <CoverPage data={data} />
+      <CoverPage data={data} theme={theme} />
 
-      <ClassOverviewPage data={data} />
+      <ClassOverviewPage data={data} theme={theme} />
 
       {/* Students grid — one page per chunk, first chunk shows the header */}
       {gridChunks.map((chunk, ci) => (
@@ -1725,24 +1725,25 @@ export function LexiconPDF({ data }: { data: PDFData }) {
           groupLabel={data.groupLabel}
           studentPageBlocks={data.studentPageBlocks}
           events={data.events}
+          theme={theme}
         />
       ))}
 
       {data.polls.length > 0 ? (
-        <PollsPage polls={data.polls} classInfo={data.classInfo} bgPng={data.bg_pattern_png} />
+        <PollsPage polls={data.polls} classInfo={data.classInfo} bgPng={data.bg_pattern_png} theme={theme} />
       ) : null}
 
       {data.events.length > 0 ? (
-        <MemoriesPage events={data.events} classInfo={data.classInfo} bgPng={data.bg_pattern_png} memoriesBlocks={data.memoriesBlocks} />
+        <MemoriesPage events={data.events} classInfo={data.classInfo} bgPng={data.bg_pattern_png} memoriesBlocks={data.memoriesBlocks} theme={theme} />
       ) : null}
 
-      <ClosingPage data={data} />
+      <ClosingPage data={data} theme={theme} />
     </Document>
   )
 }
 
 // ─── Buffer helper (keeps JSX + renderToBuffer in the same module/React instance) ─
 
-export async function generatePDFBuffer(data: PDFData): Promise<Buffer> {
-  return renderToBuffer(<LexiconPDF data={data} />) as Promise<Buffer>
+export async function generatePDFBuffer(data: PDFData, theme?: PDFTheme): Promise<Buffer> {
+  return renderToBuffer(<LexiconPDF data={data} theme={theme} />) as Promise<Buffer>
 }

@@ -60,6 +60,19 @@ export default async function VoiceAnswerRoute({
     .maybeSingle()
   const existingAnswer: string | null = va?.content ?? null
 
+  // Fetch classmates if this is a student-picker survey
+  let classmates: Array<{ id: string; first_name: string; last_name: string; photo_url: string | null }> = []
+  const isStudentPoll = question.type === 'survey' && (question.poll_options as string[] | null)?.[0] === '__students__'
+  if (isStudentPoll) {
+    const { data: cls } = await admin
+      .from('students')
+      .select('id, first_name, last_name, photo_url')
+      .eq('class_id', student.class_id)
+      .order('sort_order', { ascending: true, nullsFirst: false })
+      .order('last_name')
+    classmates = (cls ?? []).filter(c => c.id !== studentId)
+  }
+
   return (
     <VoiceAnswerPage
       studentId={studentId}
@@ -70,6 +83,7 @@ export default async function VoiceAnswerRoute({
       nextUrl={nextUrl}
       questionNumber={idx + 1}
       totalQuestions={seq.length}
+      classmates={classmates}
     />
   )
 }

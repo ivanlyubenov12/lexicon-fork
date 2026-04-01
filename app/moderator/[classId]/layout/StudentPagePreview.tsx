@@ -3,10 +3,11 @@
 import type { Block, LayoutAssets } from '@/lib/templates/types'
 import type { LexiconData } from '@/app/lexicon/[classId]/LexiconBlocks'
 
-export default function StudentPagePreview({ blocks, assets, lexiconData }: {
+export default function StudentPagePreview({ blocks, assets, lexiconData, themeVars = {} }: {
   blocks: Block[]
   assets: LayoutAssets
   lexiconData: LexiconData
+  themeVars?: Record<string, string>
 }) {
   if (blocks.length === 0) {
     return (
@@ -21,7 +22,7 @@ export default function StudentPagePreview({ blocks, assets, lexiconData }: {
   const page1Blocks = blocks.filter(b => (b.config as Record<string, unknown>).page !== 2)
   const page2Blocks = blocks.filter(b => (b.config as Record<string, unknown>).page === 2)
 
-  const accent = '#3632b7'
+  const accent = themeVars['--lex-primary'] ?? '#3632b7'
 
   function renderBlock(block: Block) {
     const cfg = block.config as Record<string, unknown>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useTransition, useEffect } from 'react'
+import { useState, useCallback, useTransition, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { saveLayout, savePageLayout } from './actions'
 import type { Block, BlockType, LayoutAssets, PageId, PageLayouts } from '@/lib/templates/types'
@@ -15,6 +15,7 @@ import StudentPagePreview from './StudentPagePreview'
 import MemoriesPagePreview from './MemoriesPagePreview'
 import { nanoid } from 'nanoid'
 import { templatePresets } from '@/lib/templates/presets'
+import { themes, defaultTheme } from '@/lib/templates/themes'
 
 const TEMPLATE_UI = [
   { id: 'primary',       name: 'Начално училище', subtitle: '1–4 клас',   icon: 'school',      color: 'bg-[#e2dfff]', accent: 'text-[#3632b7]', border: 'border-[#3632b7]' },
@@ -44,6 +45,7 @@ interface Props {
   className: string
   initialBlocks: Block[]
   templateId: string
+  initialThemeVars: Record<string, string>
   assets: LayoutAssets
   lexiconData: LexiconData
   pageLayouts: PageLayouts
@@ -76,7 +78,7 @@ function defaultMemoriesBlocks(): Block[] {
   ]
 }
 
-export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData, pageLayouts }: Props) {
+export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, initialThemeVars, assets, lexiconData, pageLayouts }: Props) {
   const [activePage, setActivePage] = useState<PageId>('group')
   const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => {
     const saved = (pageLayouts as Record<string, Block[]>) ?? {}
@@ -111,6 +113,17 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   const [activeTemplate, setActiveTemplate] = useState(
     initialTemplateId === 'classic' || !initialTemplateId ? 'primary' : initialTemplateId
   )
+  const [themeVars, setThemeVars] = useState<Record<string, string>>(initialThemeVars)
+  const isMounted = useRef(false)
+
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return }
+    if (activeTemplate === 'custom') return
+    const preset = templatePresets.find(t => t.id === activeTemplate)
+    const themeId = preset?.themeId ?? 'classic'
+    setThemeVars((themes[themeId] ?? defaultTheme).vars)
+  }, [activeTemplate])
+
   const [activeBlockId, setActiveBlockId]   = useState<string | null>(null)
   const [addDrawerOpen, setAddDrawerOpen]   = useState(false)
   const [confirmTemplate, setConfirmTemplate] = useState<string | null>(null)
@@ -326,16 +339,16 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
               />
             )}
             {activePage === 'cover' && (
-              <CoverPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
+              <CoverPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} themeVars={themeVars} />
             )}
             {activePage === 'closing' && (
-              <ClosingPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
+              <ClosingPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} themeVars={themeVars} />
             )}
             {activePage === 'student_page' && (
-              <StudentPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} />
+              <StudentPagePreview blocks={blocks} assets={assets} lexiconData={lexiconData} themeVars={themeVars} />
             )}
             {activePage === 'memories' && (
-              <MemoriesPagePreview blocks={blocks} />
+              <MemoriesPagePreview blocks={blocks} themeVars={themeVars} />
             )}
             {activePage !== 'group' && activePage !== 'cover' && activePage !== 'closing' && activePage !== 'student_page' && activePage !== 'memories' && (
               <div className="p-8 text-center text-gray-400 text-sm">Тази страница ще бъде налична скоро.</div>

@@ -1,7 +1,7 @@
 'use client'
 import type { Block } from '@/lib/templates/types'
 
-export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
+export default function MemoriesPagePreview({ blocks, themeVars = {} }: { blocks: Block[]; themeVars?: Record<string, string> }) {
   if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400 text-sm gap-2">
@@ -12,7 +12,7 @@ export default function MemoriesPagePreview({ blocks }: { blocks: Block[] }) {
     )
   }
 
-  const accent = '#3632b7'
+  const accent = themeVars['--lex-primary'] ?? '#3632b7'
 
   function renderBlock(block: Block) {
     const cfg = block.config as Record<string, unknown>

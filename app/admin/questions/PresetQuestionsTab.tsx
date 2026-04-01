@@ -206,36 +206,45 @@ function PresetRow({
   isLast,
   onMoveUp,
   onMoveDown,
+  onDelete,
+  onSaved,
 }: {
   question: PresetQuestion
   isFirst: boolean
   isLast: boolean
   onMoveUp: () => void
   onMoveDown: () => void
+  onDelete: (id: string) => void
+  onSaved: (id: string, data: Partial<PresetQuestion>) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
   function handleSave(form: typeof EMPTY_FORM) {
+    const updated = {
+      text: form.text,
+      description: form.description || null,
+      type: form.type,
+      voice_display: form.type === 'class_voice' ? form.voice_display : null,
+      is_featured: form.is_featured,
+      poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+      allows_media: form.type === 'video',
+    }
     startTransition(async () => {
-      const result = await updatePresetQuestion(question.id, {
-        text: form.text,
-        description: form.description || null,
-        type: form.type,
-        voice_display: form.type === 'class_voice' ? form.voice_display : null,
-        is_featured: form.is_featured,
-        poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
-      })
-      if (result.error) setError(result.error)
-      else { setEditing(false); setError(null) }
+      const result = await updatePresetQuestion(question.id, updated)
+      if (result.error) { setError(result.error); return }
+      setEditing(false)
+      setError(null)
+      onSaved(question.id, updated)
     })
   }
 
   function handleDelete() {
     if (!confirm('Изтриване на въпроса от шаблона?')) return
     startTransition(async () => {
-      await deletePresetQuestion(question.id)
+      const result = await deletePresetQuestion(question.id)
+      if (!result.error) onDelete(question.id)
     })
   }
 
@@ -328,15 +337,27 @@ function PresetRow({
 
 // ─── Main tab ──────────────────────────────────────────────────────────────────
 
+interface BankQuestion {
+  id: string
+  text: string
+  type: QuestionType
+  voice_display: string | null
+  poll_options: string[] | null
+}
+
 export default function PresetQuestionsTab({
   preset,
   initialQuestions,
+  bankQuestions = [],
 }: {
   preset: string
   initialQuestions: PresetQuestion[]
+  bankQuestions?: BankQuestion[]
 }) {
   const [questions, setQuestions] = useState(initialQuestions)
   const [adding, setAdding] = useState(false)
+  const [addMode, setAddMode] = useState<'new' | 'bank'>('new')
+  const [bankFilter, setBankFilter] = useState('')
   const [isPending, startTransition] = useTransition()
   const [addError, setAddError] = useState<string | null>(null)
 
@@ -372,6 +393,45 @@ export default function PresetQuestionsTab({
     })
   }
 
+  function handleAddFromBank(bq: BankQuestion) {
+    const nextIndex = questions.length > 0 ? Math.max(...questions.map(q => q.order_index)) + 1 : 0
+    startTransition(async () => {
+      const result = await addPresetQuestion({
+        preset,
+        text: bq.text,
+        description: null,
+        type: bq.type,
+        voice_display: bq.type === 'class_voice' ? (bq.voice_display as 'wordcloud' | 'barchart' | null) : null,
+        is_featured: false,
+        order_index: nextIndex,
+        poll_options: bq.poll_options,
+      })
+      if (result.error) setAddError(result.error)
+      else {
+        setAddError(null)
+        setQuestions(prev => [...prev, {
+          id: 'pending-' + Date.now(),
+          text: bq.text,
+          description: null,
+          type: bq.type,
+          allows_media: bq.type === 'video',
+          order_index: nextIndex,
+          voice_display: bq.type === 'class_voice' ? bq.voice_display : null,
+          is_featured: false,
+          poll_options: bq.poll_options,
+        }])
+      }
+    })
+  }
+
+  function handleDelete(id: string) {
+    setQuestions(prev => prev.filter(q => q.id !== id))
+  }
+
+  function handleSaved(id: string, data: Partial<PresetQuestion>) {
+    setQuestions(prev => prev.map(q => q.id === id ? { ...q, ...data } : q))
+  }
+
   function handleMove(index: number, direction: 'up' | 'down') {
     const newList = [...questions]
     const swapIndex = direction === 'up' ? index - 1 : index + 1
@@ -389,7 +449,7 @@ export default function PresetQuestionsTab({
       {!adding && (
         <div className="flex justify-end px-4 py-3 border-b border-gray-50">
           <button
-            onClick={() => setAdding(true)}
+            onClick={() => { setAdding(true); setAddMode('new') }}
             className="flex items-center gap-1.5 text-xs text-white bg-indigo-600 hover:bg-indigo-700 font-semibold px-3 py-1.5 rounded-lg transition-colors"
           >
             <span className="material-symbols-outlined text-sm">add</span>
@@ -415,6 +475,8 @@ export default function PresetQuestionsTab({
                       isLast={i === questions.length - 1}
                       onMoveUp={() => handleMove(i, 'up')}
                       onMoveDown={() => handleMove(i, 'down')}
+                      onDelete={handleDelete}
+                      onSaved={handleSaved}
                     />
                   ))}
                 </tbody>
@@ -429,14 +491,92 @@ export default function PresetQuestionsTab({
       )}
 
       {adding && (
-        <div className="px-4 pb-4 pt-2">
+        <div className="px-4 pb-4 pt-3 border-t border-gray-50">
+          {/* Mode toggle */}
+          {bankQuestions.length > 0 && (
+            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-4">
+              {(['new', 'bank'] as const).map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setAddMode(mode)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    addMode === mode ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {mode === 'new' ? 'add_circle' : 'library_books'}
+                  </span>
+                  {mode === 'new' ? 'Нов въпрос' : 'От банката'}
+                </button>
+              ))}
+            </div>
+          )}
+
           {addError && <p className="text-red-500 text-xs mb-2">{addError}</p>}
-          <QuestionEditForm
-            initial={EMPTY_FORM}
-            onSave={handleAdd}
-            onCancel={() => { setAdding(false); setAddError(null) }}
-            isPending={isPending}
-          />
+
+          {/* New question form */}
+          {addMode === 'new' && (
+            <QuestionEditForm
+              initial={EMPTY_FORM}
+              onSave={handleAdd}
+              onCancel={() => { setAdding(false); setAddError(null) }}
+              isPending={isPending}
+            />
+          )}
+
+          {/* Bank picker */}
+          {addMode === 'bank' && (
+            <div>
+              <input
+                type="text"
+                value={bankFilter}
+                onChange={e => setBankFilter(e.target.value)}
+                placeholder="Търси въпрос..."
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                autoFocus
+              />
+              <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                {bankQuestions
+                  .filter(q => !bankFilter || q.text.toLowerCase().includes(bankFilter.toLowerCase()))
+                  .map(bq => {
+                    const alreadyAdded = questions.some(q => q.text === bq.text)
+                    return (
+                      <div
+                        key={bq.id}
+                        className={`flex items-start gap-3 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+                          alreadyAdded ? 'border-gray-100 bg-gray-50 opacity-50' : 'border-gray-100 bg-white hover:border-indigo-200'
+                        }`}
+                      >
+                        <span className={`inline-flex items-center whitespace-nowrap text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${TYPE_COLOR[bq.type] ?? 'bg-gray-50 text-gray-500'}`}>
+                          {TYPE_LABELS[bq.type] ?? bq.type}
+                        </span>
+                        <p className="flex-1 text-gray-800 leading-snug">{bq.text}</p>
+                        <button
+                          type="button"
+                          disabled={alreadyAdded || isPending}
+                          onClick={() => handleAddFromBank(bq)}
+                          className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-sm">add</span>
+                          {alreadyAdded ? 'Добавен' : 'Добави'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                {bankQuestions.filter(q => !bankFilter || q.text.toLowerCase().includes(bankFilter.toLowerCase())).length === 0 && (
+                  <p className="text-xs text-gray-400 italic px-2 py-4 text-center">Няма резултати.</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setAdding(false); setAddError(null); setBankFilter('') }}
+                className="mt-3 text-xs text-gray-400 hover:text-gray-600"
+              >
+                Затвори
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

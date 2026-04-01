@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { updateSystemQuestion, deleteSystemQuestion } from '../actions'
 
 interface Props {
@@ -28,6 +29,7 @@ const TYPE_COLOR: Record<string, string> = {
 }
 
 export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, allowsMedia }: Props) {
+  const router = useRouter()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(text)
   const [isPending, startTransition] = useTransition()
@@ -40,6 +42,7 @@ export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, 
       if (result.error) { setError(result.error); return }
       setEditing(false)
       setError(null)
+      router.refresh()
     })
   }
 
@@ -47,6 +50,7 @@ export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, 
     if (!confirm('Сигурни ли сте, че искате да изтриете този въпрос?')) return
     startTransition(async () => {
       await deleteSystemQuestion(id)
+      router.refresh()
     })
   }
 

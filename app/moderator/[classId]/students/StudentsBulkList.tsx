@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import StudentActions from './StudentActions'
 import { deleteStudents, reorderStudents } from './actions'
@@ -43,6 +43,7 @@ export default function StudentsBulkList({
 
   // ── Drag-and-drop reorder ──────────────────────────────────────────────────
   const [orderedStudents, setOrderedStudents] = useState<StudentRowData[]>(students)
+  useEffect(() => { setOrderedStudents(students) }, [students])
   const dragIdx = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
 

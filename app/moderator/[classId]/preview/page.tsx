@@ -127,15 +127,16 @@ export default async function ModeratorPreviewPage({
       const display = (q.voice_display as 'wordcloud' | 'barchart' | null)
         ?? ((q.order_index ?? 99) <= 1 ? 'barchart' : 'wordcloud')
       const raw = (voiceAnswers.data ?? []).filter(a => a.question_id === q.id).map(a => a.content)
+      const allWords = raw.flatMap(c => c.split(',').map(w => w.trim()).filter(Boolean))
       const total = raw.length
       const freq: Record<string, number> = {}
-      for (const w of raw) { const k = w.trim().toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
+      for (const w of allWords) { const k = w.toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
       const maxF = Math.max(...Object.values(freq), 1)
       const items: VoiceItem[] = Object.entries(freq)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 12)
         .map(([k, n]) => ({
-          text: raw.find(w => w.trim().toLowerCase() === k) ?? k,
+          text: allWords.find(w => w.toLowerCase() === k) ?? k,
           size: n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm',
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
         }))

@@ -8,6 +8,13 @@ export const DEFAULT_THEME: PDFTheme = {
   coverBg: '#12082e',
 }
 
+export function buildPDFTheme(themeVars: Record<string, string>): PDFTheme {
+  return {
+    accentColor: themeVars['--lex-primary'] ?? DEFAULT_THEME.accentColor,
+    coverBg:     themeVars['--lex-cover-bg'] ?? DEFAULT_THEME.coverBg,
+  }
+}
+
 export const THEME_PRESETS: Array<{ label: string; theme: PDFTheme }> = [
   { label: 'Индиго', theme: { accentColor: '#3632b7', coverBg: '#12082e' } },
   { label: 'Мидъл',  theme: { accentColor: '#1d4ed8', coverBg: '#0f172a' } },

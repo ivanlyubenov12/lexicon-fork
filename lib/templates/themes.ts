@@ -19,6 +19,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '2rem',
       '--lex-radius-card': '2.5rem',
       '--lex-hero-grad': 'linear-gradient(to bottom right, #3632b7, #504ed0, #855300)',
+      '--lex-cover-bg': '#12082e',
     },
   },
   magazine: {
@@ -39,6 +40,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '0.5rem',
       '--lex-radius-card': '0.75rem',
       '--lex-hero-grad': 'linear-gradient(to bottom right, #c2410c, #ea580c, #1e3a5f)',
+      '--lex-cover-bg': '#1a0800',
     },
   },
   adventure: {
@@ -59,6 +61,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '1.5rem',
       '--lex-radius-card': '2rem',
       '--lex-hero-grad': 'linear-gradient(to bottom right, #065f46, #047857, #92400e)',
+      '--lex-cover-bg': '#012a10',
     },
   },
   teens: {
@@ -79,6 +82,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '1rem',
       '--lex-radius-card': '1.5rem',
       '--lex-hero-grad': 'linear-gradient(to bottom right, #4C6EF5, #7950F2, #12B886)',
+      '--lex-cover-bg': '#0f0f23',
     },
   },
   kindergarten: {
@@ -99,6 +103,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '2.5rem',
       '--lex-radius-card': '3rem',
       '--lex-hero-grad': 'linear-gradient(to bottom right, #FF7043, #FFA726, #29B6F6)',
+      '--lex-cover-bg': '#1a0800',
     },
   },
 
@@ -120,6 +125,7 @@ export const themes: Record<string, Theme> = {
       '--lex-radius': '1.5rem',
       '--lex-radius-card': '2rem',
       '--lex-hero-grad': 'linear-gradient(135deg, #0e1e3d 0%, #1A3D8F 50%, #2952B3 100%)',
+      '--lex-cover-bg': '#04102b',
     },
   },
 }

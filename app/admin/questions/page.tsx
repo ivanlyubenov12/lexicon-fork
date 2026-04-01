@@ -146,6 +146,13 @@ export default async function AdminQuestionsPage({
               is_featured: (q as { is_featured?: boolean }).is_featured ?? false,
               poll_options: (q as { poll_options?: string[] | null }).poll_options ?? null,
             }))}
+            bankQuestions={(archiveQuestions ?? []).map(q => ({
+              id: q.id,
+              text: q.text,
+              type: q.type as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey',
+              voice_display: (q as { voice_display?: string | null }).voice_display ?? null,
+              poll_options: (q as { poll_options?: string[] | null }).poll_options ?? null,
+            }))}
           />
         </div>
       ))}

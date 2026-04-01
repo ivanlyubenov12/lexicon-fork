@@ -81,10 +81,11 @@ export async function GET(
     const raw = (voiceAnswers ?? [])
       .filter((a: any) => a.question_id === q.id)
       .map((a: any) => a.content as string)
+    const allWords = raw.flatMap((c: string) => c.split(',').map((w: string) => w.trim()).filter(Boolean))
     const total = raw.length
     const freq: Record<string, number> = {}
-    for (const w of raw) {
-      const k = w.trim().toLowerCase()
+    for (const w of allWords) {
+      const k = w.toLowerCase()
       freq[k] = (freq[k] ?? 0) + 1
     }
     const maxF = Math.max(...Object.values(freq), 1)
@@ -92,7 +93,7 @@ export async function GET(
       .sort((a, b) => b[1] - a[1])
       .slice(0, 12)
       .map(([k, n]) => ({
-        text: raw.find((w: string) => w.trim().toLowerCase() === k) ?? k,
+        text: allWords.find((w: string) => w.toLowerCase() === k) ?? k,
         size: (n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm') as 'lg' | 'md' | 'sm',
         pct: total > 0 ? Math.round((n / total) * 100) : 0,
       }))

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
-import { defaultTemplate } from '@/lib/templates/presets'
+import { defaultTemplate, templatePresets } from '@/lib/templates/presets'
+import { themes, defaultTheme } from '@/lib/templates/themes'
 import type { Block, LayoutAssets, PageLayouts } from '@/lib/templates/types'
 import type { LexiconData, QuestionAnswer, VoiceItem } from '@/app/lexicon/[classId]/LexiconBlocks'
 import LayoutEditor from './LayoutEditor'
@@ -16,7 +17,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   const [clsRes, questionsRes, accentQsRes, voiceQsRes, pollsRes, eventsRes, studentsRes] = await Promise.all([
     admin
       .from('classes')
-      .select('id, name, layout, template_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label, page_layouts')
+      .select('id, name, layout, template_id, theme_id, cover_image_url, superhero_prompt, superhero_image_url, school_year, school_logo_url, member_label, group_label, memories_label, stars_label, page_layouts')
       .eq('id', classId)
       .eq('moderator_id', user.id)
       .single(),
@@ -166,15 +167,16 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       const display = (q.voice_display as 'wordcloud' | 'barchart' | null)
         ?? ((q.order_index ?? 99) <= 1 ? 'barchart' : 'wordcloud')
       const raw = (voiceAnswersRes.data ?? []).filter(a => a.question_id === q.id).map(a => a.content)
+      const allWords = raw.flatMap(c => c.split(',').map(w => w.trim()).filter(Boolean))
       const total = raw.length
       const freq: Record<string, number> = {}
-      for (const w of raw) { const k = w.trim().toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
+      for (const w of allWords) { const k = w.toLowerCase(); freq[k] = (freq[k] ?? 0) + 1 }
       const maxF = Math.max(...Object.values(freq), 1)
       const items: VoiceItem[] = Object.entries(freq)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 12)
         .map(([k, n]) => ({
-          text: raw.find(w => w.trim().toLowerCase() === k) ?? k,
+          text: allWords.find(w => w.toLowerCase() === k) ?? k,
           size: n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm',
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
         }))
@@ -217,6 +219,9 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     }
   }
 
+  const themeId = (cls as any).theme_id ?? templatePresets.find(t => t.id === cls.template_id)?.themeId ?? 'classic'
+  const themeVars = (themes[themeId] ?? defaultTheme).vars
+
   const rawPageLayouts = (cls.page_layouts as Record<string, unknown> | null) ?? {}
   const pageLayouts: Record<string, unknown> = {
     ...rawPageLayouts,
@@ -236,6 +241,8 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
     starsLabel: cls.stars_label ?? null,
     classData: {
       name: cls.name,
+      school_year: cls.school_year ?? null,
+      school_logo_url: cls.school_logo_url ?? null,
       superhero_prompt: cls.superhero_prompt ?? null,
       superhero_image_url: cls.superhero_image_url ?? null,
       cover_image_url: cls.cover_image_url ?? null,
@@ -256,6 +263,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       className={cls.name}
       initialBlocks={initialBlocks}
       templateId={cls.template_id ?? 'primary'}
+      initialThemeVars={themeVars}
       assets={assets}
       lexiconData={lexiconData}
       pageLayouts={pageLayouts as PageLayouts}

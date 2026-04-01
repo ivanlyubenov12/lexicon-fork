@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { createServiceRoleClient } from '@/lib/supabase/server'
 import { generatePDFBuffer } from '@/lib/pdf/LexiconPDF'
 import type { PDFData, PDFStudent, PDFPoll, PDFAnswer, PDFVoiceQuestion, PDFVoiceItem, PDFEventComment, PDFStudentEvent } from '@/lib/pdf/types'
+import { buildPDFTheme } from '@/lib/pdf/builder-types'
+import { templatePresets } from '@/lib/templates/presets'
+import { themes, defaultTheme } from '@/lib/templates/themes'
 import QRCode from 'qrcode'
 import sharp from 'sharp'
 import { getBgPatternSvg } from '@/lib/pdf/bgPatternSvg'
@@ -38,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { data: cls } = await admin
     .from('classes')
-    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, stars_label, member_label, group_label, page_layouts')
+    .select('id, name, school_year, school_logo_url, cover_image_url, superhero_image_url, superhero_prompt, plan, bg_pattern, template_id, theme_id, stars_label, member_label, group_label, page_layouts')
     .eq('id', classId)
     .single()
 
@@ -95,10 +98,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const raw = (voiceAnswers ?? [])
       .filter((a: any) => a.question_id === q.id)
       .map((a: any) => a.content as string)
+    const allWords = raw.flatMap((c: string) => c.split(',').map((w: string) => w.trim()).filter(Boolean))
     const total = raw.length
     const freq: Record<string, number> = {}
-    for (const w of raw) {
-      const k = w.trim().toLowerCase()
+    for (const w of allWords) {
+      const k = w.toLowerCase()
       freq[k] = (freq[k] ?? 0) + 1
     }
     const maxF = Math.max(...Object.values(freq), 1)
@@ -106,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 12)
       .map(([k, n]) => ({
-        text: raw.find((w: string) => w.trim().toLowerCase() === k) ?? k,
+        text: allWords.find((w: string) => w.toLowerCase() === k) ?? k,
         size: (n >= maxF * 0.6 ? 'lg' : n >= maxF * 0.3 ? 'md' : 'sm') as 'lg' | 'md' | 'sm',
         pct: total > 0 ? Math.round((n / total) * 100) : 0,
       }))
@@ -344,9 +348,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })),
   }
 
+  const effectiveThemeId = (cls as any).theme_id
+    ?? templatePresets.find((t: any) => t.id === (cls as any).template_id)?.themeId
+    ?? 'classic'
+  const pdfTheme = buildPDFTheme((themes[effectiveThemeId] ?? defaultTheme).vars)
+
   let buffer: Buffer
   try {
-    buffer = await generatePDFBuffer(pdfData)
+    buffer = await generatePDFBuffer(pdfData, pdfTheme)
   } catch (err) {
     console.error('[PDF] renderToBuffer failed:', err)
     res.status(500).json({ error: 'PDF generation failed', detail: String(err) })

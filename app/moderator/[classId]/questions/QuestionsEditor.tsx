@@ -179,11 +179,102 @@ function QuestionForm({
         </div>
       )}
 
-      {/* Poll options — only for survey */}
-      {form.type === 'survey' && (
+      {/* Poll options — survey */}
+      {form.type === 'survey' && (() => {
+        const isStudentPoll = form.poll_options[0] === '__students__'
+        return (
+          <div>
+            {/* Student picker toggle */}
+            <div className="flex items-center justify-between mb-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Избор от участниците</p>
+                <p className="text-xs text-gray-400 mt-0.5">Учениците гласуват за съученик</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => set('poll_options', isStudentPoll ? [] : ['__students__'])}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  isStudentPoll ? 'bg-indigo-600' : 'bg-gray-300'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  isStudentPoll ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+
+            {!isStudentPoll && (
+              <>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  Предефинирани отговори
+                </label>
+                <div className="space-y-2">
+                  {form.poll_options.map((opt, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={e => {
+                          const next = [...form.poll_options]
+                          next[idx] = e.target.value
+                          set('poll_options', next)
+                        }}
+                        placeholder={`Отговор ${idx + 1}`}
+                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => set('poll_options', form.poll_options.filter((_, i) => i !== idx))}
+                        className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base">close</span>
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => set('poll_options', [...form.poll_options, ''])}
+                    className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium px-1 py-1"
+                  >
+                    <span className="material-symbols-outlined text-base">add</span>
+                    Добави отговор
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Резултатите ще се показват като бар диаграма.</p>
+              </>
+            )}
+
+            {/* Anonymous toggle */}
+            <div className="flex items-center justify-between mt-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Анонимна анкета</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {form.is_anonymous
+                    ? 'Гласовете не се свързват с имена'
+                    : 'Гласът се вижда в личната страница на всеки'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => set('is_anonymous', !form.is_anonymous)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  form.is_anonymous ? 'bg-indigo-600' : 'bg-gray-300'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  form.is_anonymous ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Poll options — class_voice (predefined word list) */}
+      {form.type === 'class_voice' && (
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-            Предефинирани отговори
+            Предефинирани думи <span className="text-gray-400 font-normal normal-case">(по желание)</span>
           </label>
           <div className="space-y-2">
             {form.poll_options.map((opt, idx) => (
@@ -196,7 +287,7 @@ function QuestionForm({
                     next[idx] = e.target.value
                     set('poll_options', next)
                   }}
-                  placeholder={`Отговор ${idx + 1}`}
+                  placeholder={`Дума ${idx + 1}`}
                   className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
                 <button
@@ -214,34 +305,10 @@ function QuestionForm({
               className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium px-1 py-1"
             >
               <span className="material-symbols-outlined text-base">add</span>
-              Добави отговор
+              Добави дума
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Резултатите ще се показват като бар диаграма.</p>
-          {/* Anonymous toggle */}
-          <div className="flex items-center justify-between mt-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Анонимна анкета</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {form.is_anonymous
-                  ? 'Гласовете не се свързват с имена'
-                  : 'Гласът се вижда в личната страница на всеки'}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => set('is_anonymous', !form.is_anonymous)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                form.is_anonymous ? 'bg-indigo-600' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                  form.is_anonymous ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
+          <p className="text-xs text-gray-400 mt-2">Ако има думи — учениците избират от тях. Ако не — пишат свободно.</p>
         </div>
       )}
 
@@ -319,7 +386,7 @@ function QuestionCard({
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: question.order_index,
         voice_display: form.voice_display,
-        poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+        poll_options: (form.type === 'survey' || form.type === 'class_voice') ? form.poll_options.filter(o => o.trim()) : null,
         is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
       })
       if (result.error) {
@@ -332,7 +399,7 @@ function QuestionCard({
           ...mediaFlagsForType(form.type),
           max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
           voice_display: form.voice_display,
-          poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+          poll_options: (form.type === 'survey' || form.type === 'class_voice') ? form.poll_options.filter(o => o.trim()) : null,
           is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
         })
         setEditing(false)
@@ -571,7 +638,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
         max_length: form.max_length ? parseInt(form.max_length as unknown as string) : null,
         order_index: nextIndex,
         voice_display: form.voice_display,
-        poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+        poll_options: (form.type === 'survey' || form.type === 'class_voice') ? form.poll_options.filter(o => o.trim()) : null,
         is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
       })
 
@@ -592,7 +659,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             order_index: nextIndex,
             voice_display: form.type === 'survey' ? 'barchart' : form.voice_display,
             is_featured: false,
-            poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
+            poll_options: (form.type === 'survey' || form.type === 'class_voice') ? form.poll_options.filter(o => o.trim()) : null,
             is_anonymous: form.type === 'survey' ? form.is_anonymous : true,
           },
         ])
