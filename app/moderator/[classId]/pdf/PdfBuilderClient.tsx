@@ -524,6 +524,7 @@ export default function PdfBuilderClient({ classId }: Props) {
           ) : pdfData && currentSection ? (
             <div className="h-full rounded-xl overflow-hidden shadow-lg">
               <PdfPreview
+                key={`${currentSection.id}-${JSON.stringify(pdfData.coverBlocks)}-${JSON.stringify(pdfData.closingBlocks)}`}
                 section={currentSection}
                 pdfData={pdfData}
                 theme={globalTheme}

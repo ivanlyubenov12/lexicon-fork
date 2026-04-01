@@ -312,8 +312,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     starsLabel: (cls as any).stars_label ?? null,
     memberLabel: (cls as any).member_label ?? null,
     groupLabel: (cls as any).group_label ?? null,
-    coverBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.cover as any ?? null,
-    closingBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.closing as any ?? null,
+    coverBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.cover; console.log('[pdf api] page_layouts.cover:', JSON.stringify(v)); return Array.isArray(v) ? v as any : null })(),
+    closingBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.closing; return Array.isArray(v) ? v as any : null })(),
     classInfo: {
       name: cls.name,
       namePart,
