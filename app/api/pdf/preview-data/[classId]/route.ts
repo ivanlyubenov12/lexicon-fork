@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 import type { PDFData, PDFStudent, PDFPoll, PDFAnswer, PDFVoiceQuestion, PDFVoiceItem, PDFEventComment, PDFStudentEvent } from '@/lib/pdf/types'
 
 function safeUrl(url: string | null | undefined): string | null {

@@ -237,7 +237,7 @@ export default function PdfBuilderClient({ classId }: Props) {
   // Load preview data on mount
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/pdf/preview-data/${classId}`)
+    fetch(`/api/pdf/preview-data/${classId}`, { cache: 'no-store' })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
