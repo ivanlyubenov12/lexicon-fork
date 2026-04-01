@@ -709,7 +709,7 @@ export function CoverPage({ data, theme, options }: { data: PDFData; theme?: PDF
   const opts = (options ?? {}) as CoverOptions
 
   // Block-driven rendering when page_layouts.cover is configured
-  const blocks = data.coverBlocks
+  const blocks = Array.isArray(data.coverBlocks) ? data.coverBlocks : null
   if (blocks && blocks.length > 0) {
     const hasLogo    = blocks.some(b => b.type === 'cover_logo')
     const hasPhoto   = blocks.some(b => b.type === 'cover_photo')
@@ -1396,7 +1396,7 @@ export function ClosingPage({ data, theme }: { data: PDFData; theme?: PDFTheme }
   const memberWord = (data.preset === 'friends' || data.preset === 'sports' || data.preset === 'kindergarten') ? 'участника' : 'ученика'
 
   // Block-driven rendering when page_layouts.closing is configured
-  const blocks = data.closingBlocks
+  const blocks = Array.isArray(data.closingBlocks) ? data.closingBlocks : null
   if (blocks && blocks.length > 0) {
     const hasLogo    = blocks.some(b => b.type === 'closing_logo')
     const hasTitle   = blocks.some(b => b.type === 'closing_title')
