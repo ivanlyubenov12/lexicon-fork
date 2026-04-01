@@ -146,7 +146,7 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, mem
 }) {
   const cfg = block.config as Record<string, unknown>
   const linked = linkedLabel(block.type, cfg, assets)
-  const baseMeta = BLOCK_META[block.type]
+  const baseMeta = BLOCK_META[block.type] ?? { label: block.type, icon: 'help_outline', addLabel: block.type }
   const meta = {
     ...baseMeta,
     label:
@@ -694,7 +694,7 @@ function EventsBlockCanvas({ block, assets, classId, isActive, onSelect, memorie
 
 function BlockVisual({ block, assets, linked, memberLabel, memoriesLabel, starsLabel }: { block: Block; assets: LayoutAssets; linked: string | null; memberLabel?: string | null; memoriesLabel?: string | null; starsLabel?: string | null }) {
   const cfg = block.config as Record<string, unknown>
-  const meta = BLOCK_META[block.type]
+  const meta = BLOCK_META[block.type] ?? { label: block.type, icon: 'help_outline', addLabel: block.type }
 
   switch (block.type) {
 

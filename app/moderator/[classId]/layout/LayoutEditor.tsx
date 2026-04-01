@@ -47,15 +47,39 @@ interface Props {
   pageLayouts: PageLayouts
 }
 
+const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages'])
+
+function defaultStudentPageBlocks(assets: LayoutAssets): Block[] {
+  const blocks: Block[] = []
+  blocks.push({ id: nanoid(8), type: 'sp_photo', config: { page: 1 } })
+  blocks.push({ id: nanoid(8), type: 'sp_name', config: { page: 1 } })
+  for (const q of assets.questions) {
+    blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: 1 } })
+  }
+  for (const e of assets.events) {
+    blocks.push({ id: nanoid(8), type: 'sp_event', config: { eventId: e.id, page: 2 } })
+  }
+  blocks.push({ id: nanoid(8), type: 'sp_peer_messages', config: { page: 2 } })
+  return blocks
+}
+
 export default function LayoutEditor({ classId, className, initialBlocks, templateId: initialTemplateId, assets, lexiconData, pageLayouts }: Props) {
   const [activePage, setActivePage] = useState<PageId>('group')
-  const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => ({
-    group: initialBlocks,
-    cover: [],
-    student_page: [],
-    closing: [],
-    ...(pageLayouts as Record<string, Block[]>),
-  }))
+  const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => {
+    const saved = (pageLayouts as Record<string, Block[]>) ?? {}
+    // Clean stale sp_* block types from saved student_page layout
+    const cleanedStudentPage = (saved.student_page ?? []).filter(b => VALID_SP_TYPES.has(b.type as BlockType))
+    const studentPageBlocks = cleanedStudentPage.length > 0
+      ? cleanedStudentPage
+      : defaultStudentPageBlocks(assets)
+    return {
+      group: initialBlocks,
+      cover: [],
+      closing: [],
+      ...saved,
+      student_page: studentPageBlocks,
+    }
+  })
 
   // Derived: blocks for the active page
   const blocks = allPageBlocks[activePage] ?? []

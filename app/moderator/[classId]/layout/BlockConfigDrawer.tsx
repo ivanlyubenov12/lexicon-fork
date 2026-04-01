@@ -54,7 +54,7 @@ interface Props {
 }
 
 export default function BlockConfigDrawer({ block, assets, classId, blockIndex, blocksTotal, onUpdate, onRemove, onMove, onClose }: Props) {
-  const meta = BLOCK_META[block.type]
+  const meta = BLOCK_META[block.type] ?? { label: block.type, icon: 'help_outline', color: 'bg-gray-100 text-gray-500' }
   const cfg = block.config as Record<string, unknown>
 
   function set(key: string, value: unknown) {
