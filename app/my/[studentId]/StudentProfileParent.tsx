@@ -388,7 +388,7 @@ export default function StudentProfileParent({
                 href={firstUnansweredUrl}
                 className="flex-shrink-0 bg-indigo-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1.5"
               >
-                Продължи
+                {answeredCount === 0 ? 'Започни' : 'Продължи'}
                 <span className="material-symbols-outlined text-base">arrow_forward</span>
               </Link>
             )}
