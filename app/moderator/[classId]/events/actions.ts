@@ -56,6 +56,18 @@ export async function updateEvent(
   return { error: null }
 }
 
+export async function reorderEvents(
+  classId: string,
+  updates: Array<{ id: string; order_index: number }>
+): Promise<{ error: string | null }> {
+  const supabase = createServiceRoleClient()
+  for (const { id, order_index } of updates) {
+    await supabase.from('events').update({ order_index }).eq('id', id).eq('class_id', classId)
+  }
+  revalidatePath(`/moderator/${classId}/events`)
+  return { error: null }
+}
+
 export async function deleteEvent(
   classId: string,
   eventId: string
