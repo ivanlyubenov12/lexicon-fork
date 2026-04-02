@@ -1015,7 +1015,26 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
                         </div>
                       </div>
                     )}
-                    {rest.map(renderCard)}
+                    {(() => {
+                      const videos = rest.filter(q => q.type === 'video')
+                      const others = rest.filter(q => q.type !== 'video')
+                      return (
+                        <>
+                          {videos.length > 0 && (
+                            <div className="border border-indigo-200 rounded-2xl overflow-hidden mb-1">
+                              <div className="bg-indigo-50 px-4 py-2 border-b border-indigo-200 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-indigo-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Видео въпрос</p>
+                              </div>
+                              <div className="p-3 space-y-2">
+                                {videos.map(renderCard)}
+                              </div>
+                            </div>
+                          )}
+                          {others.map(renderCard)}
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               )
