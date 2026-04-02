@@ -36,7 +36,7 @@ export async function createQuestion(
     allows_media: boolean
     max_length: number | null
     order_index: number
-    voice_display?: 'wordcloud' | 'barchart'
+    voice_display?: 'wordcloud' | 'barchart' | null
     poll_options?: string[] | null
     is_anonymous?: boolean
   }
@@ -53,7 +53,7 @@ export async function createQuestion(
     allows_media: data.allows_media,
     max_length: data.max_length,
     order_index: data.order_index,
-    voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
+    voice_display: data.voice_display ?? null,
     poll_options: data.poll_options ?? null,
     is_anonymous: data.is_anonymous ?? true,
   })
@@ -79,7 +79,7 @@ export async function updateQuestion(
     allows_media: boolean
     max_length: number | null
     order_index: number
-    voice_display?: 'wordcloud' | 'barchart'
+    voice_display?: 'wordcloud' | 'barchart' | null
     poll_options?: string[] | null
     is_anonymous?: boolean
   }
@@ -96,7 +96,7 @@ export async function updateQuestion(
       allows_media: data.allows_media,
       max_length: data.max_length,
       order_index: data.order_index,
-      voice_display: data.type === 'survey' ? 'barchart' : (data.voice_display ?? 'wordcloud'),
+      voice_display: data.voice_display ?? null,
       poll_options: data.poll_options ?? null,
       is_anonymous: data.is_anonymous ?? true,
     })
