@@ -336,6 +336,7 @@ function QuestionForm({
 
 function QuestionCard({
   question,
+  number,
   classId,
   onMoveUp,
   onMoveDown,
@@ -350,6 +351,7 @@ function QuestionCard({
   onToggleSelect,
 }: {
   question: Question
+  number?: number
   classId: string
   onMoveUp: () => void
   onMoveDown: () => void
@@ -481,6 +483,11 @@ function QuestionCard({
         <div className="flex-1 min-w-0">
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
+            {number != null && (
+              <span className="inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-600 text-white tabular-nums">
+                В{number}
+              </span>
+            )}
             <span className="inline-flex items-center text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-100 text-amber-700">
               {TYPE_LABELS[question.type]}
             </span>
@@ -922,17 +929,29 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
 
           <p className="text-xs text-gray-400 text-center mt-3">или натиснете „Нов въпрос" за ръчно добавяне</p>
         </div>
-      ) : (
-        <div className="space-y-3 mb-8">
-          {customQuestions.map((q, i) => (
+      ) : (() => {
+        const accentQs  = customQuestions.filter(q => q.type === 'better_together' || q.type === 'superhero')
+        const voiceQs   = customQuestions.filter(q => q.type === 'class_voice')
+        const surveyQs  = customQuestions.filter(q => q.type === 'survey')
+        const mainQs    = customQuestions.filter(q => q.type === 'personal' || q.type === 'video' || q.type === 'photo')
+
+        // Number map — В1, В2... for personal+video+photo in order_index order
+        const numMap = new Map(
+          [...mainQs].sort((a, b) => a.order_index - b.order_index).map((q, i) => [q.id, i + 1])
+        )
+
+        function renderCard(q: Question) {
+          const gi = customQuestions.findIndex(cq => cq.id === q.id)
+          return (
             <QuestionCard
               key={q.id}
               question={q}
+              number={numMap.get(q.id)}
               classId={classId}
-              onMoveUp={() => handleMove(i, 'up')}
-              onMoveDown={() => handleMove(i, 'down')}
-              isFirst={i === 0}
-              isLast={i === customQuestions.length - 1}
+              onMoveUp={() => handleMove(gi, 'up')}
+              onMoveDown={() => handleMove(gi, 'down')}
+              isFirst={gi === 0}
+              isLast={gi === customQuestions.length - 1}
               featuredCount={featuredCount}
               onFeaturedChange={(id, val) =>
                 setCustomQuestions(prev => sortQuestions(prev.map(q => q.id === id ? { ...q, is_featured: val } : q)))
@@ -947,9 +966,75 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
               isSelected={selected.has(q.id)}
               onToggleSelect={toggleSelect}
             />
-          ))}
-        </div>
-      )}
+          )
+        }
+
+        function SectionHeader({ icon, label, sub, color = 'text-gray-400' }: { icon: string; label: string; sub?: string; color?: string }) {
+          return (
+            <div className="flex items-center gap-2 px-1 mb-2">
+              <span className={`material-symbols-outlined text-base ${color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+              <p className={`text-xs font-bold uppercase tracking-widest ${color}`}>{label}</p>
+              {sub && <p className="text-xs text-gray-400">{sub}</p>}
+            </div>
+          )
+        }
+
+        return (
+          <div className="space-y-6 mb-8">
+            {/* ── Акценти ──────────────────────────────────────── */}
+            {accentQs.length > 0 && (
+              <div className="border border-amber-200 rounded-2xl overflow-hidden">
+                <div className="bg-amber-50 px-5 py-3 border-b border-amber-200 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Акценти</p>
+                  <p className="text-xs text-amber-400 ml-1">— показват се в личната страница като ★</p>
+                </div>
+                <div className="p-3 space-y-2">
+                  {accentQs.map(renderCard)}
+                </div>
+              </div>
+            )}
+
+            {/* ── Въпроси (personal + video + photo) ──────────── */}
+            {mainQs.length > 0 && (
+              <div>
+                <SectionHeader icon="quiz" label="Въпроси" sub={`— В1 · В${mainQs.length}`} color="text-indigo-400" />
+                <div className="space-y-2">
+                  {[...mainQs].sort((a, b) => a.order_index - b.order_index).map(renderCard)}
+                </div>
+              </div>
+            )}
+
+            {/* ── Анонимни (class_voice) ───────────────────────── */}
+            {voiceQs.length > 0 && (
+              <div className="border border-purple-200 rounded-2xl overflow-hidden">
+                <div className="bg-purple-50 px-5 py-3 border-b border-purple-200 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-purple-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>record_voice_over</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-purple-600">Анонимни въпроси</p>
+                  <p className="text-xs text-purple-400 ml-1">— облак от думи или диаграма</p>
+                </div>
+                <div className="p-3 space-y-2">
+                  {voiceQs.map(renderCard)}
+                </div>
+              </div>
+            )}
+
+            {/* ── Анкети (survey) ─────────────────────────────── */}
+            {surveyQs.length > 0 && (
+              <div className="border border-teal-200 rounded-2xl overflow-hidden">
+                <div className="bg-teal-50 px-5 py-3 border-b border-teal-200 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-teal-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>poll</span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-teal-600">Анкети</p>
+                  <p className="text-xs text-teal-400 ml-1">— избор от отговори или от участници</p>
+                </div>
+                <div className="p-3 space-y-2">
+                  {surveyQs.map(renderCard)}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
     </div>
   )
