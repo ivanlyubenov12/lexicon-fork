@@ -118,7 +118,6 @@ export default async function PreviewStudentPage({
       backHref={`${base}/students`}
       basePath={base}
       isPremium={true /* moderator preview always shows all content */}
-      showAllQuestions={true}
       embedded
     />
   )

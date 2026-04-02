@@ -140,7 +140,6 @@ export default async function ModeratorStudentPreview({
         nextHref={nextStudentId ? `/moderator/${classId}/students/${nextStudentId}/preview` : null}
         backHref={`/moderator/${classId}/students`}
         isPremium={true /* moderator preview always shows all content */}
-        showAllQuestions={true}
       />
     </div>
   )

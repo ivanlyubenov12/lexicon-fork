@@ -91,7 +91,6 @@ export default async function AdminPreviewStudentPage({ params }: { params: Prom
       backHref={`${base}/students`}
       basePath={base}
       isPremium={true}
-      showAllQuestions={true}
       embedded
     />
   )
