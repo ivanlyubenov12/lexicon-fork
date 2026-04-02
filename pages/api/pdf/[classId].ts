@@ -322,6 +322,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     closingBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.closing; return Array.isArray(v) ? v as any : null })(),
     studentPageBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.student_page; return Array.isArray(v) ? v as any : null })(),
     memoriesBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.memories; return Array.isArray(v) ? v as any : null })(),
+    groupBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.group; return Array.isArray(v) ? v as any : null })(),
     classInfo: {
       name: cls.name,
       namePart,

@@ -63,23 +63,6 @@ export default function StudentPagePreview({ blocks, assets, lexiconData, themeV
           </div>
         )
       }
-      case 'sp_accents':
-        return (
-          <div className="mb-4">
-            <div className="text-xs font-bold text-yellow-600 uppercase tracking-widest mb-2">★ Акценти</div>
-            <div className="flex flex-col gap-2">
-              {(assets.accentQuestions.length > 0
-                ? assets.accentQuestions
-                : [{ id: '1', label: 'Акцент 1', type: 'better_together' }, { id: '2', label: 'Акцент 2', type: 'better_together' }]
-              ).slice(0, 3).map((q) => (
-                <div key={q.id} className="flex items-center gap-2">
-                  <div className="flex gap-0.5">{[1,2,3,4,5].map(s => <span key={s} className="text-yellow-300 text-sm">★</span>)}</div>
-                  <div className="text-sm text-gray-500">{q.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
       case 'sp_peer_messages':
         return (
           <div className="mb-2">
@@ -169,7 +152,7 @@ export default function StudentPagePreview({ blocks, assets, lexiconData, themeV
                       ? 'text-[10px] font-bold uppercase tracking-widest text-amber-500'
                       : 'text-[10px] font-bold uppercase tracking-widest text-indigo-500'
                     const icon = grp.kind === 'featured' ? 'star' : 'videocam'
-                    const label = grp.kind === 'featured' ? 'Профилни въпроси' : 'Видео въпрос'
+                    const label = grp.kind === 'featured' ? 'Акценти' : 'Видео въпрос'
                     return (
                       <div key={gi} className={borderCls}>
                         <div className={headerCls}>

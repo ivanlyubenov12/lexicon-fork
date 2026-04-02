@@ -227,6 +227,7 @@ export async function addSystemQuestion(data: {
   type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
   order_index: number
   poll_options?: string[] | null
+  max_length?: number | null
 }): Promise<{ error: string | null }> {
   await assertAdmin()
   const admin = createServiceRoleClient()
@@ -241,6 +242,7 @@ export async function addSystemQuestion(data: {
     class_id: null,
     poll_options: data.poll_options ?? null,
     voice_display: data.type === 'survey' ? 'barchart' : null,
+    max_length: data.max_length ?? null,
   })
 
   if (error) return { error: 'Грешка при добавяне.' }

@@ -51,7 +51,7 @@ interface Props {
   pageLayouts: PageLayouts
 }
 
-const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_accents', 'sp_event', 'sp_peer_messages'])
+const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages'])
 
 const DEFAULT_PAGE2_START = 15 // questions 0..14 on page 1, 15+ on page 2
 
@@ -59,7 +59,6 @@ function buildStudentPageBlocks(assets: LayoutAssets, page2Start = DEFAULT_PAGE2
   const blocks: Block[] = []
   blocks.push({ id: nanoid(8), type: 'sp_photo', config: { page: 1 } })
   blocks.push({ id: nanoid(8), type: 'sp_name', config: { page: 1 } })
-  blocks.push({ id: nanoid(8), type: 'sp_accents', config: { page: 1 } })
   assets.questions.forEach((q, i) => {
     blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: i < page2Start ? 1 : 2 } })
   })
@@ -74,7 +73,7 @@ function buildStudentPageBlocks(assets: LayoutAssets, page2Start = DEFAULT_PAGE2
 // - removes orphaned sp_question / sp_event blocks
 // - appends missing questions (before events/messages)
 // - appends missing events (before messages)
-// - ensures sp_accents and sp_peer_messages are present
+// - ensures sp_peer_messages is present
 function syncStudentPageBlocks(saved: Block[], assets: LayoutAssets): Block[] {
   const assetQIds = new Set(assets.questions.map(q => q.id))
   const assetEIds = new Set(assets.events.map(e => e.id))
@@ -86,13 +85,6 @@ function syncStudentPageBlocks(saved: Block[], assets: LayoutAssets): Block[] {
     if (b.type === 'sp_event') return assetEIds.has(cfg.eventId as string)
     return true
   })
-
-  // Ensure sp_accents exists
-  if (!result.some(b => b.type === 'sp_accents')) {
-    const insertAt = result.findIndex(b => b.type === 'sp_question' || b.type === 'sp_event' || b.type === 'sp_peer_messages')
-    const idx = insertAt === -1 ? result.length : insertAt
-    result = [...result.slice(0, idx), { id: nanoid(8), type: 'sp_accents' as BlockType, config: { page: 1 } }, ...result.slice(idx)]
-  }
 
   // Add missing questions (before events/messages)
   const presentQIds = new Set(result.filter(b => b.type === 'sp_question').map(b => (b.config as Record<string, unknown>).questionId as string))

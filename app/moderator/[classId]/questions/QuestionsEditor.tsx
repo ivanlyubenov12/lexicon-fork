@@ -43,11 +43,13 @@ function mediaFlagsForType(type: QuestionType) {
   return { allows_text: true, allows_media: false }
 }
 
+const DEFAULT_MAX_LENGTH = '150'
+
 const EMPTY_FORM = {
   text: '',
   description: '',
   type: 'personal' as QuestionType,
-  max_length: '',
+  max_length: DEFAULT_MAX_LENGTH,
   voice_display: 'wordcloud' as 'wordcloud' | 'barchart',
   poll_options: [] as string[],
   is_anonymous: true,
@@ -67,6 +69,15 @@ function QuestionForm({
   isPending: boolean
 }) {
   const [form, setForm] = useState(initial)
+
+  // Detect duplicate poll options (case-insensitive, trimmed)
+  const trimmedOpts = form.poll_options.map(o => o.trim().toLowerCase())
+  const duplicateOptIndices = new Set<number>()
+  trimmedOpts.forEach((v, i) => {
+    if (v && trimmedOpts.indexOf(v) !== i) duplicateOptIndices.add(i)
+    if (v && trimmedOpts.lastIndexOf(v) !== i) duplicateOptIndices.add(i)
+  })
+  const hasDuplicateOpts = duplicateOptIndices.size > 0
 
   function set<K extends keyof typeof EMPTY_FORM>(key: K, value: (typeof EMPTY_FORM)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -210,25 +221,34 @@ function QuestionForm({
                 </label>
                 <div className="space-y-2">
                   {form.poll_options.map((opt, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={opt}
-                        onChange={e => {
-                          const next = [...form.poll_options]
-                          next[idx] = e.target.value
-                          set('poll_options', next)
-                        }}
-                        placeholder={`Отговор ${idx + 1}`}
-                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => set('poll_options', form.poll_options.filter((_, i) => i !== idx))}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-base">close</span>
-                      </button>
+                    <div key={idx} className="flex flex-col gap-0.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={e => {
+                            const next = [...form.poll_options]
+                            next[idx] = e.target.value
+                            set('poll_options', next)
+                          }}
+                          placeholder={`Отговор ${idx + 1}`}
+                          className={`flex-1 border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                            duplicateOptIndices.has(idx)
+                              ? 'border-red-400 focus:ring-red-400'
+                              : 'border-gray-200 focus:ring-indigo-400'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => set('poll_options', form.poll_options.filter((_, i) => i !== idx))}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-base">close</span>
+                        </button>
+                      </div>
+                      {duplicateOptIndices.has(idx) && (
+                        <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
+                      )}
                     </div>
                   ))}
                   <button
@@ -278,25 +298,34 @@ function QuestionForm({
           </label>
           <div className="space-y-2">
             {form.poll_options.map((opt, idx) => (
-              <div key={idx} className="flex gap-2">
-                <input
-                  type="text"
-                  value={opt}
-                  onChange={e => {
-                    const next = [...form.poll_options]
-                    next[idx] = e.target.value
-                    set('poll_options', next)
-                  }}
-                  placeholder={`Дума ${idx + 1}`}
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => set('poll_options', form.poll_options.filter((_, i) => i !== idx))}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-base">close</span>
-                </button>
+              <div key={idx} className="flex flex-col gap-0.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={e => {
+                      const next = [...form.poll_options]
+                      next[idx] = e.target.value
+                      set('poll_options', next)
+                    }}
+                    placeholder={`Дума ${idx + 1}`}
+                    className={`flex-1 border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                      duplicateOptIndices.has(idx)
+                        ? 'border-red-400 focus:ring-red-400'
+                        : 'border-gray-200 focus:ring-indigo-400'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => set('poll_options', form.poll_options.filter((_, i) => i !== idx))}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                </div>
+                {duplicateOptIndices.has(idx) && (
+                  <p className="text-xs text-red-500 px-1">Тази дума вече съществува.</p>
+                )}
               </div>
             ))}
             <button
@@ -315,7 +344,7 @@ function QuestionForm({
       <div className="flex gap-2 pt-1">
         <button
           onClick={() => onSave(form)}
-          disabled={isPending || !form.text.trim()}
+          disabled={isPending || !form.text.trim() || hasDuplicateOpts}
           className="bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
         >
           {isPending ? 'Запазване...' : 'Запази'}
@@ -428,7 +457,7 @@ function QuestionCard({
             text: question.text,
             description: question.description ?? '',
             type: question.type,
-            max_length: question.max_length?.toString() ?? '',
+            max_length: question.max_length?.toString() ?? DEFAULT_MAX_LENGTH,
             voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
             poll_options: question.poll_options ?? [],
             is_anonymous: question.is_anonymous,
@@ -767,7 +796,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
         }`}>
           <span className="material-symbols-outlined text-amber-400 text-lg" style={{ fontVariationSettings: featuredCount > 0 ? "'FILL' 1" : "'FILL' 0" }}>star</span>
           <span className="text-sm text-gray-600">
-            Профилни въпроси: <strong className="font-bold">{featuredCount} / 3</strong>
+            Акценти: <strong className="font-bold">{featuredCount} / 3</strong>
           </span>
         </div>
       </div>
@@ -1010,7 +1039,7 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
                       <div className="border border-amber-300 rounded-2xl overflow-hidden mb-1">
                         <button onClick={() => toggleCollapse('featured')} className="w-full bg-amber-50 px-4 py-2 border-b border-amber-200 flex items-center gap-1.5 hover:bg-amber-100 transition-colors text-left">
                           <span className="material-symbols-outlined text-amber-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Профилни въпроси</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Акценти</p>
                           <span className={`material-symbols-outlined text-amber-400 text-base ml-auto transition-transform ${isCollapsed('featured') ? '' : 'rotate-180'}`}>expand_more</span>
                         </button>
                         {!isCollapsed('featured') && <div className="p-3 space-y-2">{featured.map(renderCard)}</div>}

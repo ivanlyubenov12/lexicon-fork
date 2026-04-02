@@ -13,6 +13,17 @@ export async function submitClassVoiceAnswer(
 
   const admin = createServiceRoleClient()
 
+  const { data: question } = await admin
+    .from('questions')
+    .select('max_length')
+    .eq('id', questionId)
+    .single()
+
+  const limit = question?.max_length ?? 150
+  if (content.trim().length > limit) {
+    return { error: `Отговорът е прекалено дълъг (максимум ${limit} знака).` }
+  }
+
   // Always save with student_id — anonymous = displayed without name, but tracked for progress
   const { error } = await admin
     .from('class_voice_answers')
@@ -46,10 +57,6 @@ export async function updateStudentPhoto(
   if (error) return { error: 'Снимката не се запази. Опитайте отново.' }
 
   await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
-  revalidatePath(`/my/${studentId}`)
-  if (student?.class_id) {
-    revalidatePath(`/moderator/${student.class_id}/students`)
-  }
   return { error: null }
 }
 
@@ -95,7 +102,6 @@ export async function submitMessage(
   if (error) return { error: 'Изпращането не успя. Опитайте отново.' }
 
   await admin.from('students').update({ questionnaire_submitted: false }).eq('id', authorStudentId)
-  revalidatePath(`/my/${authorStudentId}`)
   return { error: null }
 }
 
@@ -134,7 +140,9 @@ export async function saveDraft(
   }
 
   // flagResult error is non-critical — ignore
-  revalidatePath(`/my/${studentId}`)
+  // NOTE: no revalidatePath here — /my/${studentId} is force-dynamic and
+  // calling revalidatePath during auto-save purges the router cache,
+  // causing unexpected navigation/flicker on the current question page.
   return { error: null }
 }
 
@@ -155,7 +163,6 @@ export async function submitAllDrafts(studentId: string): Promise<ActionResult> 
 
   if (answersResult.error || flagResult.error) return { error: 'Изпращането не успя. Опитайте отново.' }
 
-  revalidatePath(`/my/${studentId}`)
   return { error: null }
 }
 
@@ -169,6 +176,19 @@ export async function submitAnswer(
   }
 ): Promise<ActionResult> {
   const admin = createServiceRoleClient()
+
+  if (data.text_content !== undefined) {
+    const { data: question } = await admin
+      .from('questions')
+      .select('max_length')
+      .eq('id', questionId)
+      .single()
+
+    const limit = question?.max_length ?? 150
+    if (data.text_content.length > limit) {
+      return { error: `Отговорът е прекалено дълъг (максимум ${limit} знака).` }
+    }
+  }
 
   const { error } = await admin
     .from('answers')
@@ -189,7 +209,9 @@ export async function submitAnswer(
   }
 
   await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
-  revalidatePath(`/my/${studentId}`)
+  // NOTE: no revalidatePath — /my/${studentId} is force-dynamic (always fresh),
+  // and calling revalidatePath purges the full router cache in Next.js 15,
+  // causing the error boundary to flash during the window.location.href navigation.
 
   return { error: null }
 }

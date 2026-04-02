@@ -40,7 +40,6 @@ export async function addEventComment(
   }
 
   await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
-  revalidatePath(`/my/${studentId}`)
   revalidatePath(`/lexicon/${student.class_id}/memories`)
   return { error: null }
 }
@@ -74,7 +73,6 @@ export async function deleteEventComment(
   if (error) return { error: 'Грешка при изтриване.' }
 
   await admin.from('students').update({ questionnaire_submitted: false }).eq('id', studentId)
-  revalidatePath(`/my/${studentId}`)
   revalidatePath(`/lexicon/${student.class_id}/memories`)
   return { error: null }
 }

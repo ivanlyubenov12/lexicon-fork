@@ -27,7 +27,7 @@ const FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
-  'sp_photo', 'sp_name', 'sp_question', 'sp_accents', 'sp_event', 'sp_peer_messages',
+  'sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages',
   'mem_photos', 'mem_note', 'mem_comments',
 ])
 
@@ -56,7 +56,7 @@ const BLOCK_META: Record<BlockType, { label: string; icon: string; addLabel: str
   sp_photo:         { label: 'Снимка',   icon: 'portrait',    addLabel: 'Снимка' },
   sp_name:          { label: 'Име',      icon: 'badge',       addLabel: 'Име' },
   sp_question:      { label: 'Въпрос',  icon: 'quiz',        addLabel: 'Въпрос' },
-  sp_accents:       { label: 'Акценти', icon: 'star',        addLabel: 'Акценти' },
+
   sp_event:         { label: 'Събитие', icon: 'photo_album', addLabel: 'Събитие' },
   sp_peer_messages: { label: 'Послания',icon: 'mail',        addLabel: 'Послания' },
   mem_photos:   { label: 'Снимки',    icon: 'photo_library', addLabel: 'Снимки' },
@@ -245,7 +245,7 @@ function SortableCanvasBlock(props: {
             {gi.group === 'featured' ? 'star' : 'videocam'}
           </span>
           <p className="text-[10px] font-bold uppercase tracking-widest">
-            {gi.group === 'featured' ? 'Профилни въпроси' : 'Видео въпрос'}
+            {gi.group === 'featured' ? 'Акценти' : 'Видео въпрос'}
           </p>
         </div>
       )}

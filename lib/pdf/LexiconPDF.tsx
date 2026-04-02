@@ -693,8 +693,10 @@ function BgImage({ png }: { png: Buffer | null | undefined }) {
   if (!png) return null
   // Rendered as last child so it overlays content as a watermark.
   // Opacity is baked into the PNG itself (set in bgPatternSvg.ts).
+  // fixed={true} makes it repeat on every continuation page within the same <Page>.
   return (
     <Image
+      fixed
       src={`data:image/png;base64,${png.toString('base64')}`}
       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
     />
@@ -816,20 +818,43 @@ export function ClassOverviewPage({ data, theme, options }: { data: PDFData; the
   const t = theme ?? DEFAULT_THEME
   const opts = (options ?? {}) as OverviewOptions
   const heroSrc = classInfo.cover_image_url ?? classInfo.superhero_image_url
+  const groupBlocks = data.groupBlocks
 
-  return (
-    <Page size="A4" style={s.page}>
-      {/* Hero image */}
+  // Determine ordered sections from groupBlocks, or fall back to legacy OverviewOptions
+  type Sec = 'hero' | 'voice' | 'polls' | 'events' | 'superhero'
+  let orderedSections: Sec[]
+  if (groupBlocks && groupBlocks.length > 0) {
+    const seen = new Set<Sec>()
+    orderedSections = groupBlocks.flatMap(b => {
+      let sec: Sec | null = null
+      if (b.type === 'hero') sec = 'hero'
+      else if (b.type === 'class_voice' || b.type === 'subjects_bar') sec = 'voice'
+      else if (b.type === 'polls_grid' || b.type === 'poll') sec = 'polls'
+      else if (b.type === 'events') sec = 'events'
+      else if (b.type === 'superhero') sec = 'superhero'
+      if (sec && !seen.has(sec)) { seen.add(sec); return [sec] }
+      return []
+    })
+  } else {
+    orderedSections = [
+      'hero',
+      ...(opts.showVoice !== false ? ['voice' as Sec] : []),
+      ...(opts.showPolls !== false ? ['polls' as Sec] : []),
+      ...(opts.showEvents !== false ? ['events' as Sec] : []),
+      'superhero',
+    ]
+  }
+
+  function renderHero() {
+    return (
       <View style={{ position: 'relative', height: 200 }}>
         {heroSrc ? (
           <Image src={heroSrc} style={{ ...s.heroImage, position: 'absolute', top: 0, left: 0 }} />
         ) : (
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: C.indigoDark }} />
         )}
-        {/* Dark overlay */}
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100,
           backgroundColor: 'rgba(0,0,0,0.55)' }} />
-        {/* Class name */}
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16 }}>
           <Text style={s.heroTitle}>{classInfo.namePart}</Text>
           {classInfo.schoolPart && (
@@ -840,155 +865,169 @@ export function ClassOverviewPage({ data, theme, options }: { data: PDFData; the
           </Text>
         </View>
       </View>
+    )
+  }
 
-      {/* Voice questions — barcharts paired side-by-side, wordclouds full-width */}
-      {opts.showVoice !== false && (() => {
-        const barcharts = voice_questions.filter(vq => vq.display === 'barchart')
-        const wordclouds = voice_questions.filter(vq => vq.display === 'wordcloud')
-
-        // Pair barcharts: [0,1], [2,3], …
-        const pairs: Array<[typeof barcharts[0], typeof barcharts[0] | null]> = []
-        for (let i = 0; i < barcharts.length; i += 2) {
-          pairs.push([barcharts[i], barcharts[i + 1] ?? null])
-        }
-
-        const renderBarCol = (vq: typeof barcharts[0]) => (
-          <View style={s.barchartCol}>
-            <Text style={[s.barchartColTitle, { color: t.accentColor }]}>{vq.text}</Text>
-            {vq.items.slice(0, 4).map((item, j) => {
-              const maxPct = vq.items[0]?.pct ?? 1
-              const relW = maxPct > 0 ? Math.round((item.pct / maxPct) * 100) : 0
-              return (
-                <View key={j} style={s.barchartItem}>
-                  <View style={s.barchartItemLabel}>
-                    <Text style={s.barchartRank}>{j + 1}</Text>
-                    <Text style={s.barchartLabelText}>{item.text}</Text>
-                  </View>
-                  <View style={s.barchartTrack}>
-                    <View style={{ ...s.barchartFill, width: `${relW}%`,
-                      backgroundColor: VOICE_COLORS[j % VOICE_COLORS.length] }} />
-                  </View>
-                </View>
-              )
-            })}
+  function renderVoice() {
+    if (voice_questions.length === 0) return null
+    const barcharts = voice_questions.filter(vq => vq.display === 'barchart')
+    const wordclouds = voice_questions.filter(vq => vq.display === 'wordcloud')
+    const pairs: Array<[typeof barcharts[0], typeof barcharts[0] | null]> = []
+    for (let i = 0; i < barcharts.length; i += 2) {
+      pairs.push([barcharts[i], barcharts[i + 1] ?? null])
+    }
+    const renderBarCol = (vq: typeof barcharts[0]) => (
+      <View style={s.barchartCol}>
+        <Text style={[s.barchartColTitle, { color: t.accentColor }]}>{vq.text}</Text>
+        {vq.items.slice(0, 4).map((item, j) => {
+          const maxPct = vq.items[0]?.pct ?? 1
+          const relW = maxPct > 0 ? Math.round((item.pct / maxPct) * 100) : 0
+          return (
+            <View key={j} style={s.barchartItem}>
+              <View style={s.barchartItemLabel}>
+                <Text style={s.barchartRank}>{j + 1}</Text>
+                <Text style={s.barchartLabelText}>{item.text}</Text>
+              </View>
+              <View style={s.barchartTrack}>
+                <View style={{ ...s.barchartFill, width: `${relW}%`,
+                  backgroundColor: VOICE_COLORS[j % VOICE_COLORS.length] }} />
+              </View>
+            </View>
+          )
+        })}
+      </View>
+    )
+    const wcPairs: Array<[typeof wordclouds[0], typeof wordclouds[0] | null]> = []
+    for (let i = 0; i < wordclouds.length; i += 2) {
+      wcPairs.push([wordclouds[i], wordclouds[i + 1] ?? null])
+    }
+    const renderWcCol = (vq: typeof wordclouds[0]) => (
+      <View style={{ flex: 1 }}>
+        <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>{vq.text}</Text>
+        <View style={s.wordcloudWrap}>
+          {vq.items.map((item, j) => (
+            <Text key={j} style={{
+              fontSize: item.size === 'lg' ? 11 : item.size === 'md' ? 8 : 6,
+              fontFamily: 'NotoSerif',
+              fontWeight: item.size === 'lg' ? 'bold' : 'normal',
+              fontStyle: item.size === 'sm' ? 'italic' : 'normal',
+              color: VOICE_COLORS[j % VOICE_COLORS.length],
+            }}>
+              {item.text}
+            </Text>
+          ))}
+        </View>
+      </View>
+    )
+    return (
+      <>
+        {pairs.map((pair, pi) => (
+          <View key={`bc-${pi}`} style={{ ...s.overviewSection, paddingBottom: 0 }}>
+            <View style={s.barchartPair}>
+              {renderBarCol(pair[0])}
+              {pair[1] ? renderBarCol(pair[1]) : <View style={{ flex: 1 }} />}
+            </View>
           </View>
-        )
+        ))}
+        {wcPairs.map((pair, pi) => (
+          <View key={`wc-${pi}`} style={{ ...s.overviewSection, paddingBottom: 0 }}>
+            <View style={s.barchartPair}>
+              {renderWcCol(pair[0])}
+              {pair[1] ? renderWcCol(pair[1]) : <View style={{ flex: 1 }} />}
+            </View>
+          </View>
+        ))}
+      </>
+    )
+  }
 
-        return (
-          <>
-            {pairs.map((pair, pi) => (
-              <View key={pi} style={{ ...s.overviewSection, paddingBottom: 0 }}>
-                <View style={s.barchartPair}>
-                  {renderBarCol(pair[0])}
-                  {pair[1] ? renderBarCol(pair[1]) : <View style={{ flex: 1 }} />}
+  function renderPolls() {
+    if (polls.length === 0) return null
+    return (
+      <View style={s.overviewSection}>
+        <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>
+          {data.starsLabel
+            ? data.starsLabel
+            : data.preset === 'sports' ? 'Звездите на отбора'
+            : (data.preset === 'friends' || data.preset === 'kindergarten') ? 'Звездите на групата'
+            : 'Звездите на класа'}
+        </Text>
+        <View style={s.pollsGridRow}>
+          {polls.filter(p => p.nominees.length > 0).map((poll, i) => {
+            const winner = poll.nominees[0]
+            const initials = winner.name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
+            return (
+              <Link key={i} src={`#s-${winner.id}`} style={{ textDecoration: 'none', width: 80 }}>
+                <View style={s.pollWinnerCard}>
+                  <View style={s.pollWinnerAvatar}>
+                    {winner.photo_url ? (
+                      <Image src={winner.photo_url} style={s.pollWinnerAvatarImg} />
+                    ) : (
+                      <Text style={{ fontSize: 14, fontWeight: 'bold', color: C.white }}>{initials}</Text>
+                    )}
+                  </View>
+                  <Text style={s.pollWinnerName}>{winner.name}</Text>
+                  <Text style={s.pollWinnerLabel}>{truncate(poll.question, 40)}</Text>
+                </View>
+              </Link>
+            )
+          })}
+        </View>
+      </View>
+    )
+  }
+
+  function renderEvents() {
+    if (events.length === 0) return null
+    return (
+      <View style={s.overviewSection}>
+        <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>Нашите събития</Text>
+        <View style={s.eventsStrip}>
+          {events.slice(0, 5).map((ev, i) => {
+            const photo = ev.photos[0]
+            return photo ? (
+              <View key={i} style={s.eventThumb}>
+                <Image src={photo} style={s.eventThumbImg} />
+                <View style={s.eventThumbOverlay}>
+                  <Text style={s.eventThumbTitle}>{truncate(ev.title, 28)}</Text>
                 </View>
               </View>
-            ))}
-            {(() => {
-              const wcPairs: Array<[typeof wordclouds[0], typeof wordclouds[0] | null]> = []
-              for (let i = 0; i < wordclouds.length; i += 2) {
-                wcPairs.push([wordclouds[i], wordclouds[i + 1] ?? null])
-              }
-              const renderWcCol = (vq: typeof wordclouds[0]) => (
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>{vq.text}</Text>
-                  <View style={s.wordcloudWrap}>
-                    {vq.items.map((item, j) => (
-                      <Text key={j} style={{
-                        fontSize: item.size === 'lg' ? 11 : item.size === 'md' ? 8 : 6,
-                        fontFamily: 'NotoSerif',
-                        fontWeight: item.size === 'lg' ? 'bold' : 'normal',
-                        fontStyle: item.size === 'sm' ? 'italic' : 'normal',
-                        color: VOICE_COLORS[j % VOICE_COLORS.length],
-                      }}>
-                        {item.text}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              )
-              return wcPairs.map((pair, pi) => (
-                <View key={pi} style={{ ...s.overviewSection, paddingBottom: 0 }}>
-                  <View style={s.barchartPair}>
-                    {renderWcCol(pair[0])}
-                    {pair[1] ? renderWcCol(pair[1]) : <View style={{ flex: 1 }} />}
-                  </View>
-                </View>
-              ))
-            })()}
-          </>
-        )
-      })()}
-
-      {/* Polls grid — winners */}
-      {opts.showPolls !== false && polls.length > 0 && (
-        <View style={s.overviewSection}>
-          <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>
-            {data.starsLabel
-              ? data.starsLabel
-              : data.preset === 'sports' ? 'Звездите на отбора'
-              : (data.preset === 'friends' || data.preset === 'kindergarten') ? 'Звездите на групата'
-              : 'Звездите на класа'}
-          </Text>
-          <View style={s.pollsGridRow}>
-            {polls.filter(p => p.nominees.length > 0).map((poll, i) => {
-              const winner = poll.nominees[0]
-              const initials = winner.name.split(' ').map(n => n?.[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || '?'
-              return (
-                <Link key={i} src={`#s-${winner.id}`} style={{ textDecoration: 'none', width: 80 }}>
-                  <View style={s.pollWinnerCard}>
-                    <View style={s.pollWinnerAvatar}>
-                      {winner.photo_url ? (
-                        <Image src={winner.photo_url} style={s.pollWinnerAvatarImg} />
-                      ) : (
-                        <Text style={{ fontSize: 14, fontWeight: 'bold', color: C.white }}>{initials}</Text>
-                      )}
-                    </View>
-                    <Text style={s.pollWinnerName}>{winner.name}</Text>
-                    <Text style={s.pollWinnerLabel}>{truncate(poll.question, 40)}</Text>
-                  </View>
-                </Link>
-              )
-            })}
-          </View>
+            ) : (
+              <View key={i} style={s.eventThumbNoPhoto}>
+                <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: C.indigo, textAlign: 'center' }}>
+                  {truncate(ev.title, 30)}
+                </Text>
+              </View>
+            )
+          })}
         </View>
-      )}
+      </View>
+    )
+  }
 
-      {/* Events strip */}
-      {opts.showEvents !== false && events.length > 0 && (
-        <View style={s.overviewSection}>
-          <Text style={[s.overviewSectionLabel, { color: t.accentColor }]}>Нашите събития</Text>
-          <View style={s.eventsStrip}>
-            {events.slice(0, 5).map((ev, i) => {
-              const photo = ev.photos[0]
-              return photo ? (
-                <View key={i} style={s.eventThumb}>
-                  <Image src={photo} style={s.eventThumbImg} />
-                  <View style={s.eventThumbOverlay}>
-                    <Text style={s.eventThumbTitle}>{truncate(ev.title, 28)}</Text>
-                  </View>
-                </View>
-              ) : (
-                <View key={i} style={s.eventThumbNoPhoto}>
-                  <Text style={{ fontSize: 6.5, fontWeight: 'bold', color: C.indigo, textAlign: 'center' }}>
-                    {truncate(ev.title, 30)}
-                  </Text>
-                </View>
-              )
-            })}
-          </View>
-        </View>
-      )}
+  function renderSuperhero() {
+    if (!classInfo.superhero_prompt) return null
+    return (
+      <View style={{ paddingHorizontal: 28, paddingTop: 8 }}>
+        <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 8,
+          color: C.muted, lineHeight: 1.4, textAlign: 'center' }}>
+          „{truncate(classInfo.superhero_prompt, 180)}"
+        </Text>
+      </View>
+    )
+  }
 
-      {/* Superhero prompt quote */}
-      {classInfo.superhero_prompt && (
-        <View style={{ paddingHorizontal: 28, paddingTop: 8 }}>
-          <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 8,
-            color: C.muted, lineHeight: 1.4, textAlign: 'center' }}>
-            „{truncate(classInfo.superhero_prompt, 180)}"
-          </Text>
-        </View>
-      )}
+  return (
+    <Page size="A4" style={s.page}>
+      {orderedSections.map((sec, i) => {
+        switch (sec) {
+          case 'hero':      return <React.Fragment key={i}>{renderHero()}</React.Fragment>
+          case 'voice':     return <React.Fragment key={i}>{renderVoice()}</React.Fragment>
+          case 'polls':     return <React.Fragment key={i}>{renderPolls()}</React.Fragment>
+          case 'events':    return <React.Fragment key={i}>{renderEvents()}</React.Fragment>
+          case 'superhero': return <React.Fragment key={i}>{renderSuperhero()}</React.Fragment>
+        }
+      })}
 
       {/* Page footer */}
       <View style={s.pageFooter}>
@@ -1038,7 +1077,10 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
 
       return (
         <Page size="A4" style={s.page}>
-          <View id={pageId} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
+          {/* Anchor for internal PDF links — not fixed so it only lands on first occurrence */}
+          <View id={pageId} style={{ height: 0 }} />
+          {/* Header — fixed so it repeats on overflow continuation pages */}
+          <View fixed style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
             <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
             <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
           </View>
@@ -1075,25 +1117,12 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
                 const answer = personalAnswers[i]
                 if (!answer) return null
                 return (
-                  <View key={i} style={s.qaBlock}>
+                  <View key={i} style={s.qaBlock} wrap={false}>
                     <Text style={s.qLabel}>{answer.question_text}</Text>
                     {answer.text_content ? <Text style={s.aText}>{answer.text_content}</Text> : null}
                   </View>
                 )
               })}
-
-              {/* sp_accents */}
-              {pg.some(b => b.type === 'sp_accents') && accentAnswers.length > 0 && (
-                <View style={s.qaBlock}>
-                  <Text style={[s.qLabel, { color: '#ca8a04' }]}>★ Акценти</Text>
-                  {accentAnswers.map((a, i) => (
-                    <View key={i} style={{ marginTop: 4 }}>
-                      <Text style={[s.qLabel, { fontSize: 6.5 }]}>{a.question_text}</Text>
-                      {a.text_content ? <Text style={s.aText}>{a.text_content}</Text> : null}
-                    </View>
-                  ))}
-                </View>
-              )}
 
               {/* sp_event blocks */}
               {pg.filter(b => b.type === 'sp_event').map((b, i) => {
@@ -1104,7 +1133,7 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
                 const ec = eventTitle ? eventByTitle.get(eventTitle) : student.event_comments[i]
                 if (!ec) return null
                 return (
-                  <View key={i} style={{ marginBottom: 8 }}>
+                  <View key={i} style={{ marginBottom: 8 }} wrap={false}>
                     {ec.event_photo_url && <Image src={ec.event_photo_url} style={{ width: 130, height: 80, objectFit: 'cover', borderRadius: 4, marginBottom: 4 }} />}
                     <Text style={{ fontFamily: 'NotoSerif', fontStyle: 'italic', fontSize: 7, color: C.dark }}>„{ec.event_title}"</Text>
                     <Text style={{ fontSize: 7.5, color: C.indigo, lineHeight: 1.4 }}>{truncate(ec.comment_text, 100)}</Text>
@@ -1120,7 +1149,7 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
               <Text style={s.messagesTitle}>Послания от съучениците</Text>
               <View style={s.messagesGrid}>
                 {student.messages.map((msg, i) => (
-                  <View key={i} style={s.messageCard}>
+                  <View key={i} style={s.messageCard} wrap={false}>
                     <Text style={s.messageText}>„{truncate(msg.content, 160)}"</Text>
                     <Text style={s.messageAuthor}>— {msg.author_name}</Text>
                   </View>
@@ -1148,8 +1177,10 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
 
   return (
     <Page size="A4" style={s.page}>
-      {/* Header — id used as internal PDF link anchor from students grid */}
-      <View id={`s-${student.id}`} style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
+      {/* Anchor for internal PDF links — not fixed so it only lands on first occurrence */}
+      <View id={`s-${student.id}`} style={{ height: 0 }} />
+      {/* Header — fixed so it repeats on overflow continuation pages */}
+      <View fixed style={[s.studentHeader, { backgroundColor: t.accentColor }]}>
         <Text style={s.studentHeaderTitle}>Малки спомени · {classInfo.namePart}</Text>
         <Text style={s.studentHeaderName}>{student.first_name} {student.last_name}</Text>
       </View>
@@ -1201,7 +1232,7 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
 
           {student.answers.length > 0 ? (
             student.answers.map((qa, i) => (
-              <View key={i} style={s.qaBlock}>
+              <View key={i} style={s.qaBlock} wrap={false}>
                 <Text style={s.qLabel}>{qa.question_text}</Text>
                 {qa.media_type === 'video' ? (
                   <View style={{ marginTop: 4, width: 110, height: 80, borderRadius: 6, overflow: 'hidden',

@@ -15,14 +15,19 @@ const TYPES = [
 
 type TypeValue = typeof TYPES[number]['value']
 
+const DEFAULT_MAX_LENGTH = 150
+
 export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const [type, setType] = useState<TypeValue>('personal')
   const [order, setOrder] = useState(nextOrder)
+  const [maxLength, setMaxLength] = useState<string>(String(DEFAULT_MAX_LENGTH))
   const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  const hasTextInput = type !== 'video' && type !== 'survey' && type !== 'better_together' && type !== 'superhero'
 
   function handleSubmit() {
     if (!text.trim()) return
@@ -31,17 +36,20 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       setError('Добави поне 2 отговора за анкетата.')
       return
     }
+    const parsedMax = hasTextInput && maxLength ? parseInt(maxLength) : null
     startTransition(async () => {
       const result = await addSystemQuestion({
         text: text.trim(),
         type,
         order_index: order,
         poll_options: options,
+        max_length: parsedMax,
       })
       if (result.error) { setError(result.error); return }
       setText('')
       setType('personal')
       setOrder(order + 1)
+      setMaxLength(String(DEFAULT_MAX_LENGTH))
       setPollOptions(['', ''])
       setOpen(false)
       setError(null)
@@ -88,6 +96,21 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
           min={1}
         />
       </div>
+
+      {hasTextInput && (
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-indigo-700 whitespace-nowrap">Макс. знаци</label>
+          <input
+            type="number"
+            min={10}
+            max={2000}
+            value={maxLength}
+            onChange={(e) => setMaxLength(e.target.value)}
+            placeholder="без ограничение"
+            className="w-28 border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
+      )}
 
       {type === 'survey' && (
         <div className="space-y-2">

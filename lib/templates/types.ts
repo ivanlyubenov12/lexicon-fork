@@ -23,7 +23,7 @@ export type BlockType =
   | 'sp_photo'
   | 'sp_name'
   | 'sp_question'
-  | 'sp_accents'
+
   | 'sp_event'
   | 'sp_peer_messages'
   | 'mem_photos'

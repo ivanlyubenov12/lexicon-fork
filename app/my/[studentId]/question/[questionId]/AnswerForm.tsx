@@ -96,6 +96,7 @@ export default function AnswerForm({
       if (result.error) {
         setSubmitError(result.error)
       } else {
+        lastSavedRef.current = textValue  // prevent navigateTo from re-saving as draft
         setSubmitStatus('submitted')
         setEditing(false)
         navigateTo(`/my/${studentId}`)
@@ -341,24 +342,36 @@ export default function AnswerForm({
             )}
 
             {/* Optional text field */}
-            {question.allows_text && (
-              <div className="relative">
-                <textarea
-                  rows={3}
-                  value={textValue}
-                  onChange={(e) => setTextValue(e.target.value)}
-                  maxLength={question.max_length ?? undefined}
-                  placeholder="Добавете текст към снимката..."
-                  disabled={isLocked || !editing}
-                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
-                />
-                {editing && question.max_length && (
-                  <div className="absolute bottom-3 right-3 text-xs text-gray-300">
-                    {textValue.length}/{question.max_length}
+            {question.allows_text && (() => {
+              const limit = question.max_length ?? 150
+              const over = textValue.length > limit
+              return (
+                <div>
+                  <div className="relative">
+                    <textarea
+                      rows={3}
+                      value={textValue}
+                      onChange={(e) => setTextValue(e.target.value)}
+                      placeholder="Добавете текст към снимката..."
+                      disabled={isLocked || !editing}
+                      className={`w-full bg-white border rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm ${
+                        over ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-indigo-400'
+                      }`}
+                    />
+                    {editing && (
+                      <div className={`absolute bottom-3 right-3 text-xs ${over ? 'text-red-500 font-semibold' : 'text-gray-300'}`}>
+                        {textValue.length}/{limit}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                  {over && editing && (
+                    <p className="text-xs text-red-500 mt-1 px-1">
+                      Прекалено дълъг текст — съкратете до {limit} знака ({textValue.length - limit} в повече).
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
 
             {uploading && (
               <div className="text-sm text-indigo-600 text-center font-medium">Качва се...</div>
@@ -370,7 +383,7 @@ export default function AnswerForm({
             {editing ? (
               <button
                 onClick={handlePhotoSubmit}
-                disabled={!mediaFile || uploading}
+                disabled={!mediaFile || uploading || (question.allows_text && textValue.length > (question.max_length ?? 150))}
                 className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {uploading ? 'Качва се...' : 'Изпрати снимката'}
@@ -430,56 +443,69 @@ export default function AnswerForm({
         {/* ── Text question ──────────────────────────────────────────────── */}
         {!isVideo && !isPhoto && (
           <div className="space-y-3">
-            <div className="relative">
-              <textarea
-                rows={5}
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
-                maxLength={question.max_length ?? undefined}
-                placeholder="Напишете отговора тук..."
-                disabled={isLocked || !editing}
-                className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm"
-              />
-              {editing && (
-                <div className="absolute bottom-3 right-3 flex items-center gap-3">
-                  {question.max_length && (
-                    <span className="text-xs text-gray-300">
-                      {textValue.length}/{question.max_length}
-                    </span>
-                  )}
-                  {saveStatus === 'saving' && (
-                    <span className="text-xs text-gray-400">Записва се...</span>
-                  )}
-                  {saveStatus === 'saved' && (
-                    <span className="text-xs text-green-500">Записано</span>
-                  )}
-                </div>
-              )}
-            </div>
+            {(() => {
+              const limit = question.max_length ?? 150
+              const over = textValue.length > limit
+              return (
+                <>
+                  <div className="relative">
+                    <textarea
+                      rows={5}
+                      value={textValue}
+                      onChange={(e) => setTextValue(e.target.value)}
+                      placeholder="Напишете отговора тук..."
+                      disabled={isLocked || !editing}
+                      className={`w-full bg-white border rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 resize-none disabled:opacity-60 disabled:bg-gray-50 disabled:cursor-default shadow-sm ${
+                        over ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-indigo-400'
+                      }`}
+                    />
+                    {editing && (
+                      <div className="absolute bottom-3 right-3 flex items-center gap-3">
+                        <span className={`text-xs ${over ? 'text-red-500 font-semibold' : 'text-gray-300'}`}>
+                          {textValue.length}/{limit}
+                        </span>
+                        {saveStatus === 'saving' && (
+                          <span className="text-xs text-gray-400">Записва се...</span>
+                        )}
+                        {saveStatus === 'saved' && !over && (
+                          <span className="text-xs text-green-500">Записано</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-            {submitError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                {submitError}
-              </div>
-            )}
+                  {over && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                      Текстът е прекалено дълъг — моля съкратете до {limit} знака ({textValue.length - limit} в повече).
+                    </div>
+                  )}
 
-            {!editing ? (
-              <button
-                onClick={handleStartEdit}
-                className="w-full border-2 border-indigo-300 text-indigo-600 py-3.5 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-base">edit</span>
-                Редактирай
-              </button>
-            ) : (
-              <button
-                onClick={handleTextSubmit}
-                disabled={!textValue.trim() || submitting}
-                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                {submitting ? 'Изпращане...' : 'Изпрати'}
-              </button>
-            )}
+                  {submitError && !over && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                      {submitError}
+                    </div>
+                  )}
+
+                  {!editing ? (
+                    <button
+                      onClick={handleStartEdit}
+                      className="w-full border-2 border-indigo-300 text-indigo-600 py-3.5 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-base">edit</span>
+                      Редактирай
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleTextSubmit}
+                      disabled={!textValue.trim() || submitting || over}
+                      className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {submitting ? 'Изпращане...' : 'Изпрати'}
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </div>
         )}
 

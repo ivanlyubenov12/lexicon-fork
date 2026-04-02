@@ -10,6 +10,7 @@ interface Question {
   type: string
   poll_options?: string[] | null
   is_anonymous?: boolean | null
+  max_length?: number | null
 }
 
 interface Classmate {
@@ -99,7 +100,9 @@ export default function VoiceAnswerPage({
     return text.trim() || null
   }
 
-  const canSubmit = !!buildValue()
+  const textLimit = question.max_length ?? 150
+  const textOver = !isStudentPoll && !isSurvey && !isWordPicker && text.length > textLimit
+  const canSubmit = !!buildValue() && !textOver
 
   async function handleSubmit() {
     const value = buildValue()
@@ -320,19 +323,33 @@ export default function VoiceAnswerPage({
         )}
 
         {/* ── Free text ─────────────────────────────────────────────── */}
-        {!isStudentPoll && !isSurvey && !isWordPicker && (!submitted || !isAnonymous) && (
-          <div className="mb-6">
-            <textarea
-              rows={5}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder={isAnonymous ? 'Вашият анонимен отговор…' : 'Вашият отговор…'}
-              maxLength={400}
-              className="w-full border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white shadow-sm"
-            />
-            <div className="text-right text-xs text-gray-300 mt-1">{text.length}/400</div>
-          </div>
-        )}
+        {!isStudentPoll && !isSurvey && !isWordPicker && (!submitted || !isAnonymous) && (() => {
+          const limit = question.max_length ?? 150
+          const over = text.length > limit
+          return (
+            <div className="mb-6">
+              <div className="relative">
+                <textarea
+                  rows={5}
+                  value={text}
+                  onChange={e => { setText(e.target.value); if (submitted) setSubmitted(false) }}
+                  placeholder={isAnonymous ? 'Вашият анонимен отговор…' : 'Вашият отговор…'}
+                  className={`w-full border rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 resize-none bg-white shadow-sm ${
+                    over ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-indigo-400'
+                  }`}
+                />
+                <span className={`absolute bottom-3 right-3 text-xs ${over ? 'text-red-500 font-semibold' : 'text-gray-300'}`}>
+                  {text.length}/{limit}
+                </span>
+              </div>
+              {over && (
+                <p className="text-xs text-red-500 mt-1 px-1">
+                  Текстът е прекалено дълъг — съкратете до {limit} знака ({text.length - limit} в повече).
+                </p>
+              )}
+            </div>
+          )
+        })()}
 
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{error}</div>
