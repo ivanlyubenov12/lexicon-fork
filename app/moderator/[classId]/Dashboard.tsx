@@ -111,13 +111,6 @@ export default function Dashboard({
               </Link>
             )
           })()}
-          <Link
-            href={`${base}/lexicon`}
-            className="bg-white px-3 py-1.5 rounded-lg border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm flex items-center gap-1.5"
-          >
-            <Icon name="edit" className="text-sm" />
-            <span className="hidden sm:inline">Редактирай</span>
-          </Link>
         </div>
       </header>
 
