@@ -996,14 +996,30 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             )}
 
             {/* ── Въпроси (personal + video + photo) ──────────── */}
-            {mainQs.length > 0 && (
-              <div>
-                <SectionHeader icon="quiz" label="Въпроси" sub={`— В1 · В${mainQs.length}`} color="text-indigo-400" />
-                <div className="space-y-2">
-                  {[...mainQs].sort((a, b) => a.order_index - b.order_index).map(renderCard)}
+            {mainQs.length > 0 && (() => {
+              const sorted = [...mainQs].sort((a, b) => a.order_index - b.order_index)
+              const featured = sorted.filter(q => q.is_featured)
+              const rest = sorted.filter(q => !q.is_featured)
+              return (
+                <div>
+                  <SectionHeader icon="quiz" label="Въпроси" sub={`— В1 · В${mainQs.length}`} color="text-indigo-400" />
+                  <div className="space-y-2">
+                    {featured.length > 0 && (
+                      <div className="border border-amber-300 rounded-2xl overflow-hidden mb-1">
+                        <div className="bg-amber-50 px-4 py-2 border-b border-amber-200 flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-amber-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Профилни въпроси</p>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          {featured.map(renderCard)}
+                        </div>
+                      </div>
+                    )}
+                    {rest.map(renderCard)}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* ── Анонимни (class_voice) ───────────────────────── */}
             {voiceQs.length > 0 && (
