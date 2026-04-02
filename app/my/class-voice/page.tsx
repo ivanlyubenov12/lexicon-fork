@@ -38,7 +38,7 @@ export default async function ClassVoicePage() {
     .from('questions')
     .select('id, text, order_index')
     .eq('class_id', student.class_id)
-    .eq('type', 'class_voice')
+    .eq('type', 'survey')
     .order('order_index')
 
   const voiceQuestions = questions ?? []

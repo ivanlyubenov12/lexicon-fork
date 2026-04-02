@@ -40,7 +40,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       .from('questions')
       .select('id, text, description, type, max_length, voice_display, order_index')
       .eq('class_id', classId)
-      .in('type', ['class_voice', 'survey'])
+      .eq('type', 'survey')
       .order('order_index'),
 
     admin

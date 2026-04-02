@@ -121,7 +121,7 @@ function Section({
 
 const KIND_ICON: Record<string, string> = {
   personal: 'article', superhero: 'auto_awesome', better_together: 'groups',
-  video: 'videocam', photo: 'add_photo_alternate', class_voice: 'record_voice_over', survey: 'poll', poll: 'how_to_vote',
+  video: 'videocam', photo: 'add_photo_alternate', survey: 'poll', poll: 'how_to_vote',
 }
 
 function QuestionListRow({

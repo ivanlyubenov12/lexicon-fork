@@ -19,7 +19,7 @@ export function buildSeq(
   questions: Array<{ id: string; text: string; type: string; order_index: number; is_anonymous?: boolean | null }>,
   polls: Array<{ id: string; question: string; order_index: number }>
 ): SeqItem[] {
-  const isVoiceType = (t: string) => t === 'class_voice' || t === 'survey'
+  const isVoiceType = (t: string) => t === 'survey'
 
   const qItems = questions
     .slice()

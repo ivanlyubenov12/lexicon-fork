@@ -14,18 +14,20 @@ interface Props {
 }
 
 const TYPE_LABEL: Record<string, string> = {
-  personal: 'Личен',
+  personal:        'Личен',
   better_together: 'По-добри заедно',
-  superhero: 'Супергерой',
-  class_voice: 'Глас на класа',
-  video: 'Видео въпрос',
+  superhero:       'Супергерой',
+  survey:          'Анкета',
+  video:           'Видео въпрос',
+  photo:           'Снимка',
 }
 const TYPE_COLOR: Record<string, string> = {
-  personal: 'bg-blue-50 text-blue-600',
+  personal:        'bg-blue-50 text-blue-600',
   better_together: 'bg-green-50 text-green-600',
-  superhero: 'bg-purple-50 text-purple-600',
-  class_voice: 'bg-amber-50 text-amber-600',
-  video: 'bg-rose-50 text-rose-600',
+  superhero:       'bg-purple-50 text-purple-600',
+  survey:          'bg-indigo-50 text-indigo-600',
+  video:           'bg-rose-50 text-rose-600',
+  photo:           'bg-teal-50 text-teal-600',
 }
 
 export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, allowsMedia }: Props) {
@@ -65,7 +67,7 @@ export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, 
           <span className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${TYPE_COLOR[type] ?? 'bg-gray-50 text-gray-500'}`}>
             {TYPE_LABEL[type] ?? type}
           </span>
-          {type === 'class_voice' && (
+          {voiceDisplay != null && (
             <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 w-fit">
               <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
                 {voiceDisplay === 'barchart' ? 'bar_chart' : 'cloud'}
@@ -79,7 +81,7 @@ export default function QuestionRow({ id, text, type, orderIndex, voiceDisplay, 
               Само видео
             </span>
           )}
-          {!allowsMedia && type !== 'class_voice' && (
+          {!allowsMedia && type !== 'survey' && (
             <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-gray-50 text-gray-400 w-fit">
               <span className="material-symbols-outlined" style={{ fontSize: 12 }}>article</span>
               Само текст

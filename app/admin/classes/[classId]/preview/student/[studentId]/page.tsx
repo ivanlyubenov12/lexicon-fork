@@ -23,7 +23,7 @@ export default async function AdminPreviewStudentPage({ params }: { params: Prom
     .from('questions')
     .select('id, text, order_index, type, is_featured')
     .eq('class_id', classId)
-    .neq('type', 'class_voice')
+    .neq('type', 'survey')
     .order('order_index')
 
   const { data: answers } = await admin

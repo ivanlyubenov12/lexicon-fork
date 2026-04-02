@@ -15,12 +15,12 @@ export type QuestionPreset = (typeof QUESTION_PRESETS)[number]['id']
 
 /** Default questions — only core columns guaranteed to exist in every schema version */
 const DEFAULT_QUESTIONS = [
-  // ── Home page questions (class_voice — answered by all students) ──
-  { text: 'Най-любимият ми предмет в училище е',                                                     type: 'class_voice', allows_text: true,  allows_media: false, order_index: 0 },
-  { text: 'А най-трудният е',                                                                        type: 'class_voice', allows_text: true,  allows_media: false, order_index: 1 },
-  { text: 'Какъв е нашият клас? Опиши го с две или три думи',                                        type: 'class_voice', allows_text: true,  allows_media: false, order_index: 2 },
-  { text: 'В междучасията най-често:',                                                               type: 'class_voice', allows_text: true,  allows_media: false, order_index: 3 },
-  { text: 'Каква суперсила има класният/класната?',                                                  type: 'class_voice', allows_text: true,  allows_media: false, order_index: 4 },
+  // ── Home page questions (survey with voice_display — answered by all students) ──
+  { text: 'Най-любимият ми предмет в училище е',                                                     type: 'survey', allows_text: true,  allows_media: false, order_index: 0 },
+  { text: 'А най-трудният е',                                                                        type: 'survey', allows_text: true,  allows_media: false, order_index: 1 },
+  { text: 'Какъв е нашият клас? Опиши го с две или три думи',                                        type: 'survey', allows_text: true,  allows_media: false, order_index: 2 },
+  { text: 'В междучасията най-често:',                                                               type: 'survey', allows_text: true,  allows_media: false, order_index: 3 },
+  { text: 'Каква суперсила има класният/класната?',                                                  type: 'survey', allows_text: true,  allows_media: false, order_index: 4 },
   // ── Student page questions ─────────────────────────────────────────
   { text: 'Представи се на останалите',                                                              type: 'video',       allows_text: false, allows_media: true,  order_index: 5 },
   { text: 'Ако имах вълшебна пръчка, щях да',                                                        type: 'personal',    allows_text: true,  allows_media: false, order_index: 6 },
@@ -123,7 +123,7 @@ export async function seedDefaultClass(
   return { blocks, error: null }
 }
 
-/** Questions to show students in the wizard (personal + video only; class_voice answered implicitly) */
+/** Questions to show students in the wizard (personal + video only; survey questions answered implicitly) */
 export function getWizardQuestionTypes(): string[] {
   return ['video', 'personal']
 }
@@ -137,7 +137,7 @@ export function buildLayoutFromQuestions(
   polls: { id: string; order_index: number }[],
 ): Block[] {
   const voiceQs = questions
-    .filter(q => q.type === 'class_voice')
+    .filter(q => q.type === 'survey' && q.voice_display != null)
     .sort((a, b) => a.order_index - b.order_index)
 
   // Split by voice_display; fall back to order_index heuristic if null

@@ -62,7 +62,7 @@ export async function GET(
     ['personal', 'better_together', 'superhero'].includes(q.type)
   )
   const voiceQuestions = (questions ?? []).filter((q: any) =>
-    q.type === 'class_voice'
+    q.type === 'survey' && q.voice_display != null
   )
   const qMap = new Map(personalQuestions.map((q: any) => [q.id, q.text]))
   const qTypeMap = new Map(personalQuestions.map((q: any) => [q.id, q.type as string]))

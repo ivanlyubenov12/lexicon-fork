@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { updatePresetQuestion, addPresetQuestion, deletePresetQuestion, reorderPresetQuestions } from '../actions'
 import CollapsibleGroup from './CollapsibleGroup'
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
+type QuestionType = 'personal' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
 
 interface PresetQuestion {
   id: string
@@ -19,39 +19,37 @@ interface PresetQuestion {
 }
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  personal: 'Личен',
-  class_voice: 'Глас на класа',
+  personal:        'Личен',
   better_together: 'По-добри заедно',
-  superhero: 'Супергерой',
-  video: 'Видео въпрос',
-  photo: 'Снимка',
-  survey: 'Анкета с отговори',
+  superhero:       'Супергерой',
+  video:           'Видео въпрос',
+  photo:           'Снимка',
+  survey:          'Анкета',
 }
 const TYPE_COLOR: Record<QuestionType, string> = {
-  personal: 'bg-blue-50 text-blue-600',
-  class_voice: 'bg-amber-50 text-amber-600',
+  personal:        'bg-blue-50 text-blue-600',
   better_together: 'bg-green-50 text-green-600',
-  superhero: 'bg-purple-50 text-purple-600',
-  video: 'bg-rose-50 text-rose-600',
-  photo: 'bg-teal-50 text-teal-600',
-  survey: 'bg-indigo-50 text-indigo-600',
+  superhero:       'bg-purple-50 text-purple-600',
+  video:           'bg-rose-50 text-rose-600',
+  photo:           'bg-teal-50 text-teal-600',
+  survey:          'bg-indigo-50 text-indigo-600',
 }
 const TYPE_META: Record<QuestionType, { icon: string; color: string }> = {
   personal:        { icon: 'person',              color: 'text-blue-500' },
   video:           { icon: 'videocam',             color: 'text-rose-500' },
   photo:           { icon: 'add_photo_alternate',  color: 'text-teal-500' },
-  class_voice:     { icon: 'record_voice_over',    color: 'text-amber-500' },
   survey:          { icon: 'poll',                 color: 'text-indigo-500' },
   better_together: { icon: 'diversity_3',          color: 'text-green-500' },
   superhero:       { icon: 'auto_awesome',         color: 'text-purple-500' },
 }
-const TYPE_ORDER: QuestionType[] = ['personal', 'video', 'class_voice', 'survey', 'better_together', 'superhero']
+const TYPE_ORDER: QuestionType[] = ['personal', 'video', 'survey', 'better_together', 'superhero']
+const SELECTABLE_TYPES: QuestionType[] = ['personal', 'video', 'photo', 'survey']
 
 const EMPTY_FORM = {
   text: '',
   description: '',
   type: 'personal' as QuestionType,
-  voice_display: 'wordcloud' as 'wordcloud' | 'barchart',
+  voice_display: null as 'wordcloud' | 'barchart' | null,
   is_featured: false,
   poll_options: [] as string[],
 }
@@ -112,7 +110,7 @@ function QuestionEditForm({
             onChange={e => set('type', e.target.value as QuestionType)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           >
-            {(Object.keys(TYPE_LABELS) as QuestionType[]).map(t => (
+            {SELECTABLE_TYPES.map(t => (
               <option key={t} value={t}>{TYPE_LABELS[t]}</option>
             ))}
           </select>
@@ -131,71 +129,79 @@ function QuestionEditForm({
         </div>
       </div>
 
-      {form.type === 'class_voice' && (
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Визуализация</label>
-          <div className="flex rounded-lg border border-gray-200 overflow-hidden w-fit">
-            {(['wordcloud', 'barchart'] as const).map(v => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => set('voice_display', v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  form.voice_display === v ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
-                } ${v === 'barchart' ? 'border-l border-gray-200' : ''}`}
-              >
-                <span className="material-symbols-outlined text-sm">{v === 'barchart' ? 'bar_chart' : 'cloud'}</span>
-                {v === 'barchart' ? 'Бар диаграма' : 'Облак от думи'}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {form.type === 'survey' && (
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</label>
-          {form.poll_options.map((opt, i) => (
-            <div key={i} className="flex flex-col gap-0.5">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={opt}
-                  onChange={e => {
-                    const next = [...form.poll_options]
-                    next[i] = e.target.value
-                    set('poll_options', next)
-                  }}
-                  placeholder={`Отговор ${i + 1}`}
-                  className={`flex-1 border rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 ${
-                    duplicateOptIndices.has(i)
-                      ? 'border-red-400 focus:ring-red-400'
-                      : 'border-gray-200 focus:ring-indigo-400'
-                  }`}
-                />
-                {form.poll_options.length > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => set('poll_options', form.poll_options.filter((_, j) => j !== i))}
-                    className="text-gray-400 hover:text-red-500 px-1"
-                  >
-                    <span className="material-symbols-outlined text-base">close</span>
-                  </button>
+        <div className="space-y-3">
+          {/* Mode selector */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Режим</label>
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden w-fit">
+              <button type="button" onClick={() => { set('voice_display', null); set('poll_options', []) }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${form.voice_display == null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                <span className="material-symbols-outlined text-sm">how_to_vote</span> Анкета с избор
+              </button>
+              <button type="button" onClick={() => { set('voice_display', 'wordcloud'); set('poll_options', []) }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border-l border-gray-200 transition-colors ${form.voice_display != null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                <span className="material-symbols-outlined text-sm">cloud</span> Облак / Диаграма
+              </button>
+            </div>
+          </div>
+
+          {/* Voice sub-toggle */}
+          {form.voice_display != null && (
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden w-fit">
+              {(['wordcloud', 'barchart'] as const).map(v => (
+                <button key={v} type="button" onClick={() => set('voice_display', v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${form.voice_display === v ? 'bg-indigo-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'} ${v === 'barchart' ? 'border-l border-gray-200' : ''}`}>
+                  <span className="material-symbols-outlined text-sm">{v === 'barchart' ? 'bar_chart' : 'cloud'}</span>
+                  {v === 'barchart' ? 'Бар диаграма' : 'Облак от думи'}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Options / words list */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              {form.voice_display != null ? 'Предефинирани думи (по желание)' : 'Отговори'}
+            </label>
+            {form.poll_options.map((opt, i) => (
+              <div key={i} className="flex flex-col gap-0.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={e => {
+                      const next = [...form.poll_options]
+                      next[i] = e.target.value
+                      set('poll_options', next)
+                    }}
+                    placeholder={form.voice_display != null ? `Дума ${i + 1}` : `Отговор ${i + 1}`}
+                    className={`flex-1 border rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 ${
+                      duplicateOptIndices.has(i)
+                        ? 'border-red-400 focus:ring-red-400'
+                        : 'border-gray-200 focus:ring-indigo-400'
+                    }`}
+                  />
+                  {(form.voice_display != null || form.poll_options.length > 2) && (
+                    <button type="button" onClick={() => set('poll_options', form.poll_options.filter((_, j) => j !== i))}
+                      className="text-gray-400 hover:text-red-500 px-1">
+                      <span className="material-symbols-outlined text-base">close</span>
+                    </button>
+                  )}
+                </div>
+                {duplicateOptIndices.has(i) && (
+                  <p className="text-xs text-red-500 px-1">
+                    {form.voice_display != null ? 'Тази дума вече съществува.' : 'Този отговор вече съществува.'}
+                  </p>
                 )}
               </div>
-              {duplicateOptIndices.has(i) && (
-                <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => set('poll_options', [...form.poll_options, ''])}
-            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            Добави отговор
-          </button>
+            ))}
+            <button type="button" onClick={() => set('poll_options', [...form.poll_options, ''])}
+              className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+              <span className="material-symbols-outlined text-sm">add</span>
+              {form.voice_display != null ? 'Добави дума' : 'Добави отговор'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -243,7 +249,7 @@ function PresetRow({
       text: form.text,
       description: form.description || null,
       type: form.type,
-      voice_display: form.type === 'class_voice' ? form.voice_display : null,
+      voice_display: form.type === 'survey' ? form.voice_display : null,
       is_featured: form.is_featured,
       poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
       allows_media: form.type === 'video',
@@ -275,7 +281,7 @@ function PresetRow({
               text: question.text,
               description: question.description ?? '',
               type: question.type,
-              voice_display: (question.voice_display as 'wordcloud' | 'barchart') ?? 'wordcloud',
+              voice_display: question.voice_display as 'wordcloud' | 'barchart' | null ?? null,
               is_featured: question.is_featured,
               poll_options: question.poll_options ?? [],
             }}
@@ -305,7 +311,7 @@ function PresetRow({
           <span className={`inline-flex items-center whitespace-nowrap text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${TYPE_COLOR[question.type] ?? 'bg-gray-50 text-gray-500'}`}>
             {TYPE_LABELS[question.type] ?? question.type}
           </span>
-          {question.type === 'class_voice' && (
+          {question.voice_display != null && (
             <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 w-fit">
               <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
                 {question.voice_display === 'barchart' ? 'bar_chart' : 'cloud'}
@@ -386,7 +392,7 @@ export default function PresetQuestionsTab({
         text: form.text,
         description: form.description || null,
         type: form.type,
-        voice_display: form.type === 'class_voice' ? form.voice_display : null,
+        voice_display: form.type === 'survey' ? form.voice_display : null,
         is_featured: form.is_featured,
         order_index: nextIndex,
         poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
@@ -402,7 +408,7 @@ export default function PresetQuestionsTab({
           type: form.type,
           allows_media: form.type === 'video',
           order_index: nextIndex,
-          voice_display: form.type === 'class_voice' ? form.voice_display : null,
+          voice_display: form.type === 'survey' ? form.voice_display : null,
           is_featured: form.is_featured,
           poll_options: form.type === 'survey' ? form.poll_options.filter(o => o.trim()) : null,
         }])
@@ -418,7 +424,7 @@ export default function PresetQuestionsTab({
         text: bq.text,
         description: null,
         type: bq.type,
-        voice_display: bq.type === 'class_voice' ? (bq.voice_display as 'wordcloud' | 'barchart' | null) : null,
+        voice_display: bq.voice_display as 'wordcloud' | 'barchart' | null,
         is_featured: false,
         order_index: nextIndex,
         poll_options: bq.poll_options,
@@ -433,7 +439,7 @@ export default function PresetQuestionsTab({
           type: bq.type,
           allows_media: bq.type === 'video',
           order_index: nextIndex,
-          voice_display: bq.type === 'class_voice' ? bq.voice_display : null,
+          voice_display: bq.voice_display,
           is_featured: false,
           poll_options: bq.poll_options,
         }])

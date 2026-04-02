@@ -8,6 +8,7 @@ interface Question {
   text: string
   description?: string | null
   type: string
+  voice_display?: string | null
   poll_options?: string[] | null
   is_anonymous?: boolean | null
   max_length?: number | null
@@ -40,9 +41,9 @@ export default function VoiceAnswerPage({
   classmates = [],
 }: Props) {
   const hasPollOptions = Array.isArray(question.poll_options) && question.poll_options.length > 0
-  const isStudentPoll = question.type === 'survey' && question.poll_options?.[0] === '__students__'
-  const isSurvey  = hasPollOptions && question.type === 'survey' && !isStudentPoll
-  const isWordPicker = hasPollOptions && question.type === 'class_voice'
+  const isStudentPoll = question.poll_options?.[0] === '__students__'
+  const isWordPicker = hasPollOptions && !isStudentPoll && question.voice_display != null
+  const isSurvey  = hasPollOptions && !isStudentPoll && question.voice_display == null
   const isAnonymous = question.is_anonymous !== false
 
   // ── Survey (single-select + Друго) ─────────────────────────────────────────

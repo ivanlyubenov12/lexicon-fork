@@ -31,7 +31,7 @@ export async function createQuestion(
   data: {
     text: string
     description?: string | null
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
+    type: 'personal' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null
@@ -74,7 +74,7 @@ export async function updateQuestion(
   data: {
     text: string
     description?: string | null
-    type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
+    type: 'personal' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
     allows_text: boolean
     allows_media: boolean
     max_length: number | null

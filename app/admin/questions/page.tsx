@@ -12,8 +12,7 @@ const TYPE_GROUPS = [
   { type: 'personal',        label: 'Въпроси за мен',        icon: 'person',            color: 'text-blue-500' },
   { type: 'video',           label: 'Видео въпроси',         icon: 'videocam',          color: 'text-rose-500' },
   { type: 'photo',           label: 'Въпроси — снимка',      icon: 'add_photo_alternate', color: 'text-teal-500' },
-  { type: 'class_voice',     label: 'Анонимни въпроси',      icon: 'record_voice_over', color: 'text-amber-500' },
-  { type: 'survey',          label: 'Анкети с отговори',     icon: 'poll',              color: 'text-indigo-500' },
+  { type: 'survey',          label: 'Анкети',                icon: 'poll',              color: 'text-indigo-500' },
   { type: 'better_together', label: 'По-добри заедно',       icon: 'diversity_3',       color: 'text-green-500' },
   { type: 'superhero',       label: 'Супергерой',            icon: 'auto_awesome',      color: 'text-purple-500' },
 ]
@@ -139,7 +138,7 @@ export default async function AdminQuestionsPage({
               id: q.id,
               text: q.text,
               description: (q as { description?: string | null }).description ?? null,
-              type: q.type as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey',
+              type: q.type as 'personal' | 'better_together' | 'superhero' | 'video' | 'survey',
               allows_media: (q as { allows_media?: boolean }).allows_media ?? false,
               order_index: q.order_index,
               voice_display: (q as { voice_display?: string | null }).voice_display ?? null,
@@ -149,7 +148,7 @@ export default async function AdminQuestionsPage({
             bankQuestions={(archiveQuestions ?? []).map(q => ({
               id: q.id,
               text: q.text,
-              type: q.type as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'survey',
+              type: q.type as 'personal' | 'better_together' | 'superhero' | 'video' | 'survey',
               voice_display: (q as { voice_display?: string | null }).voice_display ?? null,
               poll_options: (q as { poll_options?: string[] | null }).poll_options ?? null,
             }))}

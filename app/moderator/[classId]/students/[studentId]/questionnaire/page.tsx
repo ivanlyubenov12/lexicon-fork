@@ -77,8 +77,8 @@ export default async function ModeratorQuestionnairePage({
   // ── Shape data ────────────────────────────────────────────────────────────
 
   const questions = allClassQuestions ?? []
-  const voiceQuestions = questions.filter(q => q.type === 'class_voice')
-  const otherQuestions = questions.filter(q => q.type !== 'class_voice')
+  const voiceQuestions = questions.filter(q => q.type === 'survey')
+  const otherQuestions = questions.filter(q => q.type !== 'survey')
 
   const answerList = answers ?? []
   const answerMap = new Map(answerList.map(a => [a.question_id, a]))

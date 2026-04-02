@@ -48,7 +48,7 @@ export default async function MyChildPage({ params }: Props) {
     .order('order_index')
 
   const personalQuestions = (allClassQuestions ?? []).filter(q => q.type === 'personal')
-  const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'class_voice' || q.type === 'survey')
+  const classVoiceQuestions = (allClassQuestions ?? []).filter(q => q.type === 'survey')
   const classQuestions = (allClassQuestions ?? []).filter(q =>
     ['superhero', 'better_together', 'video', 'photo'].includes(q.type)
   )
@@ -94,7 +94,7 @@ export default async function MyChildPage({ params }: Props) {
 
   // All voice answers for this student (both anonymous and non-anonymous)
   const allVoiceIds = (allClassQuestions ?? [])
-    .filter(q => q.type === 'survey' || q.type === 'class_voice')
+    .filter(q => q.type === 'survey')
     .map(q => q.id)
   const existingVoiceAnswers: Record<string, string> = {}
   if (allVoiceIds.length > 0) {

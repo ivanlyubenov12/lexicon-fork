@@ -535,7 +535,7 @@ export async function seedDummyData(
     }
 
     // 3. Answers for all questions
-    const textQs  = questions.filter(q => q.allows_text && q.type !== 'class_voice')
+    const textQs  = questions.filter(q => q.allows_text && q.type !== 'survey')
     const videoQs = questions.filter(q => q.type === 'video')
 
     // Sample video URLs — round-robin per student
@@ -585,7 +585,7 @@ export async function seedDummyData(
     let barchartFallbackIdx = 0
     let wordcloudFallbackIdx = 0
 
-    const voiceQs = questions.filter(q => q.type === 'class_voice')
+    const voiceQs = questions.filter(q => q.type === 'survey' && q.voice_display != null)
     const voiceRows = voiceQs.flatMap(q => {
       let pool = VOICE_POOLS[q.text]
       if (!pool) {

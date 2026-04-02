@@ -224,10 +224,11 @@ export async function updateSystemQuestion(
 
 export async function addSystemQuestion(data: {
   text: string
-  type: 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
+  type: 'personal' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
   order_index: number
   poll_options?: string[] | null
   max_length?: number | null
+  voice_display?: 'wordcloud' | 'barchart' | null
 }): Promise<{ error: string | null }> {
   await assertAdmin()
   const admin = createServiceRoleClient()
@@ -241,7 +242,7 @@ export async function addSystemQuestion(data: {
     order_index: data.order_index,
     class_id: null,
     poll_options: data.poll_options ?? null,
-    voice_display: data.type === 'survey' ? 'barchart' : null,
+    voice_display: data.voice_display ?? null,
     max_length: data.max_length ?? null,
   })
 
@@ -269,7 +270,7 @@ export async function deleteSystemQuestion(id: string): Promise<{ error: string 
 
 // ── Preset questionnaire questions ─────────────────────────────────────────────
 
-type QuestionType = 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
+type QuestionType = 'personal' | 'better_together' | 'superhero' | 'video' | 'photo' | 'survey'
 
 export async function updatePresetQuestion(
   id: string,
@@ -293,7 +294,7 @@ export async function updatePresetQuestion(
       type: data.type,
       allows_text: data.type !== 'video',
       allows_media: data.type === 'video',
-      voice_display: data.type === 'survey' ? 'barchart' : data.voice_display,
+      voice_display: data.voice_display ?? null,
       is_featured: data.is_featured,
       poll_options: data.poll_options ?? null,
     })

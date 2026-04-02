@@ -39,7 +39,7 @@ export default async function LexiconStudentPage({
     .from('questions')
     .select('id, text, order_index, type, is_featured')
     .eq('class_id', classId)
-    .neq('type', 'class_voice')
+    .neq('type', 'survey')
     .order('order_index')
 
   // Approved answers for this student

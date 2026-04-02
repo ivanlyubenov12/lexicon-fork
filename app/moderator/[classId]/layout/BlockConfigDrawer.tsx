@@ -364,7 +364,7 @@ function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
   const [text,         setText]        = useState(selected?.label ?? '')
   const [description,  setDescription] = useState(selected?.description ?? '')
   const [maxLength,    setMaxLength]   = useState(selected?.max_length != null ? String(selected.max_length) : '150')
-  const [qType,        setQType]       = useState(selected?.type ?? 'class_voice')
+  const [qType,        setQType]       = useState(selected?.type ?? 'survey')
   const [voiceDisplay, setVoiceDisplay] = useState<'wordcloud' | 'barchart'>(selected?.voice_display ?? defaultDisplay)
   const [isPending,    startTransition] = useTransition()
   const [saved,        setSaved]        = useState(false)
@@ -379,7 +379,7 @@ function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
       setText(selected.label ?? '')
       setDescription(selected.description ?? '')
       setMaxLength(selected.max_length != null ? String(selected.max_length) : '')
-      setQType(selected.type ?? 'class_voice')
+      setQType(selected.type ?? 'survey')
       setVoiceDisplay(selected.voice_display ?? defaultDisplay)
       setSaved(false)
     }
@@ -391,7 +391,7 @@ function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
       const { error } = await updateQuestion(classId, selectedId, {
         text,
         description: description || null,
-        type: qType as 'personal' | 'class_voice' | 'better_together' | 'superhero' | 'video',
+        type: qType as 'personal' | 'survey' | 'better_together' | 'superhero' | 'video',
         allows_text: true,
         allows_media: false,
         max_length: maxLength ? Number(maxLength) : null,
@@ -409,7 +409,7 @@ function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
       const nextIndex = allOptions.length
       const { error } = await createQuestion(classId, {
         text: q,
-        type: 'class_voice',
+        type: 'survey',
         allows_text: true,
         allows_media: false,
         max_length: null,
@@ -430,7 +430,7 @@ function ClassVoiceConfig({ cfg, assets, classId, defaultDisplay, set }: {
 
   const TYPE_OPTIONS = [
     { value: 'personal',        label: 'Лично' },
-    { value: 'class_voice',     label: 'Анонимен въпрос' },
+    { value: 'survey',          label: 'Анкета' },
     { value: 'better_together', label: 'Заедно сме по-добри' },
     { value: 'superhero',       label: 'Супергерой' },
     { value: 'video',           label: 'Видео' },

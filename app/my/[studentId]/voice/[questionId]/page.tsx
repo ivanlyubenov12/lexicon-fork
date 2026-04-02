@@ -27,10 +27,10 @@ export default async function VoiceAnswerRoute({
 
   const { data: question } = await admin
     .from('questions')
-    .select('id, text, description, type, poll_options, is_anonymous, max_length')
+    .select('id, text, description, type, poll_options, is_anonymous, max_length, voice_display')
     .eq('id', questionId)
     .single()
-  if (!question || (question.type !== 'class_voice' && question.type !== 'survey')) {
+  if (!question || question.type !== 'survey') {
     redirect(`/my/${studentId}`)
   }
 

@@ -4,13 +4,10 @@ import { useState, useTransition } from 'react'
 import { addSystemQuestion } from '../actions'
 
 const TYPES = [
-  { value: 'personal',        label: 'Въпрос за мен' },
-  { value: 'video',           label: 'Видео' },
-  { value: 'photo',           label: 'Снимка' },
-  { value: 'class_voice',     label: 'Анонимен' },
-  { value: 'survey',          label: 'Анкета с отговори' },
-  { value: 'better_together', label: 'По-добри заедно' },
-  { value: 'superhero',       label: 'Супергерой' },
+  { value: 'personal', label: 'Въпрос за мен' },
+  { value: 'video',    label: 'Видео' },
+  { value: 'photo',    label: 'Снимка' },
+  { value: 'survey',   label: 'Анкета' },
 ] as const
 
 type TypeValue = typeof TYPES[number]['value']
@@ -24,10 +21,11 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
   const [order, setOrder] = useState(nextOrder)
   const [maxLength, setMaxLength] = useState<string>(String(DEFAULT_MAX_LENGTH))
   const [pollOptions, setPollOptions] = useState<string[]>(['', ''])
+  const [voiceDisplay, setVoiceDisplay] = useState<'wordcloud' | 'barchart' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const hasTextInput = type !== 'video' && type !== 'survey' && type !== 'better_together' && type !== 'superhero'
+  const hasTextInput = type !== 'video' && type !== 'survey'
 
   const trimmedOpts = pollOptions.map(o => o.trim().toLowerCase())
   const duplicateOptIndices = new Set<number>()
@@ -40,7 +38,8 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
   function handleSubmit() {
     if (!text.trim()) return
     const options = type === 'survey' ? pollOptions.filter(o => o.trim()) : null
-    if (type === 'survey' && (!options || options.length < 2)) {
+    // Poll mode requires at least 2 options; voice mode options are optional
+    if (type === 'survey' && voiceDisplay == null && (!options || options.length < 2)) {
       setError('Добави поне 2 отговора за анкетата.')
       return
     }
@@ -53,6 +52,7 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
         order_index: order,
         poll_options: options,
         max_length: parsedMax,
+        voice_display: type === 'survey' ? voiceDisplay : null,
       })
       if (result.error) { setError(result.error); return }
       setText('')
@@ -60,6 +60,7 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       setOrder(order + 1)
       setMaxLength(String(DEFAULT_MAX_LENGTH))
       setPollOptions(['', ''])
+      setVoiceDisplay(null)
       setOpen(false)
       setError(null)
     })
@@ -122,49 +123,92 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       )}
 
       {type === 'survey' && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</p>
-          {pollOptions.map((opt, i) => (
-            <div key={i} className="flex flex-col gap-0.5">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={opt}
-                  onChange={e => {
-                    const next = [...pollOptions]
-                    next[i] = e.target.value
-                    setPollOptions(next)
-                  }}
-                  placeholder={`Отговор ${i + 1}`}
-                  className={`flex-1 border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${
-                    duplicateOptIndices.has(i)
-                      ? 'border-red-400 focus:ring-red-400'
-                      : 'border-indigo-200 focus:ring-indigo-400'
-                  }`}
-                />
-                {pollOptions.length > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
-                    className="text-gray-400 hover:text-red-500 px-2"
-                  >
-                    <span className="material-symbols-outlined text-base">close</span>
-                  </button>
+        <div className="space-y-3">
+          {/* Mode selector */}
+          <div className="flex rounded-lg border border-indigo-200 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => { setVoiceDisplay(null); setPollOptions(['', '']) }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors ${
+                voiceDisplay == null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-indigo-50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">how_to_vote</span>
+              Анкета с избор
+            </button>
+            <button
+              type="button"
+              onClick={() => { setVoiceDisplay('wordcloud'); setPollOptions([]) }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold border-l border-indigo-200 transition-colors ${
+                voiceDisplay != null ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 hover:bg-indigo-50'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">cloud</span>
+              Облак / Диаграма
+            </button>
+          </div>
+
+          {/* Voice display sub-toggle */}
+          {voiceDisplay != null && (
+            <div className="flex rounded-lg border border-indigo-200 overflow-hidden">
+              <button type="button" onClick={() => setVoiceDisplay('wordcloud')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors ${voiceDisplay === 'wordcloud' ? 'bg-indigo-500 text-white' : 'bg-white text-gray-500 hover:bg-indigo-50'}`}>
+                <span className="material-symbols-outlined text-sm">cloud</span> Облак от думи
+              </button>
+              <button type="button" onClick={() => setVoiceDisplay('barchart')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold border-l border-indigo-200 transition-colors ${voiceDisplay === 'barchart' ? 'bg-indigo-500 text-white' : 'bg-white text-gray-500 hover:bg-indigo-50'}`}>
+                <span className="material-symbols-outlined text-sm">bar_chart</span> Бар диаграма
+              </button>
+            </div>
+          )}
+
+          {/* Options list */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              {voiceDisplay != null ? 'Предефинирани думи (по желание)' : 'Отговори'}
+            </p>
+            {pollOptions.map((opt, i) => (
+              <div key={i} className="flex flex-col gap-0.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={e => {
+                      const next = [...pollOptions]
+                      next[i] = e.target.value
+                      setPollOptions(next)
+                    }}
+                    placeholder={voiceDisplay != null ? `Дума ${i + 1}` : `Отговор ${i + 1}`}
+                    className={`flex-1 border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${
+                      duplicateOptIndices.has(i)
+                        ? 'border-red-400 focus:ring-red-400'
+                        : 'border-indigo-200 focus:ring-indigo-400'
+                    }`}
+                  />
+                  {(voiceDisplay != null || pollOptions.length > 2) && (
+                    <button
+                      type="button"
+                      onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                      className="text-gray-400 hover:text-red-500 px-2"
+                    >
+                      <span className="material-symbols-outlined text-base">close</span>
+                    </button>
+                  )}
+                </div>
+                {duplicateOptIndices.has(i) && (
+                  <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
                 )}
               </div>
-              {duplicateOptIndices.has(i) && (
-                <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPollOptions([...pollOptions, ''])}
-            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            Добави отговор
-          </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setPollOptions([...pollOptions, ''])}
+              className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              {voiceDisplay != null ? 'Добави дума' : 'Добави отговор'}
+            </button>
+          </div>
         </div>
       )}
 
