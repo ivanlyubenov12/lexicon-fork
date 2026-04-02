@@ -124,7 +124,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
         active="dashboard"
       />
       <Dashboard
-        classData={{ ...classData, template_id: classData.template_id ?? null, memberLabel: classData.member_label ?? null, groupLabel: classData.group_label ?? null }}
+        classData={{ id: classData.id, name: classData.name, school_year: classData.school_year, status: classData.status, school_logo_url: classData.school_logo_url, plan: classData.plan ?? null, template_id: classData.template_id ?? null, memberLabel: classData.member_label ?? null, groupLabel: classData.group_label ?? null }}
         moderatorEmail={user.email ?? null}
         deadline={classData.deadline ?? null}
         students={students ?? []}

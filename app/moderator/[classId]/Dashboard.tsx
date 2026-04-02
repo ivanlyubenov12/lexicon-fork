@@ -1,10 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
-import { updateClassInfo, setDeadline } from './actions'
 import ModeratorWizard from './ModeratorWizard'
-import DateInput from '@/components/DateInput'
 
 interface Contribution {
   id: string
@@ -18,7 +15,7 @@ interface Contribution {
 }
 
 interface Props {
-  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; cover_image_url: string | null; teacher_name: string | null; plan?: string | null; template_id?: string | null; memberLabel?: string | null; groupLabel?: string | null }
+  classData: { id: string; name: string; school_year: string; status: string; school_logo_url: string | null; plan?: string | null; template_id?: string | null; memberLabel?: string | null; groupLabel?: string | null }
   moderatorEmail: string | null
   deadline: string | null
   students: Array<{ id: string; first_name: string; last_name: string; invite_accepted_at: string | null; questionnaire_submitted: boolean }>
@@ -56,16 +53,8 @@ function Icon({ name, className = '' }: { name: string; className?: string }) {
   return <span className={`material-symbols-outlined ${className}`}>{name}</span>
 }
 
-const TEMPLATE_FIELD_LABELS: Record<string, { group: string; school: string; year: string }> = {
-  primary:      { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
-  classic:      { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
-  teens:        { group: 'Клас',  school: 'Училище',        year: 'Учебна година' },
-  kindergarten: { group: 'Група', school: 'Детска градина', year: 'Учебна година' },
-  custom:       { group: 'Група', school: 'Организация',    year: 'Период' },
-}
-
 export default function Dashboard({
-  classData, moderatorEmail, deadline, students, awaitingApproval, pendingAnswers, pendingMessages,
+  classData, deadline, students, awaitingApproval,
   approvedAnswers, hasQuestionnaire, hasLayout, events, recentContributions,
 }: Props) {
   const totalStudents = students.length
@@ -73,369 +62,203 @@ export default function Dashboard({
   const progressPercent = totalStudents > 0 ? Math.round((submittedStudents / totalStudents) * 100) : 0
   const remaining = totalStudents - submittedStudents
 
-  const tid = classData.template_id ?? 'primary'
-  const fieldLabels = TEMPLATE_FIELD_LABELS[tid] ?? TEMPLATE_FIELD_LABELS.primary
-
   const base = `/moderator/${classData.id}`
-
-  const [namePart, schoolPart] = classData.name.includes(' — ')
-    ? classData.name.split(' — ')
-    : [classData.name, '']
-
-  const [editingSettings, setEditingSettings] = useState(false)
-  const [className, setClassName] = useState(namePart)
-  const [school, setSchool] = useState(schoolPart)
-  const [schoolYear, setSchoolYear] = useState(classData.school_year)
-  const [teacherName, setTeacherName] = useState(classData.teacher_name ?? '')
-  const [logoUrl, setLogoUrl] = useState<string | null>(classData.school_logo_url)
-  const [logoUploading, setLogoUploading] = useState(false)
-  const [coverUrl, setCoverUrl] = useState<string | null>(classData.cover_image_url)
-  const [coverUploading, setCoverUploading] = useState(false)
-  const [deadlineStr, setDeadlineStr] = useState<string>(
-    deadline ? new Date(deadline).toISOString().split('T')[0] : ''
-  )
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-
-  async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setCoverUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/media/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.url) setCoverUrl(data.url)
-    } finally {
-      setCoverUploading(false)
-    }
-  }
-
-  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setLogoUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/media/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (data.url) setLogoUrl(data.url)
-    } finally {
-      setLogoUploading(false)
-    }
-  }
-
-  function handleSaveSettings() {
-    if (!className.trim() || !deadlineStr) {
-      setSaveError('Моля попълнете задължителните полета.')
-      return
-    }
-    setSaveError(null)
-    startTransition(async () => {
-      const [infoResult, deadlineResult] = await Promise.all([
-        updateClassInfo(classData.id, {
-          name: `${className.trim()} — ${school.trim()}`,
-          school_year: schoolYear.trim(),
-          school_logo_url: logoUrl ?? undefined,
-          cover_image_url: coverUrl,
-          teacher_name: teacherName.trim() || null,
-        }),
-        setDeadline(classData.id, deadlineStr ? new Date(deadlineStr).toISOString() : null),
-      ])
-      const err = infoResult.error || deadlineResult.error
-      if (err) setSaveError(err)
-      else setEditingSettings(false)
-    })
-  }
 
   return (
     <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
 
-        {/* Header */}
-        <header className="mb-10">
-          <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">
-            <span>Admin Panel</span>
-            <span>/</span>
-            <span className="text-indigo-600 font-bold">Табло</span>
-          </nav>
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 break-words" style={{ fontFamily: 'Noto Serif, serif' }}>
-              {classData.name}
-            </h2>
-            {classData.status === 'published' && (
-              <Link
-                href={`/lexicon/${classData.id}`}
-                target="_blank"
-                className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
-              >
-                <span className="material-symbols-outlined text-base">open_in_new</span>
-                Към публикувания лексикон
-              </Link>
-            )}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap mt-3">
-            <div className="bg-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-gray-100">
-              <Icon name="calendar_today" className="text-amber-600 text-sm" />
-              <span className="text-sm font-semibold text-gray-700">{classData.school_year}</span>
-            </div>
-            {(() => {
-              const info = deadlineInfo(deadline)
-              return info ? (
-                <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-sm font-semibold ${info.color}`}>
-                  <Icon name="timer" className="text-sm" />
-                  {info.label}
-                </div>
-              ) : (
-                <button
-                  onClick={() => setEditingSettings(true)}
-                  className="px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors text-sm"
-                >
-                  <Icon name="timer" className="text-sm" />
-                  Краен срок
-                </button>
-              )
-            })()}
-            <button
-              onClick={() => setEditingSettings(true)}
-              className="bg-white px-3 py-1.5 rounded-lg border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm flex items-center gap-1.5"
+      {/* Header */}
+      <header className="mb-10">
+        <nav className="flex gap-2 text-xs text-slate-400 uppercase tracking-widest mb-2">
+          <span>Admin Panel</span>
+          <span>/</span>
+          <span className="text-indigo-600 font-bold">Табло</span>
+        </nav>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="text-2xl md:text-4xl font-bold text-gray-900 break-words" style={{ fontFamily: 'Noto Serif, serif' }}>
+            {classData.name}
+          </h2>
+          {classData.status === 'published' && (
+            <Link
+              href={`/lexicon/${classData.id}`}
+              target="_blank"
+              className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
             >
-              <Icon name="edit" className="text-sm" />
-              <span className="hidden sm:inline">Редактирай</span>
-            </button>
+              <span className="material-symbols-outlined text-base">open_in_new</span>
+              Към публикувания лексикон
+            </Link>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap mt-3">
+          <div className="bg-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-gray-100">
+            <Icon name="calendar_today" className="text-amber-600 text-sm" />
+            <span className="text-sm font-semibold text-gray-700">{classData.school_year}</span>
           </div>
-        </header>
-
-        {/* Settings inline edit */}
-        {editingSettings && (
-          <div className="bg-white rounded-2xl border border-indigo-100 p-6 mb-8 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-4">Настройки на класа</h3>
-            {saveError && <p className="text-red-600 text-sm mb-3">{saveError}</p>}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.group} <span className="text-red-400">*</span></label>
-                <input value={className} onChange={(e) => setClassName(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.school}</label>
-                <input value={school} onChange={(e) => setSchool(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{fieldLabels.year}</label>
-                <input value={schoolYear} onChange={(e) => setSchoolYear(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Краен срок <span className="text-red-400">*</span></label>
-                <DateInput
-                  value={deadlineStr}
-                  onChange={setDeadlineStr}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Класен ръководител</label>
-                <input value={teacherName} onChange={(e) => setTeacherName(e.target.value)}
-                  placeholder="Напр. Мария Иванова"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-            </div>
-            <div className="flex items-start gap-6 flex-wrap">
-              {/* Cover image */}
-              <div className="flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
-                <p className="text-xs font-medium text-gray-500 mb-2">Снимка на класа</p>
-                {coverUrl ? (
-                  <div className="relative rounded-xl overflow-hidden aspect-video mb-2 max-w-xs">
-                    <img src={coverUrl} alt="Кавър" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setCoverUrl(null)}
-                      className="absolute top-1.5 right-1.5 bg-black/50 text-white rounded-lg px-2 py-0.5 text-xs hover:bg-black/70"
-                    >
-                      Премахни
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex items-center gap-2 cursor-pointer border border-dashed border-gray-300 rounded-xl px-4 py-3 text-xs text-gray-400 hover:border-indigo-400 hover:text-indigo-600 transition-colors max-w-xs">
-                    <span className="material-symbols-outlined text-base">add_photo_alternate</span>
-                    {coverUploading ? 'Качване...' : 'Качи снимка на класа'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} disabled={coverUploading} />
-                  </label>
-                )}
-              </div>
-
-              {/* Logo + save */}
-              <div className="flex flex-col gap-3 flex-shrink-0">
-                <div>
-                  <p className="text-xs font-medium text-gray-500 mb-2">Лого на училището</p>
-                  <div className="flex items-center gap-3">
-                    {logoUrl && <img src={logoUrl} alt="Лого" className="w-10 h-10 rounded-lg object-contain border border-gray-100 bg-white p-1" />}
-                    <label className="cursor-pointer border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors">
-                      {logoUploading ? 'Качване...' : logoUrl ? 'Смени лого' : 'Качи лого'}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} disabled={logoUploading} />
-                    </label>
-                    {logoUrl && <button type="button" onClick={() => setLogoUrl(null)} className="text-xs text-gray-400 hover:text-red-500">Премахни</button>}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end mt-2">
-              <button onClick={() => { setEditingSettings(false); setSaveError(null) }}
-                className="text-sm text-gray-400 hover:text-gray-600 px-4 py-2">Отказ</button>
-              <button onClick={handleSaveSettings} disabled={isPending || logoUploading || coverUploading}
-                className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
-                {isPending ? 'Запазване...' : 'Запази'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Wizard */}
-        <ModeratorWizard
-          classId={classData.id}
-          hasEvents={events.length > 0}
-          hasLayout={hasLayout}
-          hasQuestionnaire={hasQuestionnaire}
-          hasStudents={students.length > 0}
-          classStatus={classData.status}
-        />
-
-        {/* Stats row */}
-        <section className="mb-8">
-          <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm relative overflow-hidden group border border-gray-100">
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-gray-700">Прогрес на попълване</h3>
-                <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5">
-                  <Icon name="verified" className="text-emerald-600 text-sm" />
-                  <span className="text-sm font-bold text-emerald-700">{approvedAnswers}</span>
-                  <span className="text-xs text-emerald-600">одобрени</span>
-                </div>
-              </div>
-              <div className="flex items-end justify-between mb-3 gap-3">
-                <span className="text-4xl md:text-5xl font-bold text-indigo-600">{progressPercent}%</span>
-                {remaining > 0 && (
-                  <span className="text-xs text-slate-400 uppercase tracking-tight text-right">
-                    Остават {remaining} профила
-                  </span>
-                )}
-              </div>
-              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-600 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-              </div>
-            </div>
-            <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-indigo-100 opacity-40 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
-          </div>
-        </section>
-
-        {/* Bento grid */}
-        <div className="grid grid-cols-12 gap-4 md:gap-8">
-          {/* Awaiting approval list */}
-          <div className="col-span-12 lg:col-span-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Очакващи одобрение
-            </h3>
-
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-              {awaitingApproval.length === 0 ? (
-                <div className="p-10 text-center">
-                  <Icon name="check_circle" className="text-4xl text-gray-200 block mb-3" />
-                  <p className="text-slate-400 text-sm font-medium">Няма попълнени лексикони за одобрение</p>
-                </div>
-              ) : (
-                awaitingApproval.slice(0, 6).map((student, i) => (
-                  <div
-                    key={student.id}
-                    onClick={() => window.location.href = `${base}/answers`}
-                    className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer ${i > 0 ? 'border-t border-gray-50' : ''}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0">
-                        {student.first_name?.[0] ?? ''}{student.last_name?.[0] ?? ''}
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">{student.first_name} {student.last_name}</p>
-                        <p className="text-xs text-slate-400">Попълнен лексикон</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                      <Link
-                        href={`${base}/students/${student.id}/preview`}
-                        className="text-xs font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <Icon name="visibility" className="text-sm" />
-                        <span className="hidden sm:inline">Прегледай</span>
-                      </Link>
-                      <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-700">
-                        Чака
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-          </div>
-
-          {/* Recent contributions */}
-          <div className="col-span-12 lg:col-span-4 space-y-4">
-            <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Най-нови отговори
-            </h3>
-
-            {recentContributions.length === 0 ? (
-              <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center text-slate-400 text-sm">
-                Все още няма одобрени отговори.
+          {(() => {
+            const info = deadlineInfo(deadline)
+            return info ? (
+              <div className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-sm font-semibold ${info.color}`}>
+                <Icon name="timer" className="text-sm" />
+                {info.label}
               </div>
             ) : (
-              recentContributions.map((c) => (
-                <div key={c.id}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold flex-shrink-0">
-                      {c.students?.first_name?.[0]}{c.students?.last_name?.[0]}
+              <Link
+                href={`${base}/lexicon`}
+                className="px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors text-sm"
+              >
+                <Icon name="timer" className="text-sm" />
+                Краен срок
+              </Link>
+            )
+          })()}
+          <Link
+            href={`${base}/lexicon`}
+            className="bg-white px-3 py-1.5 rounded-lg border border-gray-100 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-colors text-sm flex items-center gap-1.5"
+          >
+            <Icon name="edit" className="text-sm" />
+            <span className="hidden sm:inline">Редактирай</span>
+          </Link>
+        </div>
+      </header>
+
+      {/* Wizard */}
+      <ModeratorWizard
+        classId={classData.id}
+        hasEvents={events.length > 0}
+        hasLayout={hasLayout}
+        hasQuestionnaire={hasQuestionnaire}
+        hasStudents={students.length > 0}
+        classStatus={classData.status}
+      />
+
+      {/* Stats row */}
+      <section className="mb-8">
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-sm relative overflow-hidden group border border-gray-100">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-gray-700">Прогрес на попълване</h3>
+              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5">
+                <Icon name="verified" className="text-emerald-600 text-sm" />
+                <span className="text-sm font-bold text-emerald-700">{approvedAnswers}</span>
+                <span className="text-xs text-emerald-600">одобрени</span>
+              </div>
+            </div>
+            <div className="flex items-end justify-between mb-3 gap-3">
+              <span className="text-4xl md:text-5xl font-bold text-indigo-600">{progressPercent}%</span>
+              {remaining > 0 && (
+                <span className="text-xs text-slate-400 uppercase tracking-tight text-right">
+                  Остават {remaining} профила
+                </span>
+              )}
+            </div>
+            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-600 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-indigo-100 opacity-40 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+        </div>
+      </section>
+
+      {/* Bento grid */}
+      <div className="grid grid-cols-12 gap-4 md:gap-8">
+        {/* Awaiting approval list */}
+        <div className="col-span-12 lg:col-span-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-5" style={{ fontFamily: 'Noto Serif, serif' }}>
+            Очакващи одобрение
+          </h3>
+
+          <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+            {awaitingApproval.length === 0 ? (
+              <div className="p-10 text-center">
+                <Icon name="check_circle" className="text-4xl text-gray-200 block mb-3" />
+                <p className="text-slate-400 text-sm font-medium">Няма попълнени лексикони за одобрение</p>
+              </div>
+            ) : (
+              awaitingApproval.slice(0, 6).map((student, i) => (
+                <div
+                  key={student.id}
+                  onClick={() => window.location.href = `${base}/answers`}
+                  className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer ${i > 0 ? 'border-t border-gray-50' : ''}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-sm flex-shrink-0">
+                      {student.first_name?.[0] ?? ''}{student.last_name?.[0] ?? ''}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-gray-800 truncate">
-                        {c.students?.first_name} {c.students?.last_name}
-                        <span className="text-slate-400 font-normal ml-1">
-                          {c.media_type === 'video' ? 'добави видео' : c.media_type === 'audio' ? 'добави аудио' : 'отговори'}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-400">{timeAgo(c.updated_at)}</p>
+                    <div>
+                      <p className="font-bold text-gray-800 text-sm">{student.first_name} {student.last_name}</p>
+                      <p className="text-xs text-slate-400">Попълнен лексикон</p>
                     </div>
                   </div>
-
-                  {c.media_url && c.media_type === 'video' ? (
-                    <div className="rounded-lg overflow-hidden h-32 mb-3 bg-gray-100">
-                      <video src={c.media_url} className="w-full h-full object-cover" />
-                    </div>
-                  ) : c.media_url && !c.media_type ? (
-                    <div className="rounded-lg overflow-hidden h-32 mb-3 bg-gray-100">
-                      <img src={c.media_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ) : null}
-
-                  {c.text_content && (
-                    <p className="text-sm italic text-indigo-900 leading-relaxed" style={{ fontFamily: 'Noto Serif, serif' }}>
-                      „{c.text_content.slice(0, 120)}{c.text_content.length > 120 ? '…' : ''}"
-                    </p>
-                  )}
-
-                  {c.questions?.text && (
-                    <p className="text-xs text-slate-400 mt-2">{c.questions.text}</p>
-                  )}
+                  <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                    <Link
+                      href={`${base}/students/${student.id}/preview`}
+                      className="text-xs font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <Icon name="visibility" className="text-sm" />
+                      <span className="hidden sm:inline">Прегледай</span>
+                    </Link>
+                    <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-700">
+                      Чака
+                    </span>
+                  </div>
                 </div>
               ))
             )}
-
-            {/* Superhero link — hidden */}
           </div>
         </div>
+
+        {/* Recent contributions */}
+        <div className="col-span-12 lg:col-span-4 space-y-4">
+          <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Noto Serif, serif' }}>
+            Най-нови отговори
+          </h3>
+
+          {recentContributions.length === 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center text-slate-400 text-sm">
+              Все още няма одобрени отговори.
+            </div>
+          ) : (
+            recentContributions.map((c) => (
+              <div key={c.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold flex-shrink-0">
+                    {c.students?.first_name?.[0]}{c.students?.last_name?.[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-800 truncate">
+                      {c.students?.first_name} {c.students?.last_name}
+                      <span className="text-slate-400 font-normal ml-1">
+                        {c.media_type === 'video' ? 'добави видео' : c.media_type === 'audio' ? 'добави аудио' : 'отговори'}
+                      </span>
+                    </p>
+                    <p className="text-xs text-slate-400">{timeAgo(c.updated_at)}</p>
+                  </div>
+                </div>
+
+                {c.media_url && c.media_type === 'video' ? (
+                  <div className="rounded-lg overflow-hidden h-32 mb-3 bg-gray-100">
+                    <video src={c.media_url} className="w-full h-full object-cover" />
+                  </div>
+                ) : c.media_url && !c.media_type ? (
+                  <div className="rounded-lg overflow-hidden h-32 mb-3 bg-gray-100">
+                    <img src={c.media_url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ) : null}
+
+                {c.text_content && (
+                  <p className="text-sm italic text-indigo-900 leading-relaxed" style={{ fontFamily: 'Noto Serif, serif' }}>
+                    „{c.text_content.slice(0, 120)}{c.text_content.length > 120 ? '…' : ''}"
+                  </p>
+                )}
+
+                {c.questions?.text && (
+                  <p className="text-xs text-slate-400 mt-2">{c.questions.text}</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </main>
   )
 }
