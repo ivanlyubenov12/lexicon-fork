@@ -53,7 +53,28 @@ export default async function AnswerQuestionPage({ params }: Props) {
   const idx = seq.findIndex(item => item.id === questionId && item.kind === 'question')
 
   const prevUrl = idx > 0 ? seqUrl(seq[idx - 1], studentId) : null
-  const nextUrl = idx < seq.length - 1 ? seqUrl(seq[idx + 1], studentId) : null
+
+  // Fetch all answered question/poll ids for this student
+  const [{ data: answeredQs }, { data: answeredPolls }] = await Promise.all([
+    admin.from('answers')
+      .select('question_id, status')
+      .eq('student_id', studentId)
+      .in('status', ['submitted', 'approved']),
+    admin.from('class_poll_votes')
+      .select('poll_id')
+      .eq('student_id', studentId),
+  ])
+  const answeredQIds = new Set((answeredQs ?? []).map(a => a.question_id))
+  const answeredPollIds = new Set((answeredPolls ?? []).map(v => v.poll_id))
+
+  // Next unanswered item after current position (skip already submitted/approved)
+  const nextUnanswered = seq.slice(idx + 1).find(item =>
+    item.kind === 'question' ? !answeredQIds.has(item.id) : !answeredPollIds.has(item.id)
+  )
+  // Fall back to the literal next item if all remaining are answered
+  const nextUrl = nextUnanswered
+    ? seqUrl(nextUnanswered, studentId)
+    : (idx < seq.length - 1 ? seqUrl(seq[idx + 1], studentId) : null)
 
   return (
     <AnswerForm

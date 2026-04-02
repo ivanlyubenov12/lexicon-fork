@@ -99,7 +99,7 @@ export default function AnswerForm({
         lastSavedRef.current = textValue  // prevent navigateTo from re-saving as draft
         setSubmitStatus('submitted')
         setEditing(false)
-        navigateTo(`/my/${studentId}`)
+        navigateTo(nextUrl ?? `/my/${studentId}`)
       }
     } finally {
       setSubmitting(false)
@@ -145,7 +145,7 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
-        navigateTo(`/my/${studentId}`)
+        navigateTo(nextUrl ?? `/my/${studentId}`)
       }
     } catch {
       setSubmitError('Качването не успя. Опитайте отново.')
@@ -213,7 +213,7 @@ export default function AnswerForm({
         setSubmitError(result.error)
       } else {
         setSubmitStatus('submitted')
-        navigateTo(`/my/${studentId}`)
+        navigateTo(nextUrl ?? `/my/${studentId}`)
       }
     } catch {
       setSubmitError('Качването не успя. Опитайте отново.')
