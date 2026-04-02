@@ -50,7 +50,7 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
     setCameraError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'user' }, width: { ideal: 1280 }, height: { ideal: 720 } },
       })
       streamRef.current = stream
       setCameraActive(true) // useEffect will attach stream after DOM updates
