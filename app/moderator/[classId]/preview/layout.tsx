@@ -54,7 +54,7 @@ export default async function PreviewLayout({
       {/* Preview banner */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-indigo-900 text-white flex items-center justify-between px-5 py-2.5 text-sm shadow-lg">
         <Link
-          href={`/moderator/${classId}`}
+          href={`/moderator/${classId}/lexicon`}
           className="flex items-center gap-1.5 text-indigo-200 hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
