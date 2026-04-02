@@ -383,7 +383,7 @@ export default function AnswerForm({
             {editing ? (
               <button
                 onClick={handlePhotoSubmit}
-                disabled={!mediaFile || uploading || (question.allows_text && textValue.length > (question.max_length ?? 150))}
+                disabled={!mediaFile || uploading || (!!question.allows_text && textValue.length > (question.max_length ?? 150))}
                 className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {uploading ? 'Качва се...' : 'Изпрати снимката'}
