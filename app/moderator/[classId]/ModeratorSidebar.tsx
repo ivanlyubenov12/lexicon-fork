@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import LogoutButton from './LogoutButton'
+import LexiconGroup from './LexiconGroup'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import MobileMenuWrapper from './MobileMenuWrapper'
 
@@ -29,15 +30,6 @@ interface Props {
   active: ActiveNav
 }
 
-const NAV_ITEMS = [
-  { key: 'dashboard', icon: 'dashboard',    label: 'Табло',    sub: '' },
-  { key: 'students',  icon: 'group',         label: 'Участници', sub: '/students' },
-  { key: 'answers',   icon: 'volunteer_activism', label: 'Отговори', sub: '/answers' },
-  { key: 'lexicon',   icon: 'view_quilt',    label: 'Лексикон', sub: '/lexicon' },
-  { key: 'events',    icon: 'photo_album',   label: 'Събития',  sub: '/events' },
-  { key: 'preview',   icon: 'visibility',    label: 'Превю',    sub: '/preview' },
-] as const
-
 export default async function ModeratorSidebar({ classId, namePart, schoolYear, logoUrl, active }: Props) {
   const supabase = createServerClient()
   const admin = createServiceRoleClient()
@@ -47,6 +39,24 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
   ])
   const isPublished = classRow?.status === 'published'
   const base = `/moderator/${classId}`
+
+  const lexiconItems = [
+    { key: 'lexicon',   icon: 'tune',            label: 'Настройки',   href: `${base}/lexicon` },
+    { key: 'events',    icon: 'photo_album',      label: 'Събития',     href: `${base}/events` },
+    { key: 'questions', icon: 'quiz',             label: 'Въпросник',   href: `${base}/questions` },
+    { key: 'polls',     icon: 'bar_chart',        label: 'Анкети',      href: `${base}/polls` },
+    { key: 'messages',  icon: 'forum',            label: 'Послания',    href: `${base}/messages` },
+    { key: 'pdf',       icon: 'picture_as_pdf',   label: 'PDF Builder', href: `${base}/pdf` },
+  ]
+
+  const primaryItems = [
+    { key: 'students', icon: 'group',              label: 'Участници',    sub: '/students' },
+    { key: 'answers',  icon: 'volunteer_activism', label: 'За модерация', sub: '/answers' },
+  ] as const
+
+  const secondaryItems = [
+    { href: '/moderator/profile', icon: 'manage_accounts', label: 'Профил и плащания' },
+  ]
 
   return (
     <MobileMenuWrapper namePart={namePart} finalizeHref={`${base}/finalize`}>
@@ -89,89 +99,85 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
-          const lexiconActive = item.key === 'lexicon' &&
-            ['lexicon', 'questions', 'polls', 'messages', 'layout', 'template'].includes(active ?? '')
-          const isActive = active === item.key || lexiconActive
-          return (
-            <Link
-              key={item.key}
-              href={`${base}${item.sub}`}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
-                isActive
-                  ? 'bg-white text-indigo-700 font-semibold shadow-sm'
-                  : 'text-slate-500 hover:bg-white/50'
-              }`}
-            >
-              <span className="material-symbols-outlined text-xl">{item.icon}</span>
-              {item.label}
-            </Link>
-          )
-        })}
+
+        {/* Табло */}
+        <Link
+          href={base}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
+            active === 'dashboard'
+              ? 'bg-white text-indigo-700 font-semibold shadow-sm'
+              : 'text-slate-500 hover:bg-white/50'
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">dashboard</span>
+          Табло
+        </Link>
+
+        {/* Лексикон — разгъваема група */}
+        <LexiconGroup active={active} items={lexiconItems} />
+
+        {/* Участници + За модерация */}
+        {primaryItems.map(item => (
+          <Link
+            key={item.key}
+            href={`${base}${item.sub}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
+              active === item.key
+                ? 'bg-white text-indigo-700 font-semibold shadow-sm'
+                : 'text-slate-500 hover:bg-white/50'
+            }`}
+          >
+            <span className="material-symbols-outlined text-xl">{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
       </nav>
 
-      {/* Bottom */}
-      <div className="pt-4 space-y-2">
-        <Link
-          href={`${base}/seed`}
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
-            active === 'seed'
-              ? 'bg-amber-50 text-amber-700 font-semibold'
-              : 'text-slate-400 hover:bg-white/50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-xl">science</span>
-          Тест данни
-        </Link>
-        <Link
-          href={`${base}/pdf`}
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
-            active === 'pdf'
-              ? 'bg-white text-indigo-700 font-semibold shadow-sm'
-              : 'text-slate-400 hover:bg-white/50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
-          PDF Builder
-        </Link>
-        <Link
-          href="/moderator/profile"
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
-            active === null && false ? '' : 'text-slate-400 hover:bg-white/50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-xl">manage_accounts</span>
-          Профил и плащания
-        </Link>
-        <LogoutButton />
+      {/* Secondary (pale) */}
+      <div className="pt-4 border-t border-black/5 space-y-0.5">
+        {secondaryItems.map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
+          >
+            <span className="material-symbols-outlined text-xl">{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
         <a
           href="mailto:support@lexicon.bg"
-          className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
+          className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
         >
           <span className="material-symbols-outlined text-xl">help</span>
           Помощен център
         </a>
-        {isPublished ? (
-          <Link
-            href={`/lexicon/${classId}`}
-            target="_blank"
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm text-center shadow bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-base">open_in_new</span>
-            Към лексикона
-          </Link>
-        ) : (
-          <Link
-            href={`${base}/finalize`}
-            className={`w-full block py-3 px-4 rounded-xl font-bold text-sm text-center shadow transition-opacity ${
-              active === 'finalize'
-                ? 'bg-gradient-to-br from-indigo-700 to-indigo-600 text-white opacity-100'
-                : 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90'
-            }`}
-          >
-            Финализирай лексикона
-          </Link>
-        )}
+        <LogoutButton />
+
+        {/* CTA */}
+        <div className="pt-2">
+          {isPublished ? (
+            <Link
+              href={`/lexicon/${classId}`}
+              target="_blank"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm text-center shadow bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-base">open_in_new</span>
+              Към лексикона
+            </Link>
+          ) : (
+            <Link
+              href={`${base}/finalize`}
+              className={`w-full block py-3 px-4 rounded-xl font-bold text-sm text-center shadow transition-opacity ${
+                active === 'finalize'
+                  ? 'bg-gradient-to-br from-indigo-700 to-indigo-600 text-white opacity-100'
+                  : 'bg-gradient-to-br from-indigo-600 to-indigo-500 text-white hover:opacity-90'
+              }`}
+            >
+              Финализирай лексикона
+            </Link>
+          )}
+        </div>
       </div>
     </aside>
     </MobileMenuWrapper>
