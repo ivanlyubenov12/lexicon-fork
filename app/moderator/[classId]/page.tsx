@@ -98,7 +98,7 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
 
   const submittedStudentIds = new Set((allStudentAnswers ?? []).map(a => a.student_id))
 
-  const awaitingApproval = (students ?? []).filter(s => submittedStudentIds.has(s.id))
+  const awaitingApproval = (students ?? []).filter(s => s.questionnaire_submitted && submittedStudentIds.has(s.id))
 
   // 10. Fetch events
   const { data: events } = await adminClient
