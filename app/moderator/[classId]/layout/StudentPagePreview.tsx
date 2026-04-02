@@ -141,11 +141,48 @@ export default function StudentPagePreview({ blocks, assets, lexiconData, themeV
               <div className="flex-1 p-5">
                 {rightBlocks.length === 0 ? (
                   <div className="text-gray-200 text-sm text-center mt-12">Добавете блокове</div>
-                ) : (
-                  rightBlocks.map(b => (
-                    <div key={b.id}>{renderBlock(b)}</div>
-                  ))
-                )}
+                ) : (() => {
+                  // Group consecutive featured / video sp_question blocks
+                  type Grp = { kind: 'featured' | 'video' | 'plain'; blocks: Block[] }
+                  const groups: Grp[] = []
+                  for (const b of rightBlocks) {
+                    const cfg = b.config as Record<string, unknown>
+                    const q = b.type === 'sp_question' && cfg.questionId
+                      ? assets.questions.find(q => q.id === cfg.questionId) : null
+                    const kind = q?.is_featured ? 'featured' : q?.type === 'video' ? 'video' : 'plain'
+                    const last = groups[groups.length - 1]
+                    if (last && last.kind === kind) last.blocks.push(b)
+                    else groups.push({ kind, blocks: [b] })
+                  }
+                  return groups.map((grp, gi) => {
+                    if (grp.kind === 'plain') {
+                      return grp.blocks.map(b => <div key={b.id}>{renderBlock(b)}</div>)
+                    }
+                    const borderCls = grp.kind === 'featured'
+                      ? 'border border-amber-300 rounded-xl overflow-hidden mb-4'
+                      : 'border border-indigo-200 rounded-xl overflow-hidden mb-4'
+                    const headerCls = grp.kind === 'featured'
+                      ? 'bg-amber-50 px-3 py-1.5 border-b border-amber-200 flex items-center gap-1.5'
+                      : 'bg-indigo-50 px-3 py-1.5 border-b border-indigo-200 flex items-center gap-1.5'
+                    const iconCls = grp.kind === 'featured' ? 'text-amber-400' : 'text-indigo-400'
+                    const labelCls = grp.kind === 'featured'
+                      ? 'text-[10px] font-bold uppercase tracking-widest text-amber-500'
+                      : 'text-[10px] font-bold uppercase tracking-widest text-indigo-500'
+                    const icon = grp.kind === 'featured' ? 'star' : 'videocam'
+                    const label = grp.kind === 'featured' ? 'Профилни въпроси' : 'Видео въпрос'
+                    return (
+                      <div key={gi} className={borderCls}>
+                        <div className={headerCls}>
+                          <span className={`material-symbols-outlined text-sm ${iconCls}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+                          <p className={labelCls}>{label}</p>
+                        </div>
+                        <div className="p-3">
+                          {grp.blocks.map(b => <div key={b.id}>{renderBlock(b)}</div>)}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             </div>
           )}
