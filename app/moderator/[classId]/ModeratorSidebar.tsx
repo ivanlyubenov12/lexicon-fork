@@ -55,6 +55,7 @@ export default async function ModeratorSidebar({ classId, namePart, schoolYear, 
   ] as const
 
   const secondaryItems = [
+    { href: `${base}/preview`, icon: 'visibility', label: 'Превю' },
     { href: '/moderator/profile', icon: 'manage_accounts', label: 'Профил и плащания' },
   ]
 

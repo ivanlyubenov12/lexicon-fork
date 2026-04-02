@@ -1,13 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useTransition } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import { updateClassInfo, setDeadline } from './actions'
 import ModeratorWizard from './ModeratorWizard'
 import DateInput from '@/components/DateInput'
-import LogoutButton from './LogoutButton'
-import { normalisePlan, PLANS } from '@/lib/plans'
 
 interface Contribution {
   id: string
@@ -85,10 +82,6 @@ export default function Dashboard({
     ? classData.name.split(' — ')
     : [classData.name, '']
 
-  const [menuOpen, setMenuOpen] = useState(false)
-  const pathname = usePathname()
-  useEffect(() => { setMenuOpen(false) }, [pathname])
-
   const [editingSettings, setEditingSettings] = useState(false)
   const [className, setClassName] = useState(namePart)
   const [school, setSchool] = useState(schoolPart)
@@ -157,179 +150,8 @@ export default function Dashboard({
     })
   }
 
-  const navItems = [
-    { icon: 'dashboard',    label: 'Табло',     href: base,                active: true },
-    { icon: 'group',        label: 'Участници', href: `${base}/students` },
-    { icon: 'volunteer_activism', label: 'Отговори', href: `${base}/answers` },
-    { icon: 'view_quilt',   label: 'Лексикон',  href: `${base}/lexicon` },
-    { icon: 'calendar_month', label: 'Събития', href: `${base}/events` },
-    { icon: 'visibility',   label: 'Превю',     href: `${base}/preview` },
-    { icon: 'settings',     label: 'Настройки', href: '#', onClick: () => setEditingSettings(true) },
-  ]
-
-  const sidebarContent = (
-      <aside className="w-64 h-screen bg-[#f4f3f2] flex flex-col p-4 overflow-y-auto" style={{ fontFamily: 'Manrope, sans-serif' }}>
-        {/* Brand */}
-        <div className="px-2 py-4">
-          <Link href="/moderator" className="block group">
-            <h1 className="text-indigo-900 text-xl font-bold tracking-tight group-hover:text-indigo-600 transition-colors" style={{ fontFamily: 'Noto Serif, serif' }}>
-              Малки спомени
-            </h1>
-          </Link>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-xs text-slate-400 uppercase tracking-widest">Admin Panel</p>
-            {(() => {
-              const plan = normalisePlan(classData.plan)
-              const meta = PLANS[plan]
-              return (
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
-                  {meta.label}
-                </span>
-              )
-            })()}
-          </div>
-        </div>
-
-        {/* Profile */}
-        <div className="flex items-center gap-3 px-2 py-3 bg-white/60 rounded-xl mb-4">
-          {logoUrl ? (
-            <img src={logoUrl} alt="Лого" className="w-10 h-10 rounded-full object-contain bg-white border border-gray-100 p-0.5" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
-              {namePart[0]}
-            </div>
-          )}
-          <div className="overflow-hidden">
-            <p className="font-bold text-sm text-indigo-900 truncate">{namePart}</p>
-            <p className="text-xs text-slate-400 truncate">{classData.school_year}</p>
-            {moderatorEmail && <p className="text-xs text-slate-400 truncate mt-0.5">{moderatorEmail}</p>}
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 space-y-0.5">
-          {navItems.map((item) =>
-            item.onClick ? (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-white/50 rounded-lg transition-colors text-left"
-              >
-                <Icon name={item.icon} className="text-xl" />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            ) : (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm ${
-                  item.active
-                    ? 'bg-white text-indigo-700 font-semibold shadow-sm'
-                    : 'text-slate-500 hover:bg-white/50'
-                }`}
-              >
-                <Icon name={item.icon} className="text-xl" />
-                {item.label}
-              </Link>
-            )
-          )}
-        </nav>
-
-        {/* Bottom */}
-        <div className="pt-4 space-y-2">
-          <Link
-            href={`${base}/seed`}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
-          >
-            <Icon name="science" className="text-xl" />
-            Тест данни
-          </Link>
-          <a
-            href={`/api/pdf/${classData.id}`}
-            download
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
-          >
-            <Icon name="picture_as_pdf" className="text-xl" />
-            Изтегли PDF
-          </a>
-          <Link
-            href="/moderator/profile"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm text-slate-400 hover:bg-white/50"
-          >
-            <Icon name="manage_accounts" className="text-xl" />
-            Профил и плащания
-          </Link>
-          <LogoutButton />
-          <Link
-            href={base}
-            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
-          >
-            <Icon name="help" className="text-xl" />
-            Помощен център
-          </Link>
-          <Link
-            href="/moderator"
-            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-white/50 transition-colors text-sm"
-          >
-            <Icon name="grid_view" className="text-xl" />
-            Моите лексикони
-          </Link>
-          <Link
-            href={`${base}/finalize`}
-            className="w-full block bg-gradient-to-br from-indigo-600 to-indigo-500 text-white py-3 px-4 rounded-xl font-bold text-sm text-center shadow hover:opacity-90 transition-opacity"
-          >
-            Финализирай лексикона
-          </Link>
-        </div>
-      </aside>
-  )
-
   return (
-    <div className="flex min-h-screen bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
-
-      {/* ── Mobile top bar ─────────────────────────────────────────── */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#f4f3f2] border-b border-black/5 flex items-center justify-between px-4 gap-3" style={{ fontFamily: 'Manrope, sans-serif' }}>
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-black/5 transition-colors flex-shrink-0"
-          aria-label="Меню"
-        >
-          <span className="material-symbols-outlined text-xl text-slate-600">menu</span>
-        </button>
-        <span className="font-bold text-sm text-indigo-900 truncate flex-1 text-center" style={{ fontFamily: 'Noto Serif, serif' }}>
-          {namePart}
-        </span>
-        <Link
-          href={`${base}/finalize`}
-          className="flex-shrink-0 text-xs font-bold bg-indigo-600 text-white px-3 py-2 rounded-xl whitespace-nowrap"
-        >
-          Финализирай
-        </Link>
-      </div>
-
-      {/* ── Backdrop ───────────────────────────────────────────────── */}
-      {menuOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
-
-      {/* ── Sidebar panel ──────────────────────────────────────────── */}
-      <div className={`fixed left-0 top-0 h-screen z-50 transition-transform duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        {menuOpen && (
-          <button
-            onClick={() => setMenuOpen(false)}
-            className="md:hidden absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
-          >
-            <span className="material-symbols-outlined text-base text-slate-500">close</span>
-          </button>
-        )}
-        {sidebarContent}
-      </div>
-
-      {/* ── Main ────────────────────────────────────────────────────── */}
-      <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
+    <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
 
         {/* Header */}
         <header className="mb-10">
@@ -614,7 +436,6 @@ export default function Dashboard({
             {/* Superhero link — hidden */}
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

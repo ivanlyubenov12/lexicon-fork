@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import Dashboard from './Dashboard'
+import ModeratorSidebar from './ModeratorSidebar'
 
 export default async function ModeratorDashboard({ params }: { params: Promise<{ classId: string }> }) {
   noStore()
@@ -109,20 +110,33 @@ export default async function ModeratorDashboard({ params }: { params: Promise<{
   const layout = (classData as { layout?: unknown }).layout
   const hasLayout = Array.isArray(layout) && layout.length > 0
 
+  const [namePart] = classData.name.includes(' — ')
+    ? classData.name.split(' — ')
+    : [classData.name]
+
   return (
-    <Dashboard
-      classData={{ ...classData, template_id: classData.template_id ?? null, memberLabel: classData.member_label ?? null, groupLabel: classData.group_label ?? null }}
-      moderatorEmail={user.email ?? null}
-      deadline={classData.deadline ?? null}
-      students={students ?? []}
-      awaitingApproval={awaitingApproval}
-      pendingAnswers={pendingAnswers ?? 0}
-      pendingMessages={pendingMessages ?? 0}
-      approvedAnswers={approvedAnswers ?? 0}
-      hasQuestionnaire={(questionCount ?? 0) > 0}
-      hasLayout={hasLayout}
-      events={events ?? []}
-      recentContributions={(recentContributions ?? []) as any[]}
-    />
+    <div className="flex min-h-screen bg-[#faf9f8]" style={{ fontFamily: 'Manrope, sans-serif' }}>
+      <ModeratorSidebar
+        classId={classId}
+        namePart={namePart}
+        schoolYear={classData.school_year ?? null}
+        logoUrl={classData.school_logo_url ?? null}
+        active="dashboard"
+      />
+      <Dashboard
+        classData={{ ...classData, template_id: classData.template_id ?? null, memberLabel: classData.member_label ?? null, groupLabel: classData.group_label ?? null }}
+        moderatorEmail={user.email ?? null}
+        deadline={classData.deadline ?? null}
+        students={students ?? []}
+        awaitingApproval={awaitingApproval}
+        pendingAnswers={pendingAnswers ?? 0}
+        pendingMessages={pendingMessages ?? 0}
+        approvedAnswers={approvedAnswers ?? 0}
+        hasQuestionnaire={(questionCount ?? 0) > 0}
+        hasLayout={hasLayout}
+        events={events ?? []}
+        recentContributions={(recentContributions ?? []) as any[]}
+      />
+    </div>
   )
 }
