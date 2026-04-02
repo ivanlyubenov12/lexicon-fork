@@ -362,13 +362,42 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           <div className="px-4 py-4 flex-1">
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Блокове</p>
-              <button
-                onClick={() => setAddDrawerOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">add</span>
-                Добави
-              </button>
+              <div className="flex items-center gap-2">
+                {/* ── Page 2 split control (student page only) ── */}
+                {activePage === 'student_page' && assets.questions.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Стр. 2 от В№</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={assets.questions.length + 1}
+                      value={page2Start + 1}
+                      onChange={e => {
+                        const raw = parseInt(e.target.value, 10)
+                        if (isNaN(raw)) return
+                        const newStart = Math.max(0, Math.min(assets.questions.length, raw - 1))
+                        setPage2Start(newStart)
+                        setPageBlocks(prev => prev.map(b => {
+                          if (b.type !== 'sp_question') return b
+                          const cfg = b.config as Record<string, unknown>
+                          const qIdx = assets.questions.findIndex(q => q.id === (cfg.questionId as string))
+                          if (qIdx === -1) return b
+                          return { ...b, config: { ...cfg, page: qIdx < newStart ? 1 : 2 } }
+                        }))
+                        setSaved(false)
+                      }}
+                      className="w-12 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={() => setAddDrawerOpen(true)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  Добави
+                </button>
+              </div>
             </div>
             {blocks.length === 0 ? (
               <div className="rounded-2xl border-2 border-dashed border-gray-200 p-10 flex flex-col items-center justify-center gap-3 text-center">
@@ -390,36 +419,6 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
               />
             )}
 
-            {/* ── Page 2 split control (student page only) ── */}
-            {activePage === 'student_page' && assets.questions.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Стр. 2 от въпрос №</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={assets.questions.length + 1}
-                    value={page2Start + 1}
-                    onChange={e => {
-                      const raw = parseInt(e.target.value, 10)
-                      if (isNaN(raw)) return
-                      const newStart = Math.max(0, Math.min(assets.questions.length, raw - 1))
-                      setPage2Start(newStart)
-                      setPageBlocks(prev => prev.map(b => {
-                        if (b.type !== 'sp_question') return b
-                        const cfg = b.config as Record<string, unknown>
-                        const qIdx = assets.questions.findIndex(q => q.id === (cfg.questionId as string))
-                        if (qIdx === -1) return b
-                        return { ...b, config: { ...cfg, page: qIdx < newStart ? 1 : 2 } }
-                      }))
-                      setSaved(false)
-                    }}
-                    className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
-                  <span className="text-xs text-gray-400">и след нея → Стр. 2</span>
-                </div>
-              </div>
-            )}
           </div>
         </aside>
 
