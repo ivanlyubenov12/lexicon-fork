@@ -232,7 +232,7 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
 
       {/* ── Top bar ────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <Link href={`/moderator/${classId}`} className="text-gray-400 hover:text-gray-700 transition-colors">
+        <Link href={`/moderator/${classId}/lexicon`} className="text-gray-400 hover:text-gray-700 transition-colors">
           <span className="material-symbols-outlined text-xl">arrow_back</span>
         </Link>
         <div className="min-w-0 flex-1">
