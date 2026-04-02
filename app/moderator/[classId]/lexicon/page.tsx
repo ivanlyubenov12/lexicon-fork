@@ -207,13 +207,23 @@ export default async function LexiconPage({
       <main className="md:ml-64 flex-1 min-w-0 p-4 pt-20 md:p-8 lg:p-12">
         {/* Page header */}
         <div className="flex items-center justify-between gap-4 mb-6">
-          <h1 className="text-lg font-bold text-gray-800">Лексикон</h1>
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/moderator/${classId}/layout`}
+              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Назад
+            </Link>
+            <h1 className="text-lg font-bold text-gray-800">Лексикон</h1>
+          </div>
           <Link
-            href={`/moderator/${classId}/layout`}
+            href={`/moderator/${classId}/preview`}
+            target="_blank"
             className="flex-shrink-0 flex items-center gap-2 bg-white border border-gray-200 hover:border-indigo-400 hover:text-indigo-700 text-gray-600 text-sm font-semibold px-3 py-2 rounded-xl shadow-sm transition-all"
           >
-            <span className="material-symbols-outlined text-base">tune</span>
-            Оформление
+            <span className="material-symbols-outlined text-base">visibility</span>
+            Прегледай
           </Link>
         </div>
 
