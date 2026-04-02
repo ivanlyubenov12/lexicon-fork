@@ -16,7 +16,7 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
   // ── Class ──────────────────────────────────────────────────────────────
   const { data: classData } = await admin
     .from('classes')
-    .select('id, name, status, superhero_prompt, superhero_image_url, school_logo_url, cover_image_url, layout, template_id, member_label, group_label, memories_label, stars_label')
+    .select('id, name, status, superhero_prompt, superhero_image_url, school_logo_url, cover_image_url, layout, page_layouts, template_id, member_label, group_label, memories_label, stars_label')
     .eq('id', classId)
     .single()
 
@@ -26,7 +26,11 @@ export default async function LexiconCoverPage({ params }: { params: Promise<{ c
     ? classData.name.split(' — ')
     : [classData.name, null]
 
-  const blocks: Block[] = (classData.layout as Block[] | null) ?? defaultTemplate.blocks
+  // Prefer page_layouts.group (saved by layout editor); fall back to legacy layout column, then default
+  const pageLayoutsGroup = ((classData as any).page_layouts as Record<string, unknown> | null)?.group
+  const blocks: Block[] = (Array.isArray(pageLayoutsGroup) ? pageLayoutsGroup : null)
+    ?? (classData.layout as Block[] | null)
+    ?? defaultTemplate.blocks
 
   // ── Collect linked IDs from block configs ──────────────────────────────
   const linkedQuestionIds = new Set<string>()
