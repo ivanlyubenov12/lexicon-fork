@@ -50,7 +50,7 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
     setCameraError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'user' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'user' }, width: { ideal: 720 }, height: { ideal: 960 } },
       })
       streamRef.current = stream
       setCameraActive(true) // useEffect will attach stream after DOM updates
@@ -148,7 +148,7 @@ export default function PhotoUpload({ studentId, photoUrl, firstName, wizardMode
           {/* Live camera view */}
           {cameraActive && (
             <div className="space-y-3">
-              <video ref={videoRef} playsInline muted className="w-full rounded-2xl aspect-video object-cover bg-black" />
+              <video ref={videoRef} playsInline muted className="w-full rounded-2xl object-cover bg-black" style={{ aspectRatio: '3/4' }} />
               <div className="flex gap-2">
                 <button
                   type="button"
