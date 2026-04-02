@@ -32,7 +32,7 @@ export default function EventCommentForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedCommentId, setSavedCommentId] = useState<string | null>(existingComment?.id ?? null)
-  const [localSaved, setLocalSaved] = useState(!!existingComment)
+  const [submitted, setSubmitted] = useState(false)
 
   const photo = event.photos?.[0] ?? null
 
@@ -57,8 +57,8 @@ export default function EventCommentForm({
     if (result.error) {
       setError(result.error)
     } else {
-      setLocalSaved(true)
-      navigateTo(`/my/${studentId}`)
+      setSubmitted(true)
+      navigateTo(nextUrl ?? `/my/${studentId}`)
     }
   }
 
@@ -108,58 +108,72 @@ export default function EventCommentForm({
           {dateFormatted && (
             <p className="text-sm text-gray-400 mt-0.5">{dateFormatted}</p>
           )}
+          {event.note && (
+            <p className="text-sm text-gray-500 mt-2 leading-relaxed">{event.note}</p>
+          )}
         </div>
 
         {/* Status banner */}
-        {localSaved && (
+        {submitted && (
           <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 rounded-xl mb-5">
             <span className="material-symbols-outlined text-base">check_circle</span>
-            Коментарът е запазен
+            Коментарът е изпратен
           </div>
         )}
 
         {/* Textarea */}
         <div className="space-y-3 mb-6">
-          <textarea
-            rows={4}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Напишете коментар към това събитие…"
-            maxLength={300}
-            className="w-full border border-gray-200 rounded-2xl px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none bg-white shadow-sm"
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">{text.length}/300</span>
-            {error && <span className="text-xs text-red-500">{error}</span>}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || !text.trim()}
-              className="bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-700 disabled:opacity-50 transition-colors shadow-sm"
-            >
-              {submitting ? 'Запазване...' : existingComment ? 'Обнови' : 'Запази'}
-            </button>
+          <div className="relative">
+            <textarea
+              rows={5}
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Напишете коментар към това събитие…"
+              maxLength={300}
+              className="w-full border border-gray-200 rounded-2xl px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none bg-white shadow-sm"
+            />
+            <div className="absolute bottom-3 right-3 text-xs text-gray-300">
+              {text.length}/300
+            </div>
           </div>
+
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</div>
+          )}
+
+          {/* Primary action */}
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !text.trim()}
+            className="w-full bg-teal-600 text-white py-3.5 rounded-xl font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {submitting ? 'Изпращане...' : existingComment && !submitted ? 'Обнови' : 'Изпрати'}
+          </button>
         </div>
 
         {/* Navigation */}
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={() => prevUrl ? navigateTo(prevUrl) : navigateTo(`/my/${studentId}`)}
-            className="flex-none px-5 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-          >
-            ← Назад
-          </button>
+        <div className="flex justify-between pt-4 border-t border-gray-200">
+          {prevUrl ? (
+            <button
+              onClick={() => navigateTo(prevUrl)}
+              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Предишно
+            </button>
+          ) : <span />}
           {nextUrl ? (
             <button
               onClick={() => navigateTo(nextUrl)}
-              className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
             >
-              Следващо →
+              Следващо
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
             </button>
           ) : (
             <button
               onClick={() => navigateTo(`/my/${studentId}`)}
-              className="flex-1 bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
             >
               Готово ✓
             </button>
