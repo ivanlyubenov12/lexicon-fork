@@ -66,6 +66,7 @@ export async function submitMessage(
   content: string
 ): Promise<{ error: string | null }> {
   if (!content.trim()) return { error: 'Посланието не може да е празно.' }
+  if (content.trim().length > 300) return { error: 'Посланието не може да е по-дълго от 300 знака.' }
 
   const admin = createServiceRoleClient()
 

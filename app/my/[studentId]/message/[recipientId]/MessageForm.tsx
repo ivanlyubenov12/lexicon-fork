@@ -118,25 +118,29 @@ export default function MessageForm({
         {/* Editable textarea */}
         {!isApproved && (
           <div className="space-y-3 mb-6">
-            <textarea
-              rows={5}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder={`Напишете послание до ${recipient.first_name}…`}
-              maxLength={300}
-              className="w-full border border-gray-200 rounded-2xl px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white shadow-sm"
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">{text.length}/300</span>
-              {error && <span className="text-xs text-red-500">{error}</span>}
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || !text.trim()}
-                className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
-              >
-                {submitting ? 'Изпращане...' : isPending ? 'Обнови' : 'Изпрати'}
-              </button>
+            <div className="relative">
+              <textarea
+                rows={5}
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder={`Напишете послание до ${recipient.first_name}…`}
+                maxLength={300}
+                className={`w-full border rounded-2xl px-4 py-4 text-base focus:outline-none focus:ring-2 resize-none bg-white shadow-sm ${
+                  text.length >= 300 ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-indigo-400'
+                }`}
+              />
+              <div className={`absolute bottom-3 right-3 text-xs ${text.length >= 300 ? 'text-red-500 font-semibold' : 'text-gray-300'}`}>
+                {text.length}/300
+              </div>
             </div>
+            {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</div>}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !text.trim() || text.length > 300}
+              className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-sm font-bold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+            >
+              {submitting ? 'Изпращане...' : isPending ? 'Обнови' : 'Изпрати'}
+            </button>
           </div>
         )}
 
