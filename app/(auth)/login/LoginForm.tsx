@@ -55,7 +55,7 @@ export default function LoginForm() {
           onChange={e => setEmail(e.target.value)}
           disabled={frozen}
           placeholder="вашия@имейл.com"
-          className="border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full disabled:opacity-50"
+          className="border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full disabled:opacity-50"
         />
       </div>
 
@@ -77,7 +77,7 @@ export default function LoginForm() {
           onChange={e => setPassword(e.target.value)}
           disabled={frozen}
           placeholder="Вашата парола"
-          className="border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full disabled:opacity-50"
+          className="border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full disabled:opacity-50"
         />
       </div>
 
