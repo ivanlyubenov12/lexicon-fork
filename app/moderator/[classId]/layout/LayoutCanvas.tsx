@@ -27,7 +27,7 @@ const FULL_WIDTH: Set<BlockType> = new Set([
   'hero', 'superhero', 'students_grid', 'polls_grid', 'events',
   'cover_photo', 'cover_logo', 'cover_class_name', 'cover_year', 'cover_tagline',
   'closing_logo', 'closing_title', 'closing_year', 'closing_quote', 'closing_student_count', 'closing_colophon',
-  'sp_photo', 'sp_name', 'sp_question', 'sp_event', 'sp_peer_messages',
+  'sp_photo', 'sp_name', 'sp_question', 'sp_accents', 'sp_event', 'sp_peer_messages',
   'mem_photos', 'mem_note', 'mem_comments',
 ])
 
