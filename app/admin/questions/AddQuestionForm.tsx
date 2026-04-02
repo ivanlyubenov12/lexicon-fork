@@ -29,6 +29,14 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
 
   const hasTextInput = type !== 'video' && type !== 'survey' && type !== 'better_together' && type !== 'superhero'
 
+  const trimmedOpts = pollOptions.map(o => o.trim().toLowerCase())
+  const duplicateOptIndices = new Set<number>()
+  trimmedOpts.forEach((v, i) => {
+    if (v && trimmedOpts.indexOf(v) !== i) duplicateOptIndices.add(i)
+    if (v && trimmedOpts.lastIndexOf(v) !== i) duplicateOptIndices.add(i)
+  })
+  const hasDuplicateOpts = duplicateOptIndices.size > 0
+
   function handleSubmit() {
     if (!text.trim()) return
     const options = type === 'survey' ? pollOptions.filter(o => o.trim()) : null
@@ -36,6 +44,7 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       setError('Добави поне 2 отговора за анкетата.')
       return
     }
+    if (hasDuplicateOpts) return
     const parsedMax = hasTextInput && maxLength ? parseInt(maxLength) : null
     startTransition(async () => {
       const result = await addSystemQuestion({
@@ -116,26 +125,35 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
         <div className="space-y-2">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</p>
           {pollOptions.map((opt, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                type="text"
-                value={opt}
-                onChange={e => {
-                  const next = [...pollOptions]
-                  next[i] = e.target.value
-                  setPollOptions(next)
-                }}
-                placeholder={`Отговор ${i + 1}`}
-                className="flex-1 border border-indigo-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-              {pollOptions.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
-                  className="text-gray-400 hover:text-red-500 px-2"
-                >
-                  <span className="material-symbols-outlined text-base">close</span>
-                </button>
+            <div key={i} className="flex flex-col gap-0.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={opt}
+                  onChange={e => {
+                    const next = [...pollOptions]
+                    next[i] = e.target.value
+                    setPollOptions(next)
+                  }}
+                  placeholder={`Отговор ${i + 1}`}
+                  className={`flex-1 border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 ${
+                    duplicateOptIndices.has(i)
+                      ? 'border-red-400 focus:ring-red-400'
+                      : 'border-indigo-200 focus:ring-indigo-400'
+                  }`}
+                />
+                {pollOptions.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                    className="text-gray-400 hover:text-red-500 px-2"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                )}
+              </div>
+              {duplicateOptIndices.has(i) && (
+                <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
               )}
             </div>
           ))}
@@ -154,7 +172,7 @@ export default function AddQuestionForm({ nextOrder }: { nextOrder: number }) {
       <div className="flex gap-2">
         <button
           onClick={handleSubmit}
-          disabled={isPending || !text.trim()}
+          disabled={isPending || !text.trim() || hasDuplicateOpts}
           className="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
         >
           {isPending ? 'Добавяне…' : 'Добави'}
