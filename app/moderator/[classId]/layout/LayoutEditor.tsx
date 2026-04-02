@@ -59,9 +59,7 @@ function buildStudentPageBlocks(assets: LayoutAssets, page2Start = DEFAULT_PAGE2
   const blocks: Block[] = []
   blocks.push({ id: nanoid(8), type: 'sp_photo', config: { page: 1 } })
   blocks.push({ id: nanoid(8), type: 'sp_name', config: { page: 1 } })
-  if (assets.accentQuestions.length > 0) {
-    blocks.push({ id: nanoid(8), type: 'sp_accents', config: { page: 1 } })
-  }
+  blocks.push({ id: nanoid(8), type: 'sp_accents', config: { page: 1 } })
   assets.questions.forEach((q, i) => {
     blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: i < page2Start ? 1 : 2 } })
   })
@@ -72,29 +70,56 @@ function buildStudentPageBlocks(assets: LayoutAssets, page2Start = DEFAULT_PAGE2
   return blocks
 }
 
-// Sync saved student_page blocks with current questions/events:
+// Sync saved student_page blocks with current assets:
 // - removes orphaned sp_question / sp_event blocks
 // - appends missing questions (before events/messages)
+// - appends missing events (before messages)
+// - ensures sp_accents and sp_peer_messages are present
 function syncStudentPageBlocks(saved: Block[], assets: LayoutAssets): Block[] {
   const assetQIds = new Set(assets.questions.map(q => q.id))
   const assetEIds = new Set(assets.events.map(e => e.id))
-  const cleaned = saved.filter(b => {
+
+  // Remove orphaned blocks
+  let result = saved.filter(b => {
     const cfg = b.config as Record<string, unknown>
     if (b.type === 'sp_question') return assetQIds.has(cfg.questionId as string)
     if (b.type === 'sp_event') return assetEIds.has(cfg.eventId as string)
     return true
   })
-  const presentQIds = new Set(
-    cleaned.filter(b => b.type === 'sp_question').map(b => (b.config as Record<string, unknown>).questionId as string)
-  )
+
+  // Ensure sp_accents exists
+  if (!result.some(b => b.type === 'sp_accents')) {
+    const insertAt = result.findIndex(b => b.type === 'sp_question' || b.type === 'sp_event' || b.type === 'sp_peer_messages')
+    const idx = insertAt === -1 ? result.length : insertAt
+    result = [...result.slice(0, idx), { id: nanoid(8), type: 'sp_accents' as BlockType, config: { page: 1 } }, ...result.slice(idx)]
+  }
+
+  // Add missing questions (before events/messages)
+  const presentQIds = new Set(result.filter(b => b.type === 'sp_question').map(b => (b.config as Record<string, unknown>).questionId as string))
   const missingQs = assets.questions.filter(q => !presentQIds.has(q.id))
-  if (missingQs.length === 0) return cleaned
-  const insertAt = cleaned.findIndex(b => b.type === 'sp_event' || b.type === 'sp_peer_messages')
-  const idx = insertAt === -1 ? cleaned.length : insertAt
-  const newBlocks: Block[] = missingQs.map(q => ({
-    id: nanoid(8), type: 'sp_question' as BlockType, config: { questionId: q.id, page: 1 as const },
-  }))
-  return [...cleaned.slice(0, idx), ...newBlocks, ...cleaned.slice(idx)]
+  if (missingQs.length > 0) {
+    const insertAt = result.findIndex(b => b.type === 'sp_event' || b.type === 'sp_peer_messages')
+    const idx = insertAt === -1 ? result.length : insertAt
+    const newQBlocks: Block[] = missingQs.map(q => ({ id: nanoid(8), type: 'sp_question' as BlockType, config: { questionId: q.id, page: 1 as const } }))
+    result = [...result.slice(0, idx), ...newQBlocks, ...result.slice(idx)]
+  }
+
+  // Add missing events (before messages)
+  const presentEIds = new Set(result.filter(b => b.type === 'sp_event').map(b => (b.config as Record<string, unknown>).eventId as string))
+  const missingEs = assets.events.filter(e => !presentEIds.has(e.id))
+  if (missingEs.length > 0) {
+    const insertAt = result.findIndex(b => b.type === 'sp_peer_messages')
+    const idx = insertAt === -1 ? result.length : insertAt
+    const newEBlocks: Block[] = missingEs.map(e => ({ id: nanoid(8), type: 'sp_event' as BlockType, config: { eventId: e.id, page: 2 as const } }))
+    result = [...result.slice(0, idx), ...newEBlocks, ...result.slice(idx)]
+  }
+
+  // Ensure sp_peer_messages exists
+  if (!result.some(b => b.type === 'sp_peer_messages')) {
+    result = [...result, { id: nanoid(8), type: 'sp_peer_messages' as BlockType, config: { page: 2 } }]
+  }
+
+  return result
 }
 
 // Derive page2Start (0-based question index) from existing blocks
