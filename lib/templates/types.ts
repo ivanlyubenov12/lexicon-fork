@@ -147,7 +147,7 @@ export interface VoiceQuestionAsset extends LayoutAsset {
 }
 
 export interface LayoutAssets {
-  questions: (LayoutAsset & { type: string })[]        // personal questions
+  questions: (LayoutAsset & { type: string; is_featured?: boolean })[]        // personal questions
   accentQuestions: (LayoutAsset & { type: string })[]  // better_together / superhero questions
   voiceQuestions: VoiceQuestionAsset[]                 // class_voice questions
   polls: LayoutAsset[]

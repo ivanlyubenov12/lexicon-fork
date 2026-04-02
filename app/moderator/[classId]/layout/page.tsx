@@ -24,7 +24,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
 
     admin
       .from('questions')
-      .select('id, text, type')
+      .select('id, text, type, is_featured')
       .eq('class_id', classId)
       .in('type', ['personal', 'video', 'photo'])
       .order('order_index'),
@@ -87,7 +87,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
   }
 
   const assets: LayoutAssets = {
-    questions: (questionsRes.data ?? []).map(q => ({ id: q.id, label: q.text, type: q.type })),
+    questions: (questionsRes.data ?? []).map(q => ({ id: q.id, label: q.text, type: q.type, is_featured: q.is_featured ?? false })),
     accentQuestions: (accentQsRes.data ?? []).map(q => ({ id: q.id, label: q.text, type: q.type })),
     voiceQuestions: voiceQsRaw.map(q => ({
       id: q.id,

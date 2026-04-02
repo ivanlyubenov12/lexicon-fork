@@ -116,6 +116,34 @@ function assignConfig(type: BlockType, assetId: string): Record<string, unknown>
   }
 }
 
+// ── Group helpers ──────────────────────────────────────────────────────────
+
+type SpGroup = 'featured' | 'video' | null
+
+function spGroupOf(block: Block, assets: LayoutAssets): SpGroup {
+  if (block.type !== 'sp_question') return null
+  const qId = (block.config as Record<string, unknown>).questionId as string | null
+  const q = qId ? assets.questions.find(q => q.id === qId) : null
+  if (!q) return null
+  if (q.is_featured) return 'featured'
+  if (q.type === 'video') return 'video'
+  return null
+}
+
+interface GroupInfo { group: SpGroup; isFirst: boolean; isLast: boolean }
+
+function computeGroupInfos(blocks: Block[], assets: LayoutAssets): Map<string, GroupInfo> {
+  const map = new Map<string, GroupInfo>()
+  blocks.forEach((block, i) => {
+    const group = spGroupOf(block, assets)
+    if (group === null) return
+    const prevGroup = i > 0 ? spGroupOf(blocks[i - 1], assets) : null
+    const nextGroup = i < blocks.length - 1 ? spGroupOf(blocks[i + 1], assets) : null
+    map.set(block.id, { group, isFirst: prevGroup !== group, isLast: nextGroup !== group })
+  })
+  return map
+}
+
 // ── Shell ──────────────────────────────────────────────────────────────────
 
 interface CanvasProps {
@@ -133,6 +161,7 @@ interface CanvasProps {
 
 export default function LayoutCanvas({ blocks, assets, classId, activeId, onSelect, onAssign, onReorder, memberLabel, memoriesLabel, starsLabel }: CanvasProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const groupInfos = computeGroupInfos(blocks, assets)
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -159,6 +188,7 @@ export default function LayoutCanvas({ blocks, assets, classId, activeId, onSele
               memberLabel={memberLabel}
               memoriesLabel={memoriesLabel}
               starsLabel={starsLabel}
+              groupInfo={groupInfos.get(block.id)}
             />
           ))}
         </div>
@@ -179,6 +209,7 @@ function SortableCanvasBlock(props: {
   memberLabel?: string | null
   memoriesLabel?: string | null
   starsLabel?: string | null
+  groupInfo?: GroupInfo
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.block.id })
 
@@ -190,14 +221,37 @@ function SortableCanvasBlock(props: {
   }
 
   const isFullWidth = FULL_WIDTH.has(props.block.type) || (props.block.config as Record<string, unknown>).fullWidth
+  const gi = props.groupInfo
+
+  // Build group border classes for grouped sp_question blocks
+  let groupCls = ''
+  if (gi) {
+    const colors = gi.group === 'featured'
+      ? 'border-amber-300'
+      : 'border-indigo-200'
+    const top    = gi.isFirst  ? `border-t border-l border-r ${colors} rounded-t-2xl pt-2 px-2` : `border-l border-r ${colors} px-2`
+    const bottom = gi.isLast   ? `border-b ${colors} rounded-b-2xl pb-2` : ''
+    // group header label above first item
+    groupCls = `${top} ${bottom}`
+  }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={isFullWidth ? 'col-span-2' : ''}
-    >
-      <CanvasBlock {...props} dragHandleProps={{ ...attributes, ...listeners }} />
+    <div ref={setNodeRef} style={style} className={`${isFullWidth ? 'col-span-2' : ''}`}>
+      {gi?.isFirst && (
+        <div className={`flex items-center gap-1.5 px-1 py-1.5 ${
+          gi.group === 'featured' ? 'text-amber-500' : 'text-indigo-400'
+        }`}>
+          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+            {gi.group === 'featured' ? 'star' : 'videocam'}
+          </span>
+          <p className="text-[10px] font-bold uppercase tracking-widest">
+            {gi.group === 'featured' ? 'Профилни въпроси' : 'Видео въпрос'}
+          </p>
+        </div>
+      )}
+      <div className={groupCls}>
+        <CanvasBlock {...props} dragHandleProps={{ ...attributes, ...listeners }} />
+      </div>
     </div>
   )
 }
@@ -215,6 +269,7 @@ function CanvasBlock({ block, assets, classId, isActive, onSelect, onAssign, dra
   memberLabel?: string | null
   memoriesLabel?: string | null
   starsLabel?: string | null
+  groupInfo?: GroupInfo  // accepted but not used directly (handled by SortableCanvasBlock)
 }) {
   const cfg = block.config as Record<string, unknown>
   const linked = linkedLabel(block.type, cfg, assets)
