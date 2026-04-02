@@ -84,7 +84,11 @@ function linkedLabel(type: BlockType, cfg: Record<string, unknown>, assets: Layo
     }
     case 'sp_question': {
       const id = cfg.questionId as string | null
-      return id ? (assets.questions.find(q => q.id === id)?.label ?? null) : null
+      if (!id) return null
+      const idx = assets.questions.findIndex(q => q.id === id)
+      const q = assets.questions[idx]
+      if (!q) return null
+      return `В${idx + 1} · ${q.label}`
     }
     case 'sp_event': {
       const id = cfg.eventId as string | null

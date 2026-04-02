@@ -51,6 +51,7 @@ interface Props {
   onClose: () => void
   existingTypes: BlockType[]
   assets?: LayoutAssets
+  existingQuestionIds?: string[]
 }
 
 function BlockRow({ icon, label, description, badge, onClick }: {
@@ -82,7 +83,7 @@ function BlockRow({ icon, label, description, badge, onClick }: {
   )
 }
 
-export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes, assets }: Props) {
+export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes, assets, existingQuestionIds }: Props) {
   const visibleBlocks = pageId === 'cover' ? COVER_BLOCKS : pageId === 'closing' ? CLOSING_BLOCKS : pageId === 'memories' ? MEMORIES_BLOCKS : pageId !== 'student_page' ? ALL_BLOCKS : null
 
   return (
@@ -140,21 +141,30 @@ export default function AddBlockDrawer({ pageId, onAdd, onClose, existingTypes, 
                 )
               })}
 
-              {/* Questions */}
-              {assets && assets.questions.length > 0 && (
-                <>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 px-1">Въпроси</p>
-                  {assets.questions.map((q) => (
-                    <BlockRow
-                      key={q.id}
-                      icon="quiz"
-                      label={q.label}
-                      description="Личен въпрос от участника"
-                      onClick={() => onAdd('sp_question', { questionId: q.id })}
-                    />
-                  ))}
-                </>
-              )}
+              {/* Questions — only show ones not already in layout */}
+              {assets && assets.questions.length > 0 && (() => {
+                const availableQs = assets.questions.filter(q => !existingQuestionIds?.includes(q.id))
+                if (availableQs.length === 0) return (
+                  <p className="text-xs text-gray-400 px-1 mt-3">Всички въпроси са в оформлението.</p>
+                )
+                return (
+                  <>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-3 px-1">Въпроси</p>
+                    {availableQs.map(q => {
+                      const num = assets.questions.indexOf(q) + 1
+                      return (
+                        <BlockRow
+                          key={q.id}
+                          icon="quiz"
+                          label={`В${num} · ${q.label}`}
+                          description="Личен въпрос от участника"
+                          onClick={() => onAdd('sp_question', { questionId: q.id })}
+                        />
+                      )
+                    })}
+                  </>
+                )
+              })()}
 
               {/* Events */}
               {assets && assets.events.length > 0 && (

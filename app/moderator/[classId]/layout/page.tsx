@@ -26,7 +26,7 @@ export default async function LayoutPage({ params }: { params: Promise<{ classId
       .from('questions')
       .select('id, text, type')
       .eq('class_id', classId)
-      .eq('type', 'personal')
+      .in('type', ['personal', 'video', 'photo'])
       .order('order_index'),
 
     admin

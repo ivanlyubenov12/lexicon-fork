@@ -53,21 +53,58 @@ interface Props {
 
 const VALID_SP_TYPES: ReadonlySet<BlockType> = new Set(['sp_photo', 'sp_name', 'sp_question', 'sp_accents', 'sp_event', 'sp_peer_messages'])
 
-function defaultStudentPageBlocks(assets: LayoutAssets): Block[] {
+const DEFAULT_PAGE2_START = 15 // questions 0..14 on page 1, 15+ on page 2
+
+function buildStudentPageBlocks(assets: LayoutAssets, page2Start = DEFAULT_PAGE2_START): Block[] {
   const blocks: Block[] = []
   blocks.push({ id: nanoid(8), type: 'sp_photo', config: { page: 1 } })
   blocks.push({ id: nanoid(8), type: 'sp_name', config: { page: 1 } })
-  for (const q of assets.questions) {
-    blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: 1 } })
-  }
   if (assets.accentQuestions.length > 0) {
     blocks.push({ id: nanoid(8), type: 'sp_accents', config: { page: 1 } })
   }
-  for (const e of assets.events) {
+  assets.questions.forEach((q, i) => {
+    blocks.push({ id: nanoid(8), type: 'sp_question', config: { questionId: q.id, page: i < page2Start ? 1 : 2 } })
+  })
+  assets.events.forEach(e => {
     blocks.push({ id: nanoid(8), type: 'sp_event', config: { eventId: e.id, page: 2 } })
-  }
+  })
   blocks.push({ id: nanoid(8), type: 'sp_peer_messages', config: { page: 2 } })
   return blocks
+}
+
+// Sync saved student_page blocks with current questions/events:
+// - removes orphaned sp_question / sp_event blocks
+// - appends missing questions (before events/messages)
+function syncStudentPageBlocks(saved: Block[], assets: LayoutAssets): Block[] {
+  const assetQIds = new Set(assets.questions.map(q => q.id))
+  const assetEIds = new Set(assets.events.map(e => e.id))
+  const cleaned = saved.filter(b => {
+    const cfg = b.config as Record<string, unknown>
+    if (b.type === 'sp_question') return assetQIds.has(cfg.questionId as string)
+    if (b.type === 'sp_event') return assetEIds.has(cfg.eventId as string)
+    return true
+  })
+  const presentQIds = new Set(
+    cleaned.filter(b => b.type === 'sp_question').map(b => (b.config as Record<string, unknown>).questionId as string)
+  )
+  const missingQs = assets.questions.filter(q => !presentQIds.has(q.id))
+  if (missingQs.length === 0) return cleaned
+  const insertAt = cleaned.findIndex(b => b.type === 'sp_event' || b.type === 'sp_peer_messages')
+  const idx = insertAt === -1 ? cleaned.length : insertAt
+  const newBlocks: Block[] = missingQs.map(q => ({
+    id: nanoid(8), type: 'sp_question' as BlockType, config: { questionId: q.id, page: 1 as const },
+  }))
+  return [...cleaned.slice(0, idx), ...newBlocks, ...cleaned.slice(idx)]
+}
+
+// Derive page2Start (0-based question index) from existing blocks
+function derivePage2Start(blocks: Block[], questions: LayoutAssets['questions']): number {
+  const qBlocks = blocks.filter(b => b.type === 'sp_question')
+  const firstP2 = qBlocks.findIndex(b => (b.config as Record<string, unknown>).page === 2)
+  if (firstP2 === -1) return questions.length
+  const qId = (qBlocks[firstP2].config as Record<string, unknown>).questionId as string
+  const assetIdx = questions.findIndex(q => q.id === qId)
+  return assetIdx === -1 ? firstP2 : assetIdx
 }
 
 function defaultMemoriesBlocks(): Block[] {
@@ -82,11 +119,10 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
   const [activePage, setActivePage] = useState<PageId>('group')
   const [allPageBlocks, setAllPageBlocks] = useState<Record<string, Block[]>>(() => {
     const saved = (pageLayouts as Record<string, Block[]>) ?? {}
-    // Clean stale sp_* block types from saved student_page layout
     const cleanedStudentPage = (saved.student_page ?? []).filter(b => VALID_SP_TYPES.has(b.type as BlockType))
     const studentPageBlocks = cleanedStudentPage.length > 0
-      ? cleanedStudentPage
-      : defaultStudentPageBlocks(assets)
+      ? syncStudentPageBlocks(cleanedStudentPage, assets)
+      : buildStudentPageBlocks(assets)
     const memoriesBlocks = (saved.memories ?? []).length > 0 ? saved.memories : defaultMemoriesBlocks()
     return {
       group: initialBlocks,
@@ -96,6 +132,15 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
       student_page: studentPageBlocks,
       memories: memoriesBlocks,
     }
+  })
+
+  const [page2Start, setPage2Start] = useState(() => {
+    const saved = (pageLayouts as Record<string, Block[]>) ?? {}
+    const cleanedStudentPage = (saved.student_page ?? []).filter(b => VALID_SP_TYPES.has(b.type as BlockType))
+    if (cleanedStudentPage.length > 0) {
+      return derivePage2Start(syncStudentPageBlocks(cleanedStudentPage, assets), assets.questions)
+    }
+    return Math.min(DEFAULT_PAGE2_START, assets.questions.length)
   })
 
   // Derived: blocks for the active page
@@ -319,6 +364,37 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
                 starsLabel={lexiconData.starsLabel}
               />
             )}
+
+            {/* ── Page 2 split control (student page only) ── */}
+            {activePage === 'student_page' && assets.questions.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Стр. 2 от въпрос №</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={assets.questions.length + 1}
+                    value={page2Start + 1}
+                    onChange={e => {
+                      const raw = parseInt(e.target.value, 10)
+                      if (isNaN(raw)) return
+                      const newStart = Math.max(0, Math.min(assets.questions.length, raw - 1))
+                      setPage2Start(newStart)
+                      setPageBlocks(prev => prev.map(b => {
+                        if (b.type !== 'sp_question') return b
+                        const cfg = b.config as Record<string, unknown>
+                        const qIdx = assets.questions.findIndex(q => q.id === (cfg.questionId as string))
+                        if (qIdx === -1) return b
+                        return { ...b, config: { ...cfg, page: qIdx < newStart ? 1 : 2 } }
+                      }))
+                      setSaved(false)
+                    }}
+                    className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <span className="text-xs text-gray-400">и след нея → Стр. 2</span>
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -380,6 +456,11 @@ export default function LayoutEditor({ classId, className, initialBlocks, templa
           onClose={() => setAddDrawerOpen(false)}
           existingTypes={blocks.map(b => b.type)}
           assets={assets}
+          existingQuestionIds={
+            activePage === 'student_page'
+              ? blocks.filter(b => b.type === 'sp_question').map(b => (b.config as Record<string, unknown>).questionId as string)
+              : undefined
+          }
         />
       )}
 
