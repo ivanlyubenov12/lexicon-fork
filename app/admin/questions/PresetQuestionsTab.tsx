@@ -73,6 +73,14 @@ function QuestionEditForm({
   const set = <K extends keyof typeof EMPTY_FORM>(key: K, value: (typeof EMPTY_FORM)[K]) =>
     setForm(prev => ({ ...prev, [key]: value }))
 
+  const trimmedOpts = form.poll_options.map(o => o.trim().toLowerCase())
+  const duplicateOptIndices = new Set<number>()
+  trimmedOpts.forEach((v, i) => {
+    if (v && trimmedOpts.indexOf(v) !== i) duplicateOptIndices.add(i)
+    if (v && trimmedOpts.lastIndexOf(v) !== i) duplicateOptIndices.add(i)
+  })
+  const hasDuplicateOpts = duplicateOptIndices.size > 0
+
   return (
     <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
       <div className="grid grid-cols-2 gap-3">
@@ -148,26 +156,35 @@ function QuestionEditForm({
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Отговори</label>
           {form.poll_options.map((opt, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                type="text"
-                value={opt}
-                onChange={e => {
-                  const next = [...form.poll_options]
-                  next[i] = e.target.value
-                  set('poll_options', next)
-                }}
-                placeholder={`Отговор ${i + 1}`}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-              {form.poll_options.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => set('poll_options', form.poll_options.filter((_, j) => j !== i))}
-                  className="text-gray-400 hover:text-red-500 px-1"
-                >
-                  <span className="material-symbols-outlined text-base">close</span>
-                </button>
+            <div key={i} className="flex flex-col gap-0.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={opt}
+                  onChange={e => {
+                    const next = [...form.poll_options]
+                    next[i] = e.target.value
+                    set('poll_options', next)
+                  }}
+                  placeholder={`Отговор ${i + 1}`}
+                  className={`flex-1 border rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 ${
+                    duplicateOptIndices.has(i)
+                      ? 'border-red-400 focus:ring-red-400'
+                      : 'border-gray-200 focus:ring-indigo-400'
+                  }`}
+                />
+                {form.poll_options.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => set('poll_options', form.poll_options.filter((_, j) => j !== i))}
+                    className="text-gray-400 hover:text-red-500 px-1"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                )}
+              </div>
+              {duplicateOptIndices.has(i) && (
+                <p className="text-xs text-red-500 px-1">Този отговор вече съществува.</p>
               )}
             </div>
           ))}
@@ -185,7 +202,7 @@ function QuestionEditForm({
       <div className="flex gap-2 pt-1">
         <button
           onClick={() => onSave(form)}
-          disabled={isPending || !form.text.trim()}
+          disabled={isPending || !form.text.trim() || hasDuplicateOpts}
           className="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
         >
           {isPending ? 'Запазване...' : 'Запази'}
