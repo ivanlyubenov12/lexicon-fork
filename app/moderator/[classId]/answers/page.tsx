@@ -20,6 +20,7 @@ export default async function AnswersPage({ params }: { params: Promise<{ classI
     .from('students')
     .select('id')
     .eq('class_id', classId)
+    .eq('questionnaire_submitted', true)
 
   const studentIds = (students ?? []).map((s) => s.id)
 
