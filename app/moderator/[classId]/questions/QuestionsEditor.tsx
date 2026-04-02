@@ -579,6 +579,9 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
   const [isPending, startTransition] = useTransition()
   const [addError, setAddError] = useState<string | null>(null)
   const [reseeding, setReseeding] = useState(false)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  function toggleCollapse(key: string) { setCollapsed(prev => ({ ...prev, [key]: !prev[key] })) }
+  function isCollapsed(key: string) { return !!collapsed[key] }
   const [reseedError, setReseedError] = useState<string | null>(null)
   const [selectedPreset, setSelectedPreset] = useState<string>(QUESTION_PRESETS[0].id)
   const [selectMode, setSelectMode] = useState(false)
@@ -984,14 +987,13 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             {/* ── Акценти ──────────────────────────────────────── */}
             {accentQs.length > 0 && (
               <div className="border border-amber-200 rounded-2xl overflow-hidden">
-                <div className="bg-amber-50 px-5 py-3 border-b border-amber-200 flex items-center gap-2">
+                <button onClick={() => toggleCollapse('accents')} className="w-full bg-amber-50 px-5 py-3 border-b border-amber-200 flex items-center gap-2 hover:bg-amber-100 transition-colors text-left">
                   <span className="material-symbols-outlined text-amber-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                   <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Акценти</p>
                   <p className="text-xs text-amber-400 ml-1">— показват се в личната страница като ★</p>
-                </div>
-                <div className="p-3 space-y-2">
-                  {accentQs.map(renderCard)}
-                </div>
+                  <span className={`material-symbols-outlined text-amber-400 text-base ml-auto transition-transform ${isCollapsed('accents') ? '' : 'rotate-180'}`}>expand_more</span>
+                </button>
+                {!isCollapsed('accents') && <div className="p-3 space-y-2">{accentQs.map(renderCard)}</div>}
               </div>
             )}
 
@@ -1006,13 +1008,12 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
                   <div className="space-y-2">
                     {featured.length > 0 && (
                       <div className="border border-amber-300 rounded-2xl overflow-hidden mb-1">
-                        <div className="bg-amber-50 px-4 py-2 border-b border-amber-200 flex items-center gap-1.5">
+                        <button onClick={() => toggleCollapse('featured')} className="w-full bg-amber-50 px-4 py-2 border-b border-amber-200 flex items-center gap-1.5 hover:bg-amber-100 transition-colors text-left">
                           <span className="material-symbols-outlined text-amber-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Профилни въпроси</p>
-                        </div>
-                        <div className="p-3 space-y-2">
-                          {featured.map(renderCard)}
-                        </div>
+                          <span className={`material-symbols-outlined text-amber-400 text-base ml-auto transition-transform ${isCollapsed('featured') ? '' : 'rotate-180'}`}>expand_more</span>
+                        </button>
+                        {!isCollapsed('featured') && <div className="p-3 space-y-2">{featured.map(renderCard)}</div>}
                       </div>
                     )}
                     {(() => {
@@ -1022,13 +1023,12 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
                         <>
                           {videos.length > 0 && (
                             <div className="border border-indigo-200 rounded-2xl overflow-hidden mb-1">
-                              <div className="bg-indigo-50 px-4 py-2 border-b border-indigo-200 flex items-center gap-1.5">
+                              <button onClick={() => toggleCollapse('video')} className="w-full bg-indigo-50 px-4 py-2 border-b border-indigo-200 flex items-center gap-1.5 hover:bg-indigo-100 transition-colors text-left">
                                 <span className="material-symbols-outlined text-indigo-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>videocam</span>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">Видео въпрос</p>
-                              </div>
-                              <div className="p-3 space-y-2">
-                                {videos.map(renderCard)}
-                              </div>
+                                <span className={`material-symbols-outlined text-indigo-300 text-base ml-auto transition-transform ${isCollapsed('video') ? '' : 'rotate-180'}`}>expand_more</span>
+                              </button>
+                              {!isCollapsed('video') && <div className="p-3 space-y-2">{videos.map(renderCard)}</div>}
                             </div>
                           )}
                           {others.map(renderCard)}
@@ -1043,28 +1043,26 @@ export default function QuestionsEditor({ classId, systemQuestions, customQuesti
             {/* ── Анонимни (class_voice) ───────────────────────── */}
             {voiceQs.length > 0 && (
               <div className="border border-purple-200 rounded-2xl overflow-hidden">
-                <div className="bg-purple-50 px-5 py-3 border-b border-purple-200 flex items-center gap-2">
+                <button onClick={() => toggleCollapse('voice')} className="w-full bg-purple-50 px-5 py-3 border-b border-purple-200 flex items-center gap-2 hover:bg-purple-100 transition-colors text-left">
                   <span className="material-symbols-outlined text-purple-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>record_voice_over</span>
                   <p className="text-xs font-bold uppercase tracking-widest text-purple-600">Анонимни въпроси</p>
                   <p className="text-xs text-purple-400 ml-1">— облак от думи или диаграма</p>
-                </div>
-                <div className="p-3 space-y-2">
-                  {voiceQs.map(renderCard)}
-                </div>
+                  <span className={`material-symbols-outlined text-purple-300 text-base ml-auto transition-transform ${isCollapsed('voice') ? '' : 'rotate-180'}`}>expand_more</span>
+                </button>
+                {!isCollapsed('voice') && <div className="p-3 space-y-2">{voiceQs.map(renderCard)}</div>}
               </div>
             )}
 
             {/* ── Анкети (survey) ─────────────────────────────── */}
             {surveyQs.length > 0 && (
               <div className="border border-teal-200 rounded-2xl overflow-hidden">
-                <div className="bg-teal-50 px-5 py-3 border-b border-teal-200 flex items-center gap-2">
+                <button onClick={() => toggleCollapse('survey')} className="w-full bg-teal-50 px-5 py-3 border-b border-teal-200 flex items-center gap-2 hover:bg-teal-100 transition-colors text-left">
                   <span className="material-symbols-outlined text-teal-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>poll</span>
                   <p className="text-xs font-bold uppercase tracking-widest text-teal-600">Анкети</p>
                   <p className="text-xs text-teal-400 ml-1">— избор от отговори или от участници</p>
-                </div>
-                <div className="p-3 space-y-2">
-                  {surveyQs.map(renderCard)}
-                </div>
+                  <span className={`material-symbols-outlined text-teal-300 text-base ml-auto transition-transform ${isCollapsed('survey') ? '' : 'rotate-180'}`}>expand_more</span>
+                </button>
+                {!isCollapsed('survey') && <div className="p-3 space-y-2">{surveyQs.map(renderCard)}</div>}
               </div>
             )}
           </div>
