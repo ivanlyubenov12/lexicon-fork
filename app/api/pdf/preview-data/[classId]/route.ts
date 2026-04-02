@@ -59,7 +59,7 @@ export async function GET(
     .order('order_index')
 
   const personalQuestions = (questions ?? []).filter((q: any) =>
-    ['personal', 'better_together', 'superhero'].includes(q.type)
+    ['personal', 'video', 'photo', 'better_together', 'superhero'].includes(q.type)
   )
   const voiceQuestions = (questions ?? []).filter((q: any) =>
     q.type === 'survey' && q.voice_display != null
@@ -252,6 +252,7 @@ export async function GET(
     answers: (answersByStudent.get(s.id) ?? [])
       .filter((a: any) => (a.text_content || a.media_url) && qMap.has(a.question_id))
       .map((a: any): PDFAnswer => ({
+        question_id: a.question_id,
         question_text: qMap.get(a.question_id) ?? '',
         question_type: qTypeMap.get(a.question_id) ?? null,
         text_content: a.text_content ?? null,
@@ -267,6 +268,47 @@ export async function GET(
     event_comments: eventCommentsByStudent.get(s.id) ?? [],
   }))
 
+  // Sync student_page blocks against current questions/events so the PDF matches what the layout editor shows.
+  // The layout editor auto-syncs in React state (syncStudentPageBlocks), but page_layouts.student_page in the
+  // DB can become stale after the seed modifies/deletes questions or adds new ones.
+  const rawStudentPageBlocks = (() => {
+    const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.student_page
+    return Array.isArray(v) ? v as Array<{ type: string; config: Record<string, unknown> }> : null
+  })()
+  const spQIds = new Set((questions ?? []).filter((q: any) => ['personal', 'video', 'photo'].includes(q.type)).map((q: any) => q.id as string))
+  const spEventIds = new Set((events ?? []).map((e: any) => e.id as string))
+  let syncedStudentPageBlocks = rawStudentPageBlocks
+  if (syncedStudentPageBlocks) {
+    // Remove orphaned sp_question / sp_event blocks
+    syncedStudentPageBlocks = syncedStudentPageBlocks.filter(b => {
+      if (b.type === 'sp_question') return spQIds.has(b.config.questionId as string)
+      if (b.type === 'sp_event') return spEventIds.has(b.config.eventId as string)
+      return true
+    })
+    // Add missing questions (before events/messages, default page 1)
+    const presentQIds = new Set(syncedStudentPageBlocks.filter(b => b.type === 'sp_question').map(b => b.config.questionId as string))
+    const missingQIds = [...spQIds].filter(id => !presentQIds.has(id))
+    if (missingQIds.length > 0) {
+      const insertAt = syncedStudentPageBlocks.findIndex(b => b.type === 'sp_event' || b.type === 'sp_peer_messages')
+      const idx = insertAt === -1 ? syncedStudentPageBlocks.length : insertAt
+      const newQBlocks = missingQIds.map(id => ({ type: 'sp_question', config: { questionId: id, page: 1 } }))
+      syncedStudentPageBlocks = [...syncedStudentPageBlocks.slice(0, idx), ...newQBlocks, ...syncedStudentPageBlocks.slice(idx)]
+    }
+    // Add missing events (before messages, default page 2)
+    const presentEIds = new Set(syncedStudentPageBlocks.filter(b => b.type === 'sp_event').map(b => b.config.eventId as string))
+    const missingEIds = [...spEventIds].filter(id => !presentEIds.has(id))
+    if (missingEIds.length > 0) {
+      const insertAt = syncedStudentPageBlocks.findIndex(b => b.type === 'sp_peer_messages')
+      const idx = insertAt === -1 ? syncedStudentPageBlocks.length : insertAt
+      const newEBlocks = missingEIds.map(id => ({ type: 'sp_event', config: { eventId: id, page: 2 } }))
+      syncedStudentPageBlocks = [...syncedStudentPageBlocks.slice(0, idx), ...newEBlocks, ...syncedStudentPageBlocks.slice(idx)]
+    }
+    // Ensure sp_peer_messages exists
+    if (!syncedStudentPageBlocks.some(b => b.type === 'sp_peer_messages')) {
+      syncedStudentPageBlocks = [...syncedStudentPageBlocks, { type: 'sp_peer_messages', config: { page: 2 } }]
+    }
+  }
+
   const pdfData: PDFData = {
     preset: (cls as any).template_id ?? null,
     starsLabel: (cls as any).stars_label ?? null,
@@ -274,7 +316,7 @@ export async function GET(
     groupLabel: (cls as any).group_label ?? null,
     coverBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.cover; return Array.isArray(v) ? v as any : null })(),
     closingBlocks: ((cls as any).page_layouts as Record<string, unknown> | null)?.closing as any ?? null,
-    studentPageBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.student_page; return Array.isArray(v) ? v as any : null })(),
+    studentPageBlocks: syncedStudentPageBlocks,
     memoriesBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.memories; return Array.isArray(v) ? v as any : null })(),
     groupBlocks: (() => { const v = ((cls as any).page_layouts as Record<string, unknown> | null)?.group; return Array.isArray(v) ? v as any : null })(),
     classInfo: {

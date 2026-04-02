@@ -1068,12 +1068,13 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
 
     // Build a map from event_title → PDFStudentEvent for matching by eventId
     // Note: PDFStudentEvent has event_title but not event_id, so we match by title.
-    // The i-th sp_question block maps to the i-th answer by index (question_id not stored in PDFAnswer).
     const eventByTitle = new Map(student.event_comments.map(ec => [ec.event_title, ec]))
 
+    // Match answers by question_id (preferred) so block order doesn't affect correctness.
+    const answerByQId = new Map(student.answers.filter(a => a.question_id).map(a => [a.question_id!, a]))
+
     const renderPage = (pg: typeof page1, pageId: string) => {
-      const personalAnswers = student.answers.filter(a => !a.question_type || a.question_type === 'personal')
-      const accentAnswers   = student.answers.filter(a => a.question_type === 'better_together' || a.question_type === 'superhero')
+      const accentAnswers = student.answers.filter(a => a.question_type === 'better_together' || a.question_type === 'superhero')
 
       return (
         <Page size="A4" style={s.page}>
@@ -1114,7 +1115,8 @@ export function StudentPage({ student, classInfo, bgPng, theme, options, groupLa
 
               {/* sp_question blocks */}
               {pg.filter(b => b.type === 'sp_question').map((b, i) => {
-                const answer = personalAnswers[i]
+                const cfg = b.config as Record<string, unknown>
+                const answer = cfg.questionId ? answerByQId.get(cfg.questionId as string) : null
                 if (!answer) return null
                 return (
                   <View key={i} style={s.qaBlock} wrap={false}>

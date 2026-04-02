@@ -451,7 +451,14 @@ export async function seedDummyData(
       // Always rebuild layout from current (deduped) questions + polls
       const layout = buildLayoutFromQuestions(questions, polls)
       if (layout.length > 0) {
-        await admin.from('classes').update({ layout }).eq('id', classId)
+        // Also clear page_layouts.student_page so it gets rebuilt from current questions
+        // (avoids stale sp_question blocks referencing deleted/old question IDs)
+        const { data: clsLayouts } = await admin.from('classes').select('page_layouts').eq('id', classId).single()
+        const currentLayouts = (clsLayouts?.page_layouts as Record<string, unknown>) ?? {}
+        await admin.from('classes').update({
+          layout,
+          page_layouts: { ...currentLayouts, student_page: null },
+        }).eq('id', classId)
       }
     }
 
